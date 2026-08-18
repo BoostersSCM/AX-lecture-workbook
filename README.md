@@ -50,19 +50,64 @@ entries(user_id, item_key, value)          -- 워크북의 모든 입력
 
 1. 프로젝트 생성 (현재 연결: `https://xxusvukjjxmcnmbvwybz.supabase.co`)
 2. **SQL Editor**에 [`supabase/schema.sql`](supabase/schema.sql) 전체를 붙여넣고 실행
-3. **Authentication → Providers → Google** 활성화
-   - Google Cloud Console에서 OAuth 클라이언트를 만들고 Client ID/Secret 등록
-   - 승인된 리디렉션 URI에 Supabase가 알려주는 콜백 URL 추가
-4. **Authentication → URL Configuration**
-   - Site URL: 배포 주소 (예: `https://ax-workbook.vercel.app`)
-   - Redirect URLs에 아래 둘 다 추가
-     - `http://localhost:3000/auth-callback.html`
-     - `https://<배포주소>/auth-callback.html`
+3. Google OAuth 연결 — 아래 [Google OAuth 설정](#2-google-oauth-설정) 참고
 
-> 가입은 `@boosters.kr` 계정만 가능합니다. `handle_new_user()` 트리거가 도메인을 검증하고,
-> 다른 도메인이면 `INVALID_DOMAIN` 예외로 막습니다.
+### 2. Google OAuth 설정
 
-### 2. 강사 권한
+**GCP 프로젝트는 boosters.kr 조직 소속으로 만듭니다.** 그러면 동의 화면을 Internal로 둘 수 있고,
+구글이 조직 계정만 통과시켜 도메인 제한이 구글 단계에서 먼저 걸립니다.
+
+**① 프로젝트 생성** — [console.cloud.google.com](https://console.cloud.google.com) → 새 프로젝트
+- 이름 `ax-workbook`, **위치(조직)가 `boosters.kr`로 잡히는지 확인**
+
+**② 동의 화면** — `APIs & Services` → `OAuth consent screen` (최근 UI는 *Google Auth Platform → Audience*)
+- User Type: **Internal**
+- 앱 이름 `AX 워크북`, 지원 이메일·개발자 연락처만 채우고 저장
+- **스코프는 추가하지 않습니다.** Supabase가 요청하는 `openid`/`email`/`profile`은 민감 스코프가 아니라
+  구글 심사가 필요 없습니다. Internal이므로 게시(Publish)도 불필요합니다
+
+**③ 클라이언트 생성** — `Credentials` → `+ CREATE CREDENTIALS` → `OAuth client ID` → **Web application**
+
+| 칸 | 값 |
+|---|---|
+| Authorized JavaScript origins | `http://localhost:3000` <br> `https://<배포주소>` (배포 후 추가) |
+| Authorized redirect URIs | `https://xxusvukjjxmcnmbvwybz.supabase.co/auth/v1/callback` |
+
+> redirect URI에는 **Supabase 콜백만** 넣습니다. 앱의 `/auth-callback.html`은 여기가 아니라 ⑤에 들어갑니다.
+> 이걸 헷갈려서 `redirect_uri_mismatch`가 나는 경우가 가장 많습니다.
+
+**④ Supabase에 연결** — Authentication → **Sign In / Providers** → Auth Providers 목록에서 Google
+- Enable 켜고 ③에서 받은 Client ID / Client Secret 붙여넣기 → Save
+- 이 화면에 있는 **Callback URL (for OAuth)** 가 ③의 redirect URI에 넣을 값입니다
+
+> 메뉴 이름이 예전에는 `Providers`였습니다. 현재 UI는 좌측 CONFIGURATION 섹션의 **`Sign In / Providers`** 입니다.
+
+**⑤ Redirect URLs** — Authentication → **URL Configuration**
+
+| 항목 | 값 |
+|---|---|
+| Site URL | `http://localhost:3000` → 배포 후 Vercel 주소로 변경 |
+| Redirect URLs | `http://localhost:3000/auth-callback.html` <br> `https://<배포주소>/auth-callback.html` |
+
+#### 도메인 제한은 4중입니다
+
+| 층 | 위치 | 하는 일 |
+|---|---|---|
+| 0 | GCP 동의 화면 **Internal** | 조직 외 계정은 구글에서 차단 — 앱까지 오지 않음 |
+| 1 | `auth.js` `hd: 'boosters.kr'` | 계정 선택 창에 회사 계정만 노출 |
+| 2 | `schema.sql` `handle_new_user()` | 다른 도메인은 `INVALID_DOMAIN` 예외로 **가입 차단** |
+| 3 | `auth-callback.html` + `requireAuth()` | 세션 이메일 재확인, 프로필 없으면 로그아웃 후 사유 안내 |
+
+#### 증상별 해결
+
+| 증상 | 원인 |
+|---|---|
+| `redirect_uri_mismatch` | ③의 redirect URI 오타. 끝에 슬래시가 없어야 합니다 |
+| 로그인 후 `/auth-callback.html`에서 멈춤 | ⑤ Redirect URLs 누락 |
+| "액세스 차단: 조직 내부용 앱" | 개인 계정으로 시도한 경우. 정상 동작입니다 |
+| "부스터스 이메일만 들어올 수 있습니다" | 앱의 3층이 막은 것. 정상 동작입니다 |
+
+### 3. 강사 권한
 
 강사 계정으로 **한 번 로그인한 뒤**, SQL Editor에서 실행하세요.
 
@@ -70,7 +115,7 @@ entries(user_id, item_key, value)          -- 워크북의 모든 입력
 update public.profiles set role = 'instructor' where email = 'ku.do@boosters.kr';
 ```
 
-### 3. 로컬 실행
+### 4. 로컬 실행
 
 ```bash
 cp .env.local.example .env.local   # SUPABASE_ANON_KEY 채우기
@@ -80,7 +125,7 @@ node dev-server.js
 http://localhost:3000 — **포트는 3000 고정**입니다 (Supabase 리다이렉트에 등록한 주소).
 `.env.local`을 바꾸면 서버를 재시작해야 `public/env.js`가 다시 생성됩니다.
 
-### 4. 배포
+### 5. 배포
 
 Vercel 프로젝트에 환경변수 두 개를 등록하고 배포합니다.
 
