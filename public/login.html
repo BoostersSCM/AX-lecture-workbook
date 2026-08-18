@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 · AX 워크북</title>
+<link rel="stylesheet" href="/styles.css">
+<script src="/env.js"></script>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="eyebrow">연결해서 일하기 · 4주</div>
+    <h1>AX 워크북</h1>
+    <p class="lede">회차별 실습을 기록하고, 내 업무 자동화 설계서를 만드는 곳입니다.</p>
+
+    <button class="primary gbtn" id="google">부스터스 계정으로 로그인</button>
+
+    <p class="login-foot">
+      <b>@boosters.kr</b> 계정만 로그인할 수 있습니다.<br>
+      입력한 내용은 본인과 강사만 볼 수 있습니다.
+    </p>
+  </div>
+</div>
+
+<script type="module">
+  import { signInWithGoogle, getMe } from '/js/auth.js';
+
+  // 이미 로그인돼 있으면 홈으로
+  getMe().then(me => { if (me) location.replace('/'); });
+
+  document.getElementById('google').addEventListener('click', signInWithGoogle);
+</script>
+</body>
+</html>

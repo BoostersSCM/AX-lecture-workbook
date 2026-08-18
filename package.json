@@ -1,0 +1,8 @@
+{
+  "name": "ax-workbook",
+  "private": true,
+  "description": "AX 강의 워크북 — 빌드 없음. 클라이언트는 ESM CDN만 사용합니다(npm 패키지 추가 금지).",
+  "scripts": {
+    "dev": "node dev-server.js"
+  }
+}

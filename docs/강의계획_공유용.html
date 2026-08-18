@@ -1,0 +1,466 @@
+<title>연결해서 일하기</title>
+<style>
+  :root {
+    --ground: #F1F1EE;
+    --surface: #FCFCFA;
+    --surface-2: #E7E8E3;
+    --ink: #14201F;
+    --ink-soft: #3C4A47;
+    --muted: #6A7773;
+    --rule: #D3D6D0;
+    --accent: #0F6E63;
+    --accent-soft: #D9E8E5;
+    --brass: #A87424;
+    --brass-soft: #EFE3CE;
+    --warn: #9A4A22;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1413;
+      --surface: #161F1D;
+      --surface-2: #1F2A28;
+      --ink: #E9EBE6;
+      --ink-soft: #C0C8C5;
+      --muted: #8B9793;
+      --rule: #2C3735;
+      --accent: #48C0AF;
+      --accent-soft: #17322E;
+      --brass: #D8A34F;
+      --brass-soft: #2E2617;
+      --warn: #D98553;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1413;
+    --surface: #161F1D;
+    --surface-2: #1F2A28;
+    --ink: #E9EBE6;
+    --ink-soft: #C0C8C5;
+    --muted: #8B9793;
+    --rule: #2C3735;
+    --accent: #48C0AF;
+    --accent-soft: #17322E;
+    --brass: #D8A34F;
+    --brass-soft: #2E2617;
+    --warn: #D98553;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(1.1rem, 4vw, 2.5rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.75rem, 5vw, 4rem);
+  }
+
+  .mono {
+    font-family: ui-monospace, "Cascadia Code", "Consolas", "D2Coding", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  h1 {
+    font-size: clamp(2.1rem, 6vw, 3.4rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    margin: 0.5rem 0 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    font-size: clamp(1.02rem, 2.2vw, 1.2rem);
+    color: var(--ink-soft);
+    max-width: 42em;
+    margin: 1.1rem 0 0;
+    text-wrap: pretty;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin-top: 1.8rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+  .facts b { color: var(--ink); font-weight: 650; }
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  h2 {
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    font-weight: 750;
+    margin: 0;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--ink);
+    text-wrap: balance;
+  }
+
+  h3 { font-size: 1.02rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+
+  p { margin: 0; max-width: 44em; text-wrap: pretty; }
+  .dim { color: var(--ink-soft); }
+  .small { font-size: 0.88rem; }
+
+  .pull {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 1rem 1.2rem;
+    font-size: 1.02rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+  .pull strong { font-weight: 750; }
+
+  /* 긁정만보 4단계 */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .step {
+    background: var(--surface);
+    padding: 1.1rem 1.15rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .step-n {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--brass);
+    font-weight: 700;
+  }
+  .step-name { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
+  .step-en { font-size: 0.74rem; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+  .step p { font-size: 0.89rem; color: var(--ink-soft); margin-top: 0.3rem; }
+
+  /* 회차 */
+  .weeks { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .week {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 4.6rem 1fr;
+    gap: 0 1.3rem;
+    padding: 1.35rem 1.1rem;
+    align-items: start;
+  }
+  .week-tag {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--surface);
+    background: var(--accent);
+    padding: 0.18rem 0.5rem;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+  .week-body { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  .week-title { font-size: 1.16rem; font-weight: 780; letter-spacing: -0.02em; }
+  .week-title span { color: var(--muted); font-weight: 500; font-size: 0.92rem; letter-spacing: 0; }
+  .week p { font-size: 0.93rem; color: var(--ink-soft); }
+  .deliver {
+    margin-top: 0.15rem;
+    font-size: 0.86rem;
+    display: flex;
+    gap: 0.55rem;
+    align-items: baseline;
+    color: var(--ink);
+  }
+  .deliver .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    color: var(--brass);
+    background: var(--brass-soft);
+    padding: 0.1rem 0.42rem;
+    white-space: nowrap;
+  }
+
+  /* 표 */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-size: 0.74rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.was { color: var(--muted); }
+  td.now { color: var(--ink); font-weight: 600; }
+  .time { white-space: nowrap; color: var(--accent); font-weight: 700; }
+
+  /* 안전 규칙 */
+  .rules { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .rule-item {
+    background: var(--surface);
+    padding: 0.85rem 1.1rem;
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    gap: 0.8rem;
+    align-items: baseline;
+  }
+  .rule-item .n { color: var(--warn); font-weight: 700; font-size: 0.85rem; }
+  .rule-item b { font-weight: 720; }
+  .rule-item span.t { font-size: 0.93rem; color: var(--ink-soft); }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.6rem; }
+  ul { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  li { font-size: 0.92rem; color: var(--ink-soft); }
+  li b { color: var(--ink); font-weight: 680; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.4rem;
+    font-size: 0.83rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+  }
+
+  @media (max-width: 560px) {
+    .week { grid-template-columns: 1fr; gap: 0.7rem; }
+    .week-tag { justify-self: start; padding: 0.15rem 0.6rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">부스터스 AX 사내 강의 · 4회 × 90분</div>
+    <h1>연결해서 일하기</h1>
+    <p class="lede">노션·슬랙·구글 드라이브를 AI에 직접 연결해, 복붙 없이 업무를 잇는 4주 과정.
+      전사 크루(비개발) 대상이며, 매 회차 손에 쥐고 나가는 완성물이 하나씩 있습니다.</p>
+    <div class="facts mono">
+      <div>대상 <b>전사 크루 · 비개발</b></div>
+      <div>구성 <b>4회 × 90분</b></div>
+      <div>방식 <b>AI 커넥터 · 코드 없음</b></div>
+      <div>정원 <b>12명 내외 (조교 1명)</b></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>이 강의가 푸는 문제</h2>
+    <p>AI 도구는 이미 다들 쓰고 있습니다. 그런데 <b>내 업무에 붙이는 순간</b> 대부분 여기서 멈춥니다.
+      멈추는 이유는 프롬프트를 못 써서가 아니라, <b>AI가 우리 회사 데이터를 못 보기 때문</b>입니다.</p>
+    <p class="dim">지금 대부분은 이렇게 씁니다 — 노션 열기 → 드래그 → 복사 → AI에 붙여넣기 → 결과 복사 → 다시 노션에 붙여넣기.
+      이 방식은 세 군데서 막힙니다. <b>양</b>(회의록 20건은 복붙이 불가능하다), <b>최신성</b>(붙여넣는 순간 이미 과거다),
+      <b>반복 비용</b>(매주 같은 일을 처음부터 한다).</p>
+    <div class="pull">이 강의는 복붙을 없앱니다. AI에 <strong>커넥터</strong>를 연결해 노션·슬랙·드라이브를 직접 읽고 쓰게 만듭니다.</div>
+  </section>
+
+  <section>
+    <h2>관통 원리 — 긁·정·만·보</h2>
+    <p class="dim">4주 내내 반복되는 뼈대는 하나입니다. 매 회차 이 네 칸 중 한 칸씩 깊게 팝니다.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-n mono">01</div>
+        <div class="step-name">긁기</div>
+        <div class="step-en mono">Collect</div>
+        <p>흩어진 원본을 AI가 직접 읽게 한다</p>
+      </div>
+      <div class="step">
+        <div class="step-n mono">02</div>
+        <div class="step-name">정하기</div>
+        <div class="step-en mono">Structure</div>
+        <p>읽은 것을 정해진 형식에 넣는다</p>
+      </div>
+      <div class="step">
+        <div class="step-n mono">03</div>
+        <div class="step-name">만들기</div>
+        <div class="step-en mono">Generate</div>
+        <p>형식이 잡힌 데이터로 결과물을 만든다</p>
+      </div>
+      <div class="step">
+        <div class="step-n mono">04</div>
+        <div class="step-name">보내기</div>
+        <div class="step-en mono">Deliver</div>
+        <p>사람이 볼 곳까지 배달한다</p>
+      </div>
+    </div>
+    <div class="pull">“AI가 못 하는 게 아니라, 우리가 <strong>어디서 긁어서 어떤 형식으로 어디로 보낼지</strong>를 안 정해준 것이다.”</div>
+  </section>
+
+  <section>
+    <h2>회차 구성</h2>
+    <div class="weeks">
+
+      <article class="week">
+        <div class="week-tag mono">1회차</div>
+        <div class="week-body">
+          <div class="week-title">복붙을 그만두는 날 <span>· 긁기</span></div>
+          <p>커넥터로 노션을 직접 읽게 하고, 사내 행사 퀴즈 콘텐츠를 만듭니다. 업무 부담이 0이고 실패해도 손해가 없어 첫 성공 경험을 만들기에 최적입니다.
+            도입에서 강사가 지난 5월 같은 일을 하려고 만들었던 <b>크롬 확장 프로그램(651줄)</b>을 보여주고 시작합니다 —
+            “저는 2주 걸렸습니다. 오늘 여러분은 그거 없이 90분에 합니다.”</p>
+          <div class="deliver"><span class="label mono">완성물</span> 퀴즈 3종 — WHO AM I 15문항(힌트 3단 차등) · AI 예측 퀴즈 · 크로스 퀴즈</div>
+        </div>
+      </article>
+
+      <article class="week">
+        <div class="week-tag mono">2회차</div>
+        <div class="week-body">
+          <div class="week-title">흩어진 기록을 표로 <span>· 정하기</span></div>
+          <p>공용 샘플 회의록 3건에서 액션아이템을 뽑아 「내 업무(연습용)」 DB에 등재합니다. 1회차는 읽기만 했고, 여기서부터 AI가 씁니다.
+            그래서 안전장치를 같이 배웁니다 — 미리보기 먼저, 한 건 먼저, 되돌릴 수 있게.
+            회의록에는 함정 8개를 심어뒀습니다. 논의만 된 것을 액션으로 잡으면 하지도 않은 일이 다음 주에 지연으로 뜬다는 걸 눈으로 보게 됩니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 회의록에서 뽑아 등재한 업무 카드 13~15개</div>
+        </div>
+      </article>
+
+      <article class="week">
+        <div class="week-tag mono">3회차</div>
+        <div class="week-body">
+          <div class="week-title">보고를 자동으로 <span>· 만들기 + 보내기</span></div>
+          <p>업무 DB를 완료·진행·지연 3분류로 요약해 슬랙 리포트로 발행합니다. 결과물이 내 화면에만 있으면 자동화가 아니라,
+            남에게 도착해야 끝납니다. 마지막엔 이 과정을 다음 주에 한 줄로 재실행할 ‘레시피’로 저장합니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 우리 팀 주간 리포트 템플릿 + 실제 발행 1회</div>
+        </div>
+      </article>
+
+      <article class="week">
+        <div class="week-tag mono">4회차</div>
+        <div class="week-body">
+          <div class="week-title">내 것으로 만들기 <span>· 케이스 클리닉</span></div>
+          <p>승인 절차 없이 오늘 바로 쓸 수 있는 개인 루틴 3종(수신함 정리·일일 로그·주간 회고)을 따라 만든 뒤,
+            각자 자기 업무 하나를 가져와 설계서를 채우고 2인 1조로 상호 리뷰합니다. 정착률이 여기서 갈립니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 내 업무 자동화 설계서 1장</div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>왜 ‘노말한 방법’인가</h2>
+    <p class="dim">같은 업무를 SCM Portal에서 시스템으로 구현해본 경험이 있습니다. 1회차 도입에서 이 대조를 그대로 보여주고 시작합니다.</p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>업무</th><th>SCM Portal에서 한 방식</th><th>이 강의에서 할 방식</th><th>회차</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>행사 퀴즈 콘텐츠</td><td class="was">크롬 확장 프로그램 651줄 + Sheets API 연동</td><td class="now">노션 크루 DB → 퀴즈 3종, 코드 0줄</td><td class="mono">1</td></tr>
+          <tr><td>부자재 이력 관리</td><td class="was">Next.js + DB 테이블 + 노션 자동 생성 API</td><td class="now">노션 DB에 AI가 직접 등재</td><td class="mono">2</td></tr>
+          <tr><td>경영 대시보드</td><td class="was">집계 쿼리 + 캐시 DB + 차트 화면</td><td class="now">노션 DB → 주간 요약 → 슬랙 발행</td><td class="mono">3</td></tr>
+          <tr><td>메일 첨부 처리</td><td class="was">Gmail 애드온 개발</td><td class="now">수신함 자동 분류 루틴</td><td class="mono">4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pull">시스템 개발은 규모·신뢰성·권한 통제가 필요할 때 합니다. 대신 6개월이 듭니다.
+      이 강의 방식은 <strong>90분에 만들고, 안 맞으면 버립니다.</strong> 판단 기준 한 줄 —
+      <strong>매일 100명이 쓰면 시스템, 매주 나 혼자 쓰면 커넥터.</strong></div>
+  </section>
+
+  <section>
+    <h2>매 회차 90분</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>시간</th><th>블록</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td class="time mono">0–10</td><td>체크인</td><td>지난주 적용 사례 1~2명 공유</td></tr>
+          <tr><td class="time mono">10–25</td><td>개념</td><td>슬라이드 최소. 화이트보드에 긁·정·만·보 그리기</td></tr>
+          <tr><td class="time mono">25–40</td><td>라이브 데모</td><td>강사가 실제로 실행 — <b>실패도 그대로 보여준다</b></td></tr>
+          <tr><td class="time mono">40–75</td><td>실습</td><td>각자 실행. 강사 + 조교가 순회</td></tr>
+          <tr><td class="time mono">75–90</td><td>공유·정리</td><td>완성물 2~3개 화면 공유, 숙제 안내</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cols">
+      <div>
+        <h3>운영 원칙</h3>
+        <ul>
+          <li>실습이 전체의 <b>40% 미만</b>이면 그 회차는 실패다. 개념 설명이 길어지면 잘라낸다.</li>
+          <li>데모에서 AI가 엉뚱한 답을 내면 고치지 말고 <b>그대로 보여준 뒤</b> 같이 진단한다. 가장 기억에 남는다.</li>
+          <li>매 회차 슬랙에 완성물 스레드를 열고 각자 결과를 올린다. <b>제출률이 곧 정착률</b>이다.</li>
+          <li>실습 소재는 <b>전 부서 공용</b>이다. 특정 팀 DB(품번·협력사 같은 칸)를 쓰면 다른 본부 크루는 출발선에 서지도 못한다. 자기 팀 데이터로 해보는 건 숙제로 넘긴다.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>가장 큰 리스크 — 커넥터가 안 붙는 것</h3>
+        <ul>
+          <li>노션 커넥터 관리자 승인은 <b>강의 1주 전</b>에 일괄 요청한다.</li>
+          <li>슬랙 앱 설치 권한이 없어도 3회차는 <b>DM 리허설까지로 완주</b> 가능하게 설계했다.</li>
+          <li>당일 연결 실패자에겐 <b>플랜 B</b> — 노션 페이지를 내려받아 파일 업로드로 동일 실습.</li>
+          <li>실습은 전부 <b>「AX 실습장」 복제 DB</b>에서. 실제 팀 DB는 건드리지 않는다.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>안전 규칙</h2>
+    <p class="dim">매 회차 첫 화면에 이 네 줄을 그대로 띄웁니다.</p>
+    <div class="rules">
+      <div class="rule-item"><span class="n mono">01</span><span class="t"><b>긁지 않는다</b> — 개인 연락처, 급여·평가, 계약 단가, 미공개 재무. 내가 볼 수 있어도 AI에 넘기지 않는다.</span></div>
+      <div class="rule-item"><span class="n mono">02</span><span class="t"><b>쓰기 전에 본다</b> — AI가 노션·슬랙에 무언가 쓰기 전에 반드시 초안을 눈으로 확인한다.</span></div>
+      <div class="rule-item"><span class="n mono">03</span><span class="t"><b>채널 발송은 사람이 누른다</b> — 전사 채널·외부 메일 자동 발송은 이 강의 범위 밖이다.</span></div>
+      <div class="rule-item"><span class="n mono">04</span><span class="t"><b>실습은 복제본에서</b> — 실제 팀 DB와 운영 채널은 실습 대상이 아니다.</span></div>
+    </div>
+    <p class="small dim">덧붙여 매번 짚을 것 — 커넥터의 접근 범위는 <b>본인 계정 권한 범위</b>까지입니다.
+      내가 못 보는 페이지는 AI도 못 봅니다. 이건 제약이자 안심 포인트입니다.</p>
+  </section>
+
+  <section>
+    <h2>강의 후 2주가 진짜 승부처</h2>
+    <div class="cols">
+      <div>
+        <h3>정착 장치</h3>
+        <ul>
+          <li><b>완성물 제출</b> — 회차별 결과를 슬랙 스레드에 올린다.</li>
+          <li><b>4주 뒤 TOP3</b> — 실제로 굴러가는 자동화 3개를 전사 공지에 발행한다. 다음 기수 모집이 여기서 자동으로 된다.</li>
+          <li><b>케이스 축적</b> — 클리닉 설계서를 노션 한 곳에 모아 다음 기수 실습 소재로 재사용한다.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>강사 준비물</h3>
+        <ul>
+          <li>「AX 실습장」 노션 페이지</li>
+          <li><b>「내 업무(연습용)」 공용 DB</b> — 부서 무관 9개 필드, 각자 복제해서 사용</li>
+          <li><b>공용 샘플 회의록 3건</b> — 부스팅데이 준비 · 팝업스토어 킥오프 · 계정 권한 정비</li>
+          <li>크루 소개 DB 실습용 사본 (연락처 열 제거)</li>
+          <li>슬랙 실습 채널 개설</li>
+          <li>조교 1명 — 참가자 12명 이상이면 필수</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>부속 문서 — 사전세팅 체크리스트 · 프롬프트 카드 · 케이스 클리닉 워크시트</div>
+    <div class="mono">v1 · 2026-08-18</div>
+  </footer>
+
+</div>
