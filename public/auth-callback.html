@@ -41,7 +41,18 @@
     let tries = 0;
     const timer = setInterval(async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) { clearInterval(timer); location.replace('/'); return; }
+      if (session) {
+        clearInterval(timer);
+        // 도메인 재확인 — DB 트리거가 1차로 막지만 여기서도 한 번 더 봅니다
+        const { isBoostersEmail } = await import('/js/supabase.js');
+        if (!isBoostersEmail(session.user.email)) {
+          await supabase.auth.signOut();
+          location.replace('/login?e=bad-domain');
+          return;
+        }
+        location.replace('/');
+        return;
+      }
       if (++tries > 25) { clearInterval(timer); fail('세션을 확인하지 못했습니다. 다시 시도해주세요.'); }
     }, 200);
   }

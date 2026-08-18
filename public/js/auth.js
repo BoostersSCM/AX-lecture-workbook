@@ -1,19 +1,32 @@
 // js/auth.js — 로그인·세션·페이지 가드
-import { supabase, toast } from './supabase.js';
+import { supabase, toast, isBoostersEmail } from './supabase.js';
+
+export const ALLOWED_DOMAIN = 'boosters.kr';
 
 let _me = null; // 페이지 수명 동안 캐시
 
-export async function getMe({ fresh = false } = {}) {
-  if (_me && !fresh) return _me;
+// 세션은 있는데 프로필이 없거나 도메인이 다른 경우를 구분해서 알려줍니다.
+// 반환: { profile } | { reason: 'no-session' | 'bad-domain' | 'no-profile' }
+export async function getSessionState() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  if (!session) return { reason: 'no-session' };
+
+  // 도메인 방어 — DB 트리거가 1차로 막지만, 앱 진입도 따로 막습니다
+  if (!isBoostersEmail(session.user.email)) return { reason: 'bad-domain', session };
 
   const { data: profile, error } = await supabase
     .from('profiles').select('*').eq('id', session.user.id).single();
-  if (error) return null;
+  if (error || !profile) return { reason: 'no-profile', session };
 
-  _me = profile;
-  return profile;
+  return { profile };
+}
+
+export async function getMe({ fresh = false } = {}) {
+  if (_me && !fresh) return _me;
+  const st = await getSessionState();
+  if (!st.profile) return null;
+  _me = st.profile;
+  return _me;
 }
 
 // Google OAuth — hd 파라미터로 부스터스 계정만 뜨게 함 (최종 차단은 DB 트리거)
@@ -55,9 +68,21 @@ export async function saveTeam(team) {
 
 // 페이지 보호 — 로그인 필수
 export async function requireAuth() {
-  const me = await getMe();
-  if (!me) { location.href = '/login'; return null; }
-  return me;
+  const st = await getSessionState();
+
+  if (st.profile) { _me = st.profile; return st.profile; }
+
+  // 남의 도메인 계정이거나 프로필이 없으면 세션을 끊고 이유를 알려줍니다.
+  // (이걸 안 하면 참가자가 이유도 모른 채 로그인 화면만 반복하게 됩니다)
+  if (st.reason === 'bad-domain' || st.reason === 'no-profile') {
+    await supabase.auth.signOut();
+    _me = null;
+    location.replace('/login?e=' + st.reason);
+    return null;
+  }
+
+  location.replace('/login');
+  return null;
 }
 
 // 강사 전용 페이지 보호
