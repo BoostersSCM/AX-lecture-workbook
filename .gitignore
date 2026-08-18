@@ -2,3 +2,4 @@
 public/env.js
 node_modules
 .vercel
+.claude/
