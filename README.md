@@ -100,11 +100,20 @@ entries(user_id, item_key, value)          -- 워크북의 모든 입력
 
 #### 세션 정책
 
-Supabase → `Authentication` → `Sessions` 에서 **Time-box user sessions = 6시간**으로 두었습니다.
+**로그인 후 6시간이 지나면 자동 로그아웃**됩니다. 회차(90분)는 충분히 덮으면서 하루를 넘기지 않는 값입니다.
 
-- 로그인 시점부터 6시간 뒤 무조건 만료됩니다. 회차(90분)는 충분히 덮으면서 하루를 넘기지 않습니다
-- `Inactivity timeout`이 아니라 Time-box를 쓰는 이유: 유휴 타임아웃은 계속 쓰면 영원히 유지돼 보안 목적에 맞지 않습니다
-- 재로그인은 구글 계정 선택 한 번이라 실습 흐름을 거의 끊지 않습니다
+> Supabase의 `Authentication → Sessions` (Time-box user sessions)는 **Pro 플랜 전용**이라
+> 무료 플랜에서는 쓸 수 없습니다. 그래서 [`auth.js`](public/js/auth.js)에서 직접 구현했습니다.
+
+동작 방식:
+
+- 로그인 성공 시 `localStorage`에 시각을 기록(`axwb.loginAt`) — `auth-callback.html`의 `stampLogin()`
+- `requireAuth()`가 페이지 진입마다 경과 시간을 검사 → 초과면 `signOut` 후 `/login?e=session-expired`
+- 페이지를 켜둔 채 넘기는 경우를 위해 `watchSessionExpiry()`가 **5분마다** 검사 (`shell.js`에서 기동)
+- 수명은 `SESSION_MAX_MS` 상수 하나로 조절합니다
+
+> `persistSession`도 같은 localStorage를 쓰기 때문에, 기산점만 지워서 우회하려 하면 세션 자체가 함께 사라집니다.
+> 클라이언트 측 제한이라 Pro의 서버 강제만큼 엄밀하진 않지만, 실제 위협(공용 PC에 방치된 세션)에는 충분히 작동합니다.
 
 세션이 끊겼을 때 참가자가 쓰던 내용을 잃지 않도록 [`store.js`](public/js/store.js)가 이렇게 막습니다.
 

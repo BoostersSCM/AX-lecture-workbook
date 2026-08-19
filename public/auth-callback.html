@@ -50,6 +50,9 @@
           location.replace('/login?e=bad-domain');
           return;
         }
+        // 세션 수명(6시간) 기산점을 여기서 찍습니다
+        const { stampLogin } = await import('/js/auth.js');
+        stampLogin();
         location.replace('/');
         return;
       }

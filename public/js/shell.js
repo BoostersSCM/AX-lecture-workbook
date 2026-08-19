@@ -1,5 +1,5 @@
 // js/shell.js — 공통 헤더/네비
-import { getMe, signOut, isInstructor } from './auth.js';
+import { getMe, signOut, isInstructor, watchSessionExpiry } from './auth.js';
 
 const NAV = [
   { href: '/',        label: '홈' },
@@ -53,6 +53,9 @@ export async function mountShell() {
   st.className = 'savestate';
   st.id = 'savestate';
   document.body.appendChild(st);
+
+  // 페이지를 켜둔 채 6시간을 넘기는 경우 대비
+  if (me) watchSessionExpiry();
 
   return me;
 }
