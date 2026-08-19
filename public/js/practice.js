@@ -1,7 +1,8 @@
 // 회차별 실제 연동 실습 패널
 import { getValue, loadEntries } from './store.js';
 import { callIntegration } from './integrations.js';
-import { el, esc } from './render.js';
+import { el } from './render.js';
+import { esc } from './shell.js';
 import { toast } from './supabase.js';
 
 function valueOf(...keys) {
