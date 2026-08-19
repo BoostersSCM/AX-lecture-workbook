@@ -15,6 +15,17 @@ const PROTOCOL = '2025-03-26';
 const WRITABLE = /^(s[1-4]|clinic|my|setup)\.[\w.]{1,60}$/; // 쓰기 허용 키 패턴
 const MAX_VALUE = 8000;
 
+// 실습 프롬프트 정의는 워크북 화면과 같은 원본(content.js)을 씁니다 — 이중 관리 방지.
+// content.js는 import 문이 없는 순수 데이터 모듈이라 서버에서도 불러올 수 있습니다.
+let _content = null;
+async function content() {
+  if (!_content) _content = await import('../public/js/content.js');
+  return _content;
+}
+
+// 프롬프트 본문의 개인화 토큰 → 수강생 entries 값으로 치환 (render.js와 동일 규칙)
+const PERSONALIZE = { '[페이지명]': 's1.page_name', '[회의록 원본]': 's2.source_urls' };
+
 function sb(path, options = {}) {
   const url = env('SUPABASE_URL').replace(/\/$/, '') + '/rest/v1/' + path;
   const service = env('SUPABASE_SERVICE_ROLE_KEY');
@@ -71,6 +82,21 @@ const TOOLS = [
     name: 'get_course_status',
     description: '내 기수와 기수별로 열린 회차 등 강의 진행 상태를 확인합니다.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'list_exercises',
+    description: '이 워크북의 AI 실습(다듬기 단계) 목록을 봅니다. 각 실습의 id로 get_exercise를 호출해 실행 재료를 받으세요.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'get_exercise',
+    description: '실습 하나의 프롬프트 + 워크북에 저장된 재료(원문) + 결과 저장 위치를 통째로 가져옵니다. 받은 지시를 수행한 뒤, 결과를 save_entry(output_key)로 워크북에 저장하세요.',
+    inputSchema: {
+      type: 'object',
+      properties: { exercise_id: { type: 'string', description: 'list_exercises에서 확인한 id. 예: s2rules' } },
+      required: ['exercise_id'],
+      additionalProperties: false,
+    },
   },
 ];
 
@@ -141,6 +167,47 @@ async function callTool(userId, name, args = {}) {
     ].join('\n');
   }
 
+  if (name === 'list_exercises') {
+    const { PROMPTS } = await content();
+    const rows = Object.entries(PROMPTS)
+      .filter(([, p]) => p.context?.length || p.output)
+      .map(([pid, p]) => `- id: ${pid} | ${p.session}회차 | ${p.title}${p.output ? ` | 결과 저장: ${p.output}` : ''}`);
+    return `# AI 실습 목록 (다듬기 단계)\n\n${rows.join('\n')}\n\n사용법: get_exercise(id) → 지시 수행 → save_entry(결과 저장 키, 결과)`;
+  }
+
+  if (name === 'get_exercise') {
+    const { PROMPTS } = await content();
+    const pid = String(args.exercise_id || '').trim();
+    const p = PROMPTS[pid];
+    if (!p || !(p.context?.length || p.output)) {
+      return `'${pid}' 실습을 찾을 수 없습니다. list_exercises로 id를 먼저 확인하세요.`;
+    }
+
+    // 수강생 entries에서 개인화 토큰 값 + 재료를 한 번에 조회
+    const need = [...new Set([...(p.context || []), ...Object.values(PERSONALIZE)])];
+    const res = await sb(`entries?user_id=eq.${userId}&item_key=in.(${need.map(k => `"${k}"`).join(',')})&select=item_key,value`);
+    const got = Object.fromEntries((await res.json()).map(r => [r.item_key, String(r.value || '').trim()]));
+
+    let body = String(p.body || '');
+    for (const [token, key] of Object.entries(PERSONALIZE)) {
+      if (got[key]) body = body.replaceAll(token, got[key]);
+    }
+
+    const materials = (p.context || [])
+      .map(k => (got[k] && got[k] !== 'false') ? `【${k}】\n${got[k]}` : null)
+      .filter(Boolean)
+      .join('\n\n');
+
+    return [
+      `# 실습: ${p.title} (${p.session}회차)`,
+      p.note ? `참고: ${p.note}` : null,
+      `\n## 지시(프롬프트)\n${body}`,
+      materials ? `\n## 재료 — 워크북에 저장된 원문\n${materials}` : '\n## 재료\n(워크북에 저장된 재료가 아직 없습니다 — 사용자에게 원문을 요청하거나, 워크북 작업대에서 먼저 가져오라고 안내하세요)',
+      p.output ? `\n## 결과 처리\n위 지시를 수행한 결과를 사용자에게 보여주고 확인받은 뒤, save_entry(item_key="${p.output}", value=결과)로 워크북에 저장하세요.` : '\n## 결과 처리\n결과를 사용자에게 보여주세요 (별도 저장 위치 없음).',
+      '\n규칙: 재료에 없는 담당자·날짜·수량을 지어내지 말 것. 모르면 빈칸/미확인.',
+    ].filter(Boolean).join('\n');
+  }
+
   throw new Error(`알 수 없는 도구: ${name}`);
 }
 
@@ -185,7 +252,7 @@ module.exports = async function handler(req, res) {
       protocolVersion: PROTOCOL,
       capabilities: { tools: {} },
       serverInfo: { name: 'ax-workbook', version: '1.0.0' },
-      instructions: '부스터스 AX 워크북 커넥터입니다. get_my_workbook으로 내 4주 실습 기록을 불러오고, save_entry로 다듬은 결과를 되돌려 놓을 수 있습니다.',
+      instructions: '부스터스 AX 워크북 커넥터입니다. 실습 실행: list_exercises → get_exercise(id) → 지시 수행 → save_entry(결과 저장 키)로 워크북에 저장. 기록 조회: get_my_workbook / get_entry.',
     }));
   }
 

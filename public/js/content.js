@@ -104,6 +104,9 @@ export const SETUP = {
         { key: 'setup.notion', kind: 'check', label: '노션 연결 — 접근 범위에 내가 보는 팀 페이지를 포함' },
         { key: 'setup.slack',  kind: 'check', label: '슬랙 연결' },
         { key: 'setup.asana',  kind: 'check', label: '아사나 연결 — 실습 프로젝트 또는 태스크 접근 권한 포함' },
+        { key: 'setup.mcp', kind: 'check',
+          label: '내 Claude에 **워크북 커넥터**를 등록했다',
+          hint: '마이페이지에서 연결 키를 발급해 Claude 설정 → 커넥터 → 커스텀 커넥터에 주소를 붙여넣습니다. AI 실습(다듬기)은 각자의 Claude가 이 커넥터로 수행합니다 — 별도 API 크레딧이 들지 않습니다.' },
       ]
     },
     {
@@ -264,7 +267,7 @@ export const SESSIONS = [
         hint: '예: 8월 1일 이후 결정사항만 읽고, 개인정보가 있는 부록은 제외' },
       { type: 'field', key: 's2.source_text', kind: 'textarea', rows: 8,
         label: '회의록 본문 붙여넣기 (AI 실행 재료)',
-        hint: '아래 [워크북에서 AI 실행]이 이 본문을 재료로 씁니다. 링크만으로는 AI가 내용을 읽을 수 없습니다. 개인정보·민감 정보는 빼고 붙여넣으세요.' },
+        hint: '내 Claude가 커넥터(get_exercise)로 이 본문을 재료로 가져갑니다. 링크만으로는 AI가 내용을 읽을 수 없습니다. 개인정보·민감 정보는 빼고 붙여넣으세요.' },
       { type: 'prompt', id: 's2raw' },
       { type: 'field', key: 's2.count_before', kind: 'number', required: true,
         label: '규칙 없이 나온 후보 개수', hint: '실제 결과를 그대로 적습니다. 회의록 개수·길이에 따라 달라지며 정답 개수는 없습니다.' },
@@ -613,7 +616,7 @@ export const PROMPTS = {
     session: 1, title: '2 — 원본을 업무 맥락으로 요약하기',
     context: ['s1.source_snapshot'],
     output: 's1.context',
-    note: '어느 AI에나 붙여넣어도 됩니다 — [재료와 함께 복사]가 작업대에서 가져온 원문을 프롬프트 뒤에 동봉하므로, 그 AI가 우리 노션에 접근하지 못해도 맥락이 통합니다.',
+    note: '내 Claude에 [Claude 실행 문장 복사] 한 줄만 붙여넣으면 됩니다 — 커넥터의 get_exercise가 이 프롬프트와 작업대의 원문을 통째로 전달하므로, 그 Claude가 우리 노션에 접근하지 못해도 맥락이 통합니다.',
     body: `노션 「[페이지명]」 한 페이지만 읽어줘.
 
 아래 순서로 업무 맥락을 요약해줘:
@@ -815,7 +818,7 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
   s3flow: {
     session: 3, title: '4 — 같은 원본을 목적지별로 바꾸기',
     context: ['s3.asana_tasks', 's3.report'],
-    note: '어디에 붙여넣나요? 아무 AI나 됩니다 — [재료와 함께 복사]가 오늘 가져온 Asana 태스크·Notion 문단을 동봉합니다.',
+    note: '내 Claude에서 실행합니다 — 커넥터의 get_exercise가 오늘 가져온 Asana 태스크·Notion 문단을 재료로 전달합니다.',
     body: `한 개의 업무 원본을 아래 세 목적지에 맞게 변환하는 표를 만들어줘.
 
 원본: [Asana에서 읽은 태스크 또는 Notion에서 읽은 페이지]
@@ -832,7 +835,7 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
     session: 3, title: '5 — 연결 레시피로 저장',
     context: ['setup.asana_target', 'setup.notion_target', 'setup.slack_target', 's3.asana_update', 's3.notion_update', 's3.slack_message', 's3.slack_event'],
     output: 's3.recipe',
-    note: '각자의 AI는 오늘 실습을 모릅니다 — 그래서 [재료와 함께 복사]가 연결 대상과 성공 영수증을 전부 동봉합니다. 아무 AI에나 붙여넣고, 나온 레시피를 아래 칸에 저장하세요.',
+    note: '각자의 Claude는 오늘 실습을 모릅니다 — 그래서 커넥터의 get_exercise가 연결 대상과 성공 영수증을 전부 전달합니다. 실행하면 Claude가 레시피를 만들어 s3.recipe에 직접 저장합니다.',
     body: `방금 한 연결 실습을 다음 사람이 다시 실행할 수 있는 한 덩어리의 레시피로 정리해줘.
 
 반드시 포함해:

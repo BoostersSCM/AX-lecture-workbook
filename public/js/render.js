@@ -3,7 +3,6 @@ import { getValue, saveValue } from './store.js';
 import { PROMPTS, PROMPT_HELP, VISUALS, SESSIONS, SETUP, CLINIC } from './content.js';
 import { esc, mini } from './shell.js';
 import { toast } from './supabase.js';
-import { callIntegration } from './integrations.js';
 
 // item_key → 라벨 (AI 실행 재료의 섹션 제목용)
 const FIELD_LABELS = (() => {
@@ -120,35 +119,34 @@ export function renderPrompt(p, help = null) {
     return parts.join('\n\n');
   };
 
-  // context/output이 있으면 "워크북에서 AI 실행" 카드 — 복붙 셔틀 없이 루프가 닫힙니다
+  // context/output이 있으면 "내 Claude에서 실행" 카드 — 각자의 Claude 구독이
+  // 워크북 MCP 커넥터로 재료를 직접 읽고 결과를 되돌려 놓습니다 (API 크레딧 불필요)
   const runnable = Boolean(p.context?.length || p.output);
+  const promptId = Object.keys(PROMPTS).find(k => PROMPTS[k] === p) || '';
+  const claudeLine = `워크북 커넥터에서 get_exercise("${promptId}")를 실행해서, 지시대로 수행하고 결과를 안내된 위치에 save_entry로 저장해줘.`;
 
   const wrap = el(`
     <div class="prompt${runnable ? ' prompt-runnable' : ''}">
       <div class="prompt-head">
         <span class="prompt-title">${esc(p.title)}</span>
-        ${runnable ? '<button class="prompt-run" type="button">워크북에서 AI 실행</button>' : '<button class="copy" type="button">복사</button>'}
+        ${runnable ? '<button class="prompt-run" type="button">Claude 실행 문장 복사</button>' : '<button class="copy" type="button">복사</button>'}
         <button class="prompt-help-button" type="button" aria-label="${esc(p.title)} 초보자 도움말">?</button>
       </div>
       ${p.note ? `<div class="prompt-note">${mini(p.note)}</div>` : ''}
       <div class="prompt-guide" aria-label="프롬프트 실행 안내">
-        <div><span>실행 위치</span><strong>${runnable ? '이 카드 — 버튼 한 번' : esc(guide.run)}</strong></div>
-        <div><span>결과 확인</span><strong>${runnable ? '아래 결과를 사람이 검토 → 기록 칸에 넣기' : esc(guide.result)}</strong></div>
+        <div><span>실행 위치</span><strong>${runnable ? '내 Claude — 워크북 커넥터 연결 (마이페이지)' : esc(guide.run)}</strong></div>
+        <div><span>결과 확인</span><strong>${runnable ? 'Claude가 워크북에 저장 → 아래 기록 칸 새로고침 후 검토' : esc(guide.result)}</strong></div>
       </div>
       <div class="prompt-beginner"><span>초보자 메모</span><p></p></div>
-      <div class="ai-result" hidden>
-        <div class="ai-result-head"><span>AI 결과 — 그대로 믿지 말고 검토하세요</span></div>
-        <pre></pre>
-        <div class="ai-result-actions">
-          ${p.output ? '<button class="ai-insert" type="button">결과를 아래 기록 칸에 넣기</button>' : ''}
-          <button class="ai-copy copy" type="button">결과 복사</button>
-        </div>
-      </div>
       ${runnable ? `
+      <div class="claude-run-strip">
+        <span class="claude-run-label">내 Claude에 이렇게 말하세요</span>
+        <code>${esc(claudeLine)}</code>
+      </div>
       <details class="prompt-source">
-        <summary>버튼 뒤 요청문 보기 — 직접 복사해 다른 AI에서 실행할 수도 있습니다</summary>
+        <summary>커넥터 없이 하려면 — 요청문+재료를 통째로 복사해 아무 AI에서 실행</summary>
         <pre></pre>
-        <button class="copy" type="button">요청문 복사</button>
+        <button class="copy" type="button">요청문+재료 복사</button>
       </details>` : '<pre></pre>'}
     </div>`);
   wrap.querySelector('.prompt-beginner p').textContent = helpInfo.summary || '';
@@ -176,56 +174,18 @@ export function renderPrompt(p, help = null) {
     }
   });
 
-  // 워크북 안에서 AI 실행
+  // Claude 실행 문장 복사 — 수강생은 이 한 문장을 자기 Claude(구독)에 붙여넣습니다.
+  // 재료·프롬프트는 MCP의 get_exercise가 서버에서 통째로 전달하므로 복붙 셔틀이 없습니다.
   if (runnable) {
     const runBtn = wrap.querySelector('.prompt-run');
-    const resultBox = wrap.querySelector('.ai-result');
-    const resultPre = resultBox.querySelector('pre');
-
     runBtn.addEventListener('click', async () => {
-      const materials = buildMaterials();
-      if (p.context?.length && !materials) {
-        toast('재료가 비어 있습니다 — 먼저 작업대에서 원본을 가져오거나 위 칸을 채워주세요.', 'error');
-        return;
-      }
-      runBtn.disabled = true;
-      runBtn.textContent = 'AI 실행 중…';
       try {
-        const res = await callIntegration('/api/ai/transform', {
-          method: 'POST',
-          body: { prompt: personalizeBody(), materials },
-        });
-        resultPre.textContent = res.text;
-        resultBox.hidden = false;
-      } catch (error) {
-        if (/AI_NOT_CONFIGURED/.test(error.message || '')) {
-          toast('워크북 AI가 아직 설정되지 않았습니다(운영자: ANTHROPIC_API_KEY). 아래 요청문 복사로 각자 AI에서 실행하세요.', 'error');
-          wrap.querySelector('.prompt-source')?.setAttribute('open', '');
-        } else {
-          toast(error.message || 'AI 실행에 실패했습니다.', 'error');
-        }
-      } finally {
-        runBtn.disabled = false;
-        runBtn.textContent = '워크북에서 AI 실행';
+        await navigator.clipboard.writeText(claudeLine);
+        runBtn.textContent = '복사됨 — Claude에 붙여넣으세요';
+        setTimeout(() => { runBtn.textContent = 'Claude 실행 문장 복사'; }, 2200);
+      } catch {
+        toast('직접 복사해주세요: ' + claudeLine, 'error');
       }
-    });
-
-    resultBox.querySelector('.ai-insert')?.addEventListener('click', (e) => {
-      const text = resultPre.textContent.trim();
-      if (!text) return;
-      saveValue(p.output, text); // 수동 저장 모드 — 초안으로 들어가고 [모두 저장]으로 확정
-      const field = document.getElementById('f_' + p.output.replace(/[^\w]/g, '_'));
-      if (field) { field.value = text; field.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-      e.currentTarget.textContent = '넣었습니다 — 검토 후 [모두 저장]';
-      toast('기록 칸에 넣었습니다. 사람이 다듬은 뒤 하단 [모두 저장]으로 확정하세요.');
-    });
-
-    resultBox.querySelector('.ai-copy').addEventListener('click', async (e) => {
-      try {
-        await navigator.clipboard.writeText(resultPre.textContent);
-        e.currentTarget.textContent = '복사됨';
-        setTimeout(() => { e.currentTarget && (e.currentTarget.textContent = '결과 복사'); }, 1500);
-      } catch { toast('직접 복사해주세요 (Ctrl+C)'); }
     });
   }
 

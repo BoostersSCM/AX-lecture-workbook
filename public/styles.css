@@ -681,3 +681,8 @@ body { background: var(--cream); color: var(--navy); }
 
 /* 마이페이지 MCP */
 .mcp-box input[readonly] { font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem; }
+
+/* Claude 실행 안내 스트립 */
+.claude-run-strip { margin: 0.8rem 0.9rem 0.9rem; padding: 0.7rem 0.85rem; background: rgba(17,42,50,0.05); border-left: 3px solid #112a32; display: flex; flex-direction: column; gap: 0.3rem; }
+.claude-run-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; color: var(--ink-soft, #3C4A47); }
+.claude-run-strip code { font-size: 0.8rem; line-height: 1.55; overflow-wrap: anywhere; }

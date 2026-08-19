@@ -2,6 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node build-env.js",
   "outputDirectory": "public",
+  "functions": {
+    "api/mcp.js": { "includeFiles": "public/js/content.js" }
+  },
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
