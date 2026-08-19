@@ -77,7 +77,6 @@ export const SETUP = {
         { key: 'setup.notion', kind: 'check', label: '노션 연결 — 접근 범위에 내가 보는 팀 페이지를 포함' },
         { key: 'setup.slack',  kind: 'check', label: '슬랙 연결' },
         { key: 'setup.asana',  kind: 'check', label: '아사나 연결 — 실습 프로젝트 또는 태스크 접근 권한 포함' },
-        { key: 'setup.drive',  kind: 'check', label: '구글 드라이브 연결' },
         { key: 'setup.verify', kind: 'check', label: '읽기 범위 확인 프롬프트가 통과했다', hint: '아래 프롬프트로 페이지 목록만 확인합니다. 첫날은 아직 아무것도 쓰지 않습니다.' },
       ]
     },
