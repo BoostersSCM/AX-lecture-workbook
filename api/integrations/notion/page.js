@@ -3,6 +3,7 @@ const {
   json,
   idFromInput,
   requireIntegrationAccess,
+  readJsonBody,
   upstreamJson,
 } = require('../../_lib/integration');
 
@@ -29,7 +30,7 @@ function blockText(block) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') return json(res, 405, { ok: false, error: 'GET only' });
+  if (!['GET', 'POST'].includes(req.method)) return json(res, 405, { ok: false, error: 'GET 또는 POST only' });
   if (!await requireIntegrationAccess(req, res)) return;
 
   const token = env('NOTION_TOKEN');
@@ -41,6 +42,36 @@ module.exports = async function handler(req, res) {
   const headers = notionHeaders(token);
 
   try {
+    if (req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const text = String(body.text || '').trim();
+      if (!text) return json(res, 400, { ok: false, error: '추가할 text 필요' });
+
+      const chunks = text.match(/.{1,1800}/gs) || [];
+      const children = chunks.map((chunk) => ({
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ type: 'text', text: { content: chunk } }],
+        },
+      }));
+      const appended = await upstreamJson(
+        NOTION_API + '/blocks/' + encodeURIComponent(pageId) + '/children',
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ children }),
+        }
+      );
+
+      return json(res, 200, {
+        ok: true,
+        source: 'notion',
+        page_id: pageId,
+        appended_blocks: (appended.results || []).length,
+      });
+    }
+
     const page = await upstreamJson(
       NOTION_API + '/pages/' + encodeURIComponent(pageId),
       { headers }
