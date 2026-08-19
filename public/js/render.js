@@ -27,8 +27,26 @@ function renderVisual(v) {
 }
 
 // 프롬프트 카드 (읽기 전용 + 복사)
+function promptGuide(p) {
+  const title = String(p.title || '');
+  if (title.includes('웹훅으로 받기')) {
+    return { run: 'Slack 테스트 채널에 메시지 작성', result: 'Vercel 로그 확인 → 아래 결과 칸에 기록' };
+  }
+  if (title.includes('Asana')) {
+    return { run: 'Claude + 연결된 Asana 도구', result: 'Claude 대화창과 Asana 프로젝트에서 확인' };
+  }
+  if (title.includes('Notion')) {
+    return { run: 'Claude + 연결된 Notion 도구', result: 'Claude 대화창과 Notion 페이지에서 확인' };
+  }
+  if (title.includes('Slack')) {
+    return { run: 'Claude + 연결된 Slack 도구/API', result: 'Claude 대화창과 Slack 채널에서 확인' };
+  }
+  return { run: 'Claude 대화창', result: 'Claude 결과 확인 → 아래 워크북 칸에 기록' };
+}
+
 export function renderPrompt(p) {
   if (!p) return document.createComment('missing prompt');
+  const guide = promptGuide(p);
   const wrap = el(`
     <div class="prompt">
       <div class="prompt-head">
@@ -36,6 +54,10 @@ export function renderPrompt(p) {
         <button class="copy" type="button">복사</button>
       </div>
       ${p.note ? `<div class="prompt-note">${mini(p.note)}</div>` : ''}
+      <div class="prompt-guide" aria-label="프롬프트 실행 안내">
+        <div><span>실행 위치</span><strong>${esc(guide.run)}</strong></div>
+        <div><span>결과 확인</span><strong>${esc(guide.result)}</strong></div>
+      </div>
       <pre></pre>
     </div>`);
   wrap.querySelector('pre').textContent = p.body;

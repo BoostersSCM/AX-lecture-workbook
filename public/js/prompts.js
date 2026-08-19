@@ -23,7 +23,7 @@ const GROUPS = [
     <div class="page-head">
       <div class="eyebrow">참고 자료</div>
       <h1>업무 연결 프롬프트 카드</h1>
-      <p class="lede">어디서 읽고, 무엇을 만들고, 어디로 보낼지 분명하게 말하는 문장들입니다. 대괄호 부분만 각자 상황에 맞게 바꾸세요.</p>
+      <p class="lede">이 페이지에서 프롬프트를 복사해 Claude에서 실행하세요. 결과는 Claude 대화창·연결한 업무 도구에서 확인하고, 회차별 워크북 결과 칸에 기록합니다.</p>
     </div>`));
 
   for (const g of GROUPS) {
