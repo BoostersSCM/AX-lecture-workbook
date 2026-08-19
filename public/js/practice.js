@@ -4,6 +4,15 @@ import { callIntegration } from './integrations.js';
 import { el } from './render.js';
 import { esc } from './shell.js';
 import { toast } from './supabase.js';
+import {
+  CLASS_TARGET,
+  classConfigReady,
+  getClassProfile,
+  getClassSession,
+  signInToClass,
+  listTargetSessionPosts,
+  addTargetSessionPost,
+} from './class-supabase.js';
 
 function valueOf(...keys) {
   for (const key of keys) {
@@ -71,17 +80,109 @@ function addNotionReader(panel) {
 }
 
 function addEntriesReader(panel, n, title, prefix) {
+  const prefixes = Array.isArray(prefix) ? prefix : [prefix];
   const card = actionCard(title, '지금까지 이 회차에서 저장한 답변을 Supabase에서 다시 읽습니다.', 'DB에서 불러오기');
   panel.querySelector('.practice-actions').appendChild(card);
   card.querySelector('button').addEventListener('click', async () => {
     try {
       card.querySelector('button').disabled = true;
       const entries = await loadEntries({ fresh: true });
-      const rows = Object.entries(entries).filter(([key, value]) => key.startsWith(prefix) && String(value || '').trim());
+      const rows = Object.entries(entries).filter(([key, value]) => prefixes.some(item => key.startsWith(item)) && String(value || '').trim());
       showOutput(panel, `${n}회차 Supabase 입력`, rows.length ? rows.map(([key, value]) => `${key}\n${value}`).join('\n\n') : '아직 저장된 답변이 없습니다. 아래 워크북 입력칸부터 채워보세요.');
     } catch (error) { showError(panel, error); }
     finally { card.querySelector('button').disabled = false; }
   });
+}
+
+function addClassPostWriter(panel) {
+  const card = el(`
+    <article class="practice-action practice-class-post">
+      <div>
+        <h3>클래스 2회차에 글 남기기</h3>
+        <p>작성한 글을 클래스 플랫폼의 <code>class_posts</code>에 저장합니다. 저장 후 실제 클래스의 2회차 탭에서 확인할 수 있습니다.</p>
+      </div>
+      <div class="class-post-auth"></div>
+      <div class="class-post-list" aria-live="polite"></div>
+    </article>`);
+  panel.querySelector('.practice-actions').appendChild(card);
+
+  const authBox = card.querySelector('.class-post-auth');
+  const listBox = card.querySelector('.class-post-list');
+
+  function renderPosts(posts) {
+    listBox.innerHTML = posts.length
+      ? `<div class="class-post-list-title">2회차에 이미 남긴 글</div>${posts.map(post => `
+          <article class="class-post-item">
+            <div><strong>${esc(post.author?.name || '클래스 참여자')}</strong><span>${esc(new Date(post.created_at).toLocaleString('ko-KR'))}</span></div>
+            <p>${esc(post.body || '')}</p>
+          </article>`).join('')}`
+      : '<p class="class-post-empty">아직 2회차 글이 없습니다. 첫 기록을 남겨보세요.</p>';
+  }
+
+  async function loadPosts() {
+    const { data, error } = await listTargetSessionPosts();
+    if (error) {
+      listBox.innerHTML = '<p class="class-post-empty">클래스 글을 불러오지 못했습니다. 클래스 계정과 참여 권한을 확인해주세요.</p>';
+      return;
+    }
+    renderPosts(data);
+  }
+
+  async function renderAuth() {
+    if (!classConfigReady()) {
+      authBox.innerHTML = '<p class="class-post-empty">클래스 플랫폼 연결값이 아직 설정되지 않았습니다. 강사에게 알려주세요.</p>';
+      return;
+    }
+
+    const session = await getClassSession();
+    if (!session) {
+      authBox.innerHTML = `
+        <p class="class-post-hint">클래스 플랫폼 계정을 한 번 연결하면 이 워크북에서 바로 2회차 글을 저장할 수 있습니다.</p>
+        <button class="practice-button" type="button">클래스 계정 연결</button>`;
+      authBox.querySelector('button').addEventListener('click', async (event) => {
+        event.currentTarget.disabled = true;
+        const { error } = await signInToClass('/session?n=2');
+        if (error) {
+          event.currentTarget.disabled = false;
+          toast(error.message || '클래스 계정 연결에 실패했습니다.', 'error');
+        }
+      });
+      return;
+    }
+
+    const profile = await getClassProfile(session);
+    authBox.innerHTML = `
+      <div class="class-post-user">${esc(profile?.name || session.user.email || '클래스 계정')}으로 연결됨</div>
+      <textarea class="practice-input class-post-input" rows="4" maxlength="2000" placeholder="예: 오늘 회의록에서 근거문장을 남기면 AI 결과를 검수하기 쉬워진다는 걸 확인했습니다."></textarea>
+      <button class="practice-button" type="button">2회차 글 저장</button>
+      <p class="class-post-hint"><a href="${CLASS_TARGET.session2Url}" target="_blank" rel="noopener">클래스 플랫폼의 2회차에서 확인하기 ↗</a></p>`;
+
+    const input = authBox.querySelector('textarea');
+    const button = authBox.querySelector('button');
+    button.addEventListener('click', async () => {
+      const body = input.value.trim();
+      if (!body) {
+        toast('남길 글을 먼저 입력해주세요.', 'error');
+        input.focus();
+        return;
+      }
+      button.disabled = true;
+      button.textContent = '저장 중…';
+      const { error } = await addTargetSessionPost(body);
+      if (error) {
+        toast(error.message || '클래스 글 저장에 실패했습니다. 수강 참여 권한을 확인해주세요.', 'error');
+      } else {
+        input.value = '';
+        toast('클래스 2회차에 글이 저장되었습니다.');
+        await loadPosts();
+      }
+      button.disabled = false;
+      button.textContent = '2회차 글 저장';
+    });
+  }
+
+  renderAuth();
+  loadPosts();
 }
 
 function addAsanaReader(panel) {
@@ -172,6 +273,7 @@ export function renderPracticePanel(n) {
   }
   if (n === 2) {
     const panel = panelShell(n, '내 입력이 DB에 들어갔는지 확인하기', '아래 답변을 입력하면 Supabase에 저장됩니다. 버튼을 눌러 지금 저장된 행을 다시 읽어봅니다.');
+    addClassPostWriter(panel);
     addEntriesReader(panel, n, 'Supabase entries 다시 읽기', 's2.');
     return panel;
   }
@@ -189,7 +291,7 @@ export function renderPracticePanel(n) {
     });
     return panel;
   }
-  const panel = panelShell(n, '내 루틴 결과를 다시 꺼내보기', '마지막 회차에서 적은 자동화 계획과 연결 레시피가 DB에 저장되었는지 확인합니다.');
-  addEntriesReader(panel, n, '개인 루틴 결과 불러오기', 's4.');
+  const panel = panelShell(n, '내 워크북 데이터가 쌓인 모습 확인하기', '1~4회차 동안 입력한 답변을 Supabase에서 다시 읽어보며, 화면의 한 칸이 DB의 한 행으로 남는 흐름을 확인합니다.');
+  addEntriesReader(panel, n, 'Supabase에 쌓인 내 워크북 기록 보기', ['s1.', 's2.', 's3.', 's4.']);
   return panel;
 }

@@ -48,8 +48,11 @@ export function renderPrompt(p) {
   if (!p) return document.createComment('missing prompt');
   const guide = promptGuide(p);
   const personalizeBody = () => {
-    const pageName = String(getValue('s1.page_name') || '').trim();
-    return String(p.body || '').replaceAll('[페이지명]', pageName || '[여기에 Notion 페이지명 입력]');
+    const replacements = {
+      '[페이지명]': String(getValue('s1.page_name') || '').trim() || '[여기에 Notion 페이지명 입력]',
+      '[회의록 원본]': String(getValue('s2.source_urls') || '').trim() || '[여기에 회의록 URL 또는 페이지 입력]',
+    };
+    return Object.entries(replacements).reduce((body, [token, value]) => body.replaceAll(token, value), String(p.body || ''));
   };
   const wrap = el(`
     <div class="prompt">
@@ -68,6 +71,7 @@ export function renderPrompt(p) {
   const refreshPrompt = () => { pre.textContent = personalizeBody(); };
   refreshPrompt();
   document.getElementById('f_s1_page_name')?.addEventListener('input', refreshPrompt);
+  document.getElementById('f_s2_source_urls')?.addEventListener('input', refreshPrompt);
 
   wrap.querySelector('button.copy').addEventListener('click', async (e) => {
     const btn = e.currentTarget;

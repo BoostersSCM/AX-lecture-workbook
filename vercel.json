@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "echo \"window.__ENV__={SUPABASE_URL:'$SUPABASE_URL',SUPABASE_ANON_KEY:'$SUPABASE_ANON_KEY'};\" > public/env.js",
+  "buildCommand": "echo \"window.__ENV__={SUPABASE_URL:'$SUPABASE_URL',SUPABASE_ANON_KEY:'$SUPABASE_ANON_KEY',CLASS_SUPABASE_URL:'$CLASS_SUPABASE_URL',CLASS_SUPABASE_ANON_KEY:'$CLASS_SUPABASE_ANON_KEY',CLASS_PLATFORM_CLASS_ID:'$CLASS_PLATFORM_CLASS_ID',CLASS_PLATFORM_SESSION_2_ID:'$CLASS_PLATFORM_SESSION_2_ID'};\" > public/env.js",
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,

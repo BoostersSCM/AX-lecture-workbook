@@ -436,6 +436,21 @@ body { background: var(--cream); color: var(--navy); }
 .practice-button { border: 1px solid var(--teal-strong); background: var(--teal-strong); color: #fff; font-size: 0.76rem; font-weight: 750; padding: 0.52rem 0.75rem; white-space: nowrap; }
 .practice-button:hover { background: var(--navy); border-color: var(--navy); }
 .practice-button:disabled { opacity: 0.55; cursor: wait; }
+.practice-class-post { grid-template-columns: 1fr; }
+.practice-class-post > div:first-child { min-width: 0; }
+.class-post-auth { display: grid; gap: 0.6rem; }
+.class-post-user { color: var(--teal-strong); font-size: 0.82rem; font-weight: 700; }
+.class-post-hint { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.55; }
+.class-post-hint a { color: var(--teal-strong); }
+.class-post-input { min-height: 5.5rem; }
+.class-post-list { display: grid; gap: 0.55rem; }
+.class-post-list-title { color: var(--muted); font-size: 0.74rem; font-weight: 750; letter-spacing: 0.04em; }
+.class-post-item { padding: 0.7rem 0.8rem; border: 1px solid var(--rule); background: var(--ground); }
+.class-post-item > div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.7rem; }
+.class-post-item strong { font-size: 0.82rem; }
+.class-post-item span { color: var(--muted); font-size: 0.72rem; white-space: nowrap; }
+.class-post-item p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.84rem; line-height: 1.55; white-space: pre-wrap; }
+.class-post-empty { margin: 0; color: var(--muted); font-size: 0.82rem; }
 .practice-input { width: 100%; min-width: 0; padding: 0.6rem 0.7rem; border: 1px solid var(--line-soft); background: #fffdf8; color: var(--ink); font: inherit; font-size: 0.82rem; }
 .practice-create { grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.62fr) auto; }
 .practice-output { margin-top: 0.9rem; padding: 0.95rem 1rem; background: rgba(17,42,50,0.92); color: #f7f3e9; }

@@ -32,7 +32,7 @@ function buildEnv() {
     console.warn(`\n  ⚠️  .env.local 에 ${missing.join(', ')} 이(가) 없습니다.`);
     console.warn('     .env.local.example 를 복사해서 채워주세요.\n');
   }
-  const js = `window.__ENV__={SUPABASE_URL:'${env.SUPABASE_URL || ''}',SUPABASE_ANON_KEY:'${env.SUPABASE_ANON_KEY || ''}'};`;
+  const js = `window.__ENV__={SUPABASE_URL:'${env.SUPABASE_URL || ''}',SUPABASE_ANON_KEY:'${env.SUPABASE_ANON_KEY || ''}',CLASS_SUPABASE_URL:'${env.CLASS_SUPABASE_URL || ''}',CLASS_SUPABASE_ANON_KEY:'${env.CLASS_SUPABASE_ANON_KEY || ''}',CLASS_PLATFORM_CLASS_ID:'${env.CLASS_PLATFORM_CLASS_ID || ''}',CLASS_PLATFORM_SESSION_2_ID:'${env.CLASS_PLATFORM_SESSION_2_ID || ''}'};`;
   fs.writeFileSync(path.join(PUBLIC, 'env.js'), js);
 }
 buildEnv(); // 시작 시 1회 — .env.local을 바꾸면 서버를 재시작하세요

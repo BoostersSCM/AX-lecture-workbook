@@ -159,12 +159,23 @@ http://localhost:3000 — **포트는 3000 고정**입니다 (Supabase 리다이
 
 ### 5. 배포
 
-Vercel 프로젝트에 환경변수 두 개를 등록하고 배포합니다.
+Vercel 프로젝트에 기본 환경변수와 클래스 플랫폼 연동 환경변수를 등록하고 배포합니다.
 
 | 키 | 값 |
 |---|---|
 | `SUPABASE_URL` | `https://xxusvukjjxmcnmbvwybz.supabase.co` |
 | `SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public |
+| `CLASS_SUPABASE_URL` | `https://utoczgjuaiwdattgchcx.supabase.co` |
+| `CLASS_SUPABASE_ANON_KEY` | 클래스 플랫폼 Supabase의 anon public 키 |
+
+2회차의 `class_posts` 글 저장을 사용하려면 클래스 플랫폼 Supabase의 Authentication → URL Configuration → Redirect URLs에 아래 주소도 추가합니다.
+
+```text
+https://ax-lecture-workbook.vercel.app/class-auth-callback.html
+http://localhost:3000/class-auth-callback.html
+```
+
+워크북의 기존 로그인과 클래스 플랫폼 로그인은 서로 다른 Supabase 프로젝트 세션으로 분리됩니다. 수강생은 2회차에서 `클래스 계정 연결` 버튼으로 한 번만 연결하면 됩니다.
 
 ```bash
 vercel deploy --prod

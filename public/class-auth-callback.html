@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>클래스 계정 연결 중… · AX 워크북</title>
+<link rel="stylesheet" href="/styles.css">
+<script src="/env.js"></script>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <h1 id="msg">클래스 계정 연결 중…</h1>
+    <p class="lede" id="sub">잠시만 기다려주세요.</p>
+  </div>
+</div>
+<script type="module">
+  import { classSupabase } from '/js/class-supabase.js';
+
+  const msg = document.getElementById('msg');
+  const sub = document.getElementById('sub');
+  const returnTo = new URLSearchParams(location.search).get('returnTo') || '/session?n=2';
+  const safeReturnTo = returnTo.startsWith('/') ? returnTo : '/session?n=2';
+
+  function fail(text) {
+    msg.textContent = '클래스 계정을 연결하지 못했습니다';
+    sub.textContent = text;
+  }
+
+  if (!classSupabase) {
+    fail('클래스 플랫폼 연결값이 아직 배포되지 않았습니다. 강사에게 알려주세요.');
+  } else {
+    const params = new URLSearchParams(location.hash.slice(1));
+    const error = params.get('error_description') || new URLSearchParams(location.search).get('error_description');
+    const code = new URLSearchParams(location.search).get('code');
+    let result;
+    if (error) result = { error: new Error(decodeURIComponent(error)) };
+    else if (code) result = await classSupabase.auth.exchangeCodeForSession(code);
+    else {
+      result = await classSupabase.auth.setSession({
+        access_token: params.get('access_token') || '',
+        refresh_token: params.get('refresh_token') || '',
+      });
+    }
+    if (result?.error) fail(result.error.message || '로그인 응답을 확인하지 못했습니다.');
+    else location.replace(safeReturnTo);
+  }
+</script>
+</body>
+</html>
