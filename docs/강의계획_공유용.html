@@ -1,4 +1,4 @@
-<title>업무를 연결하는 AI — AX 워크북</title>
+<title>업무를 연결하는 AI</title>
 <style>
   :root {
     --ground: #F1F1EE;
@@ -138,7 +138,7 @@
   }
   .pull strong { font-weight: 750; }
 
-  /* 긁정만보 4단계 */
+  /* 4단계 */
   .steps {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -241,6 +241,27 @@
   li { font-size: 0.92rem; color: var(--ink-soft); }
   li b { color: var(--ink); font-weight: 680; }
 
+  /* 워크북 흐름 다이어그램 */
+  .loop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.7rem;
+    padding: 1.1rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    font-size: 0.9rem;
+  }
+  .loop b {
+    background: var(--accent-soft);
+    color: var(--ink);
+    padding: 0.28rem 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .loop b.hot { background: var(--brass-soft); }
+  .loop i { color: var(--muted); font-style: normal; }
+
   footer {
     border-top: 1px solid var(--rule);
     padding-top: 1.4rem;
@@ -260,58 +281,60 @@
 <div class="wrap">
 
   <header>
-    <div class="eyebrow">부스터스 AX 사내 강의 · 4회 × 90분</div>
+    <div class="eyebrow">부스터스 AX 사내 강의 · 4회 × 90분 · v2</div>
     <h1>업무를 연결하는 AI</h1>
-    <p class="lede">노션·슬랙·아사나·Supabase를 AI에 직접 연결해, 업무 데이터와 반복 작업이 팀의 여러 곳으로 이어지는 4주 과정.
-      전사 크루(비개발) 대상이며, 매 회차 손에 쥐고 나가는 완성물이 하나씩 있습니다.</p>
+    <p class="lede">Notion·Asana·Slack의 실제 값을 가져와 사람이 확인해 고치고, 같은 자리에 다시 저장하는
+      4주 과정. 전사 크루(비개발) 대상이며, 참가자 전용 워크북 웹앱에서 실습이 진행됩니다.</p>
     <div class="facts mono">
       <div>대상 <b>전사 크루 · 비개발</b></div>
       <div>구성 <b>4회 × 90분</b></div>
-      <div>방식 <b>AI 커넥터 · 코드 없음</b></div>
+      <div>방식 <b>워크북 웹앱 · 실제 SaaS 연동</b></div>
       <div>정원 <b>12명 내외 (조교 1명)</b></div>
     </div>
   </header>
 
   <section>
     <h2>이 강의가 푸는 문제</h2>
-    <p>AI 도구는 이미 다들 쓰고 있습니다. 그런데 <b>내 업무에 붙이는 순간</b> 대부분 여기서 멈춥니다.
-      멈추는 이유는 프롬프트를 못 써서가 아니라, <b>AI가 우리 회사 데이터를 못 보기 때문</b>입니다.</p>
-    <p class="dim">지금 대부분은 이렇게 씁니다 — 노션 열기 → 드래그 → 복사 → AI에 붙여넣기 → 결과 복사 → 다시 노션에 붙여넣기.
-      이 방식은 세 군데서 막힙니다. <b>양</b>(회의록 20건은 복붙이 불가능하다), <b>최신성</b>(붙여넣는 순간 이미 과거다),
+    <p>AI 도구는 이미 다들 쓰고 있습니다. 그런데 <b>내 업무에 붙이는 순간</b> 대부분 멈춥니다.
+      멈추는 이유는 프롬프트를 못 써서가 아니라, <b>AI와 업무 도구 사이를 사람이 복붙으로 나르고 있기 때문</b>입니다.</p>
+    <p class="dim">노션 열기 → 드래그 → 복사 → AI → 결과 복사 → 다시 노션.
+      이 방식은 세 군데서 막힙니다. <b>양</b>(수십 건은 복붙이 불가능하다), <b>최신성</b>(붙여넣는 순간 이미 과거다),
       <b>반복 비용</b>(매주 같은 일을 처음부터 한다).</p>
-    <div class="pull">이 강의는 워크북을 <strong>SaaS 편집 작업대</strong>로 사용합니다. 노션·아사나·슬랙의 실제 값을 가져와 사람이 고치고, 변경 전후를 확인한 뒤 같은 항목에 다시 저장하며 Supabase에는 실행 기록을 남깁니다.</div>
+    <div class="pull">이 강의는 나르는 일을 없앱니다. 워크북이 <strong>편집 작업대</strong>가 되어
+      SaaS 원본을 가져오고, 사람이 확인해 고치고, <strong>같은 위치에 다시 저장</strong>합니다.</div>
   </section>
 
   <section>
-    <h2>관통 원리 — 가져오기·다듬기·반영하기·이어쓰기</h2>
-    <p class="dim">4주 내내 반복되는 뼈대는 하나입니다. 버튼을 눌렀을 때 데이터가 어디에서 와서 어디에 다시 저장되는지 직접 확인합니다.</p>
+    <h2>관통 원리 — 네 단계</h2>
+    <p class="dim">4주 내내 반복되는 뼈대는 하나입니다. 매 회차 이 흐름을 한 바퀴씩 돕니다.</p>
     <div class="steps">
       <div class="step">
         <div class="step-n mono">01</div>
         <div class="step-name">가져오기</div>
         <div class="step-en mono">Collect</div>
-        <p>SaaS의 실제 값을 워크북으로 불러온다</p>
+        <p>Notion 페이지·Asana 프로젝트·Slack 채널에서 실제 값을 워크북으로</p>
       </div>
       <div class="step">
         <div class="step-n mono">02</div>
         <div class="step-name">다듬기</div>
         <div class="step-en mono">Structure</div>
-        <p>사람이 기준에 맞게 확인하고 고친다</p>
+        <p>근거·담당자·상태·마감일처럼 사람이 확인하고 고칠 칸을 분명히</p>
       </div>
       <div class="step">
         <div class="step-n mono">03</div>
         <div class="step-name">반영하기</div>
         <div class="step-en mono">Sync</div>
-        <p>고친 값을 같은 SaaS 항목에 저장한다</p>
+        <p>변경 전후를 미리보기로 확인한 뒤 같은 태스크·문단·메시지에 저장</p>
       </div>
       <div class="step">
         <div class="step-n mono">04</div>
         <div class="step-name">이어쓰기</div>
         <div class="step-en mono">Reuse</div>
-        <p>저장 기록을 다음 자동화에 다시 쓴다</p>
+        <p>저장된 기록을 다시 읽어 레시피와 다음 자동화의 재료로</p>
       </div>
     </div>
-    <div class="pull">“연결은 값을 보여주는 데서 끝나지 않습니다. <strong>어디서 가져와 무엇을 고치고, 어느 ID에 다시 저장했는지</strong> 확인해야 완성됩니다.”</div>
+    <div class="pull">“<strong>어디서 가져와, 무엇을 고치고, 어디에 다시 저장할 것인가.</strong>”
+      — 이 한 문장이 4주의 전부입니다.</div>
   </section>
 
   <section>
@@ -322,8 +345,11 @@
         <div class="week-tag mono">1회차</div>
         <div class="week-body">
           <div class="week-title">AI에게 업무 원본을 읽히는 날 <span>· 연결</span></div>
-          <p>강사가 배포한 「AX 실습장」을 각자 복제하고 Notion 앱을 연결합니다. 실제 문단을 워크북으로 가져와 작은 수정을 만든 뒤, 미리보기 후 같은 block ID에 다시 저장합니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> Notion 원본 스냅샷 + 같은 문단의 수정 저장 결과 + 근거 문장</div>
+          <p>내 계정 권한 안에서 AI가 읽을 수 있는 원본을 목록으로 만들고, 실습장(각자 복제한 Notion 템플릿)의
+            문단을 워크북으로 가져와 작은 수정을 <b>같은 문단에</b> 저장합니다. 도입에서 강사가 지난 5월
+            같은 일을 하려고 만들었던 <b>크롬 확장 프로그램 651줄</b>을 보여주고 시작합니다 —
+            “저는 2주 걸렸습니다. 오늘 여러분은 버튼 하나로 합니다.”</p>
+          <div class="deliver"><span class="label mono">완성물</span> 내 권한 안의 원본 목록 + Notion 문단 첫 수정 저장</div>
         </div>
       </article>
 
@@ -331,9 +357,11 @@
         <div class="week-tag mono">2회차</div>
         <div class="week-body">
           <div class="week-title">흩어진 기록에 구조를 더하는 날 <span>· 구조</span></div>
-          <p>각자가 지정한 회의록에서 액션아이템 후보를 뽑아 근거를 검수하고, 최종 표를 워크북 Supabase에 저장합니다. 저장 버튼과 재조회 버튼으로 화면의 입력이 DB 한 행이 되는 과정을 확인합니다.
-            원본이 없을 때만 공용 샘플을 사용합니다. 결과 개수를 맞추기보다 미리보기·근거·저장 위치를 확인합니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 근거가 붙은 최종 액션아이템 표와 Supabase 재조회 기록</div>
+          <p>회의록에서 액션아이템 후보를 규칙 없이 넓게 뽑고(20개+), 규칙 — 근거문장 필수, 논의만 된 건 제외 —
+            을 넣어 다시 뽑아(13~15개) <b>차이를 눈으로 확인</b>합니다. 지어낸 항목을 잡아내는 게 이 회차의
+            전부입니다. 결과는 DB에 명시 저장하고, 학습 기록 한 건을 클래스 플랫폼에 남깁니다 —
+            워크북에서 다른 서비스의 DB에 직접 쓰는 첫 경험입니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 근거가 붙은 액션아이템 표 + 클래스 학습 기록 1건</div>
         </div>
       </article>
 
@@ -341,9 +369,11 @@
         <div class="week-tag mono">3회차</div>
         <div class="week-body">
           <div class="week-title">Asana·Notion·Slack을 실제로 연결하는 날 <span>· 연동</span></div>
-          <p>기존 봇·앱 토큰은 서버에 두고, 각자가 원하는 Asana 프로젝트·Notion 페이지·Slack 채널을 연결합니다.
-            기존 태스크·문단·봇 메시지를 가져와 워크북에서 고친 뒤 같은 ID에 다시 저장하고, Slack 웹훅 수신까지 확인합니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 세 SaaS의 수정 저장 결과 + 연결 레시피 1개</div>
+          <p>봇 토큰은 운영자가 서버에만 두고, 수강생은 대상(프로젝트·페이지·채널)만 지정합니다 —
+            <b>권한은 관리자에게, 대상 지정은 실무자에게</b>라는 구분 자체가 교육 포인트입니다.
+            Asana 태스크와 Notion 문단을 수정 저장하고, Slack은 <b>보내기</b>(작성 → 미리보기 → 전송 →
+            같은 메시지 수정)와 <b>받기</b>(사람이 채널에 쓴 메시지를 수신함으로)를 따로 연습합니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 세 SaaS 수정 저장 영수증 + 내 연결 레시피</div>
         </div>
       </article>
 
@@ -351,9 +381,10 @@
         <div class="week-tag mono">4회차</div>
         <div class="week-body">
           <div class="week-title">내 업무 흐름을 연결하는 날 <span>· 정착</span></div>
-          <p>승인 절차 없이 오늘 바로 쓸 수 있는 개인 루틴 3종(수신함 정리·일일 로그·주간 회고)을 따라 만든 뒤,
-            각자 자기 업무 하나를 가져와 설계서를 채우고 2인 1조로 상호 리뷰합니다. 정착률이 여기서 갈립니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 내 업무 연결 설계서 1장</div>
+          <p>승인 절차 없이 오늘 바로 쓸 수 있는 개인 루틴(수신함 정리·일일 로그·주간 회고)과 파일 정리
+            자동화 규칙을 만든 뒤, 각자 자기 업무 하나를 <b>연결 설계서</b>로 완성하고 2인 1조(타 팀)로
+            상호 리뷰합니다. 3주간의 기록 전체를 파일로 내보내 다음 실행의 재료로 가져갑니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 내 업무 연결 설계서 + 1~4회차 기록 내보내기</div>
         </div>
       </article>
 
@@ -361,24 +392,50 @@
   </section>
 
   <section>
+    <h2>실습 도구 — 참가자 전용 워크북</h2>
+    <p class="dim">실습은 전부 참가자 전용 웹앱에서 진행됩니다. 회사 구글 계정(@boosters.kr)만 로그인할 수 있습니다.</p>
+    <div class="loop mono">
+      <b>SaaS 원본</b><i>→</i><b class="hot">워크북에서 수정</b><i>→</i><b class="hot">미리보기 · 확인</b><i>→</i><b>같은 SaaS에 저장</b><i>→</i><b>기록 재조회</b>
+    </div>
+    <div class="cols">
+      <div>
+        <h3>참가자에게</h3>
+        <ul>
+          <li>회차별 실습·설계서가 한 곳에, 진행률이 눈에 보임</li>
+          <li>입력은 <b>본인과 강사만</b> 열람 — 동료에게 공개되지 않음</li>
+          <li>외부 도구에 쓰는 동작은 <b>미리보기 → 한 번 더 확인</b>을 거쳐야 실행</li>
+          <li>저장은 하단 <b>[모두 저장]</b> 버튼으로 확정 — 저장 전 초안도 유실되지 않음</li>
+        </ul>
+      </div>
+      <div>
+        <h3>운영·보안</h3>
+        <ul>
+          <li>Asana·Notion·Slack 봇 토큰은 <b>서버에만</b> — 수강생 화면에 노출되지 않음</li>
+          <li>수정 저장 대상은 <b>복제본·샘플 태스크·봇 메시지</b>로 한정</li>
+          <li>로그인 6시간 후 자동 로그아웃, 도메인 제한 4중</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
     <h2>왜 ‘노말한 방법’인가</h2>
-    <p class="dim">같은 업무를 SCM Portal에서 시스템으로 구현해본 경험이 있습니다. 1회차 도입에서 이 대조를 그대로 보여주고 시작합니다.</p>
+    <p class="dim">같은 업무를 코드로 구현해본 강사의 실사례를 대조하며 시작합니다.</p>
     <div class="tablewrap">
       <table>
         <thead>
-          <tr><th>업무</th><th>SCM Portal에서 한 방식</th><th>이 강의에서 할 방식</th><th>회차</th></tr>
+          <tr><th>업무</th><th>코드로 한 방식</th><th>이 강의 방식</th><th>회차</th></tr>
         </thead>
         <tbody>
-          <tr><td>업무 원본 요약</td><td class="was">문서 수집 도구 + API 연동</td><td class="now">노션·슬랙 원본 → 근거 포함 업무 맥락 요약</td><td class="mono">1</td></tr>
-          <tr><td>부자재 이력 관리</td><td class="was">Next.js + DB 테이블 + 노션 자동 생성 API</td><td class="now">노션 DB에 AI가 직접 등재</td><td class="mono">2</td></tr>
-          <tr><td>사내봇 연결</td><td class="was">서버 API + 권한 확인 + 목적지별 변환</td><td class="now">Asana 프로젝트·Notion 페이지·Slack 채널 연결</td><td class="mono">3</td></tr>
-          <tr><td>메일 첨부 처리</td><td class="was">Gmail 애드온 개발</td><td class="now">수신함 자동 분류 루틴</td><td class="mono">4</td></tr>
+          <tr><td>행사 퀴즈 콘텐츠</td><td class="was">크롬 확장 프로그램 651줄 + Sheets API 연동</td><td class="now">워크북 버튼으로 Notion 문단 가져오기</td><td class="mono">1</td></tr>
+          <tr><td>부자재 이력 관리</td><td class="was">Next.js + DB 테이블 + 노션 자동 생성 API</td><td class="now">워크북에서 수정 → 같은 SaaS에 저장</td><td class="mono">3</td></tr>
+          <tr><td>경영 대시보드</td><td class="was">집계 쿼리 + 캐시 DB + 차트 화면</td><td class="now">기록을 다시 읽어 리포트·레시피로</td><td class="mono">4</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="pull">시스템 개발은 규모·신뢰성·권한 통제가 필요할 때 합니다. 대신 6개월이 듭니다.
-      이 강의 방식은 <strong>90분에 만들고, 안 맞으면 버립니다.</strong> 판단 기준 한 줄 —
-      <strong>매일 100명이 쓰면 시스템, 매주 나 혼자 쓰면 커넥터.</strong></div>
+    <div class="pull">시스템 개발은 규모·신뢰성·권한 통제가 필요할 때 합니다. 대신 몇 달이 듭니다.
+      이 강의 방식은 <strong>90분에 연결하고, 안 맞으면 버립니다.</strong> 판단 기준 한 줄 —
+      <strong>매일 100명이 쓰면 시스템, 매주 나 혼자 쓰면 연결.</strong></div>
   </section>
 
   <section>
@@ -387,11 +444,11 @@
       <table>
         <thead><tr><th>시간</th><th>블록</th><th>내용</th></tr></thead>
         <tbody>
-          <tr><td class="time mono">0–10</td><td>체크인</td><td>지난주 적용 사례 1~2명 공유</td></tr>
-          <tr><td class="time mono">10–25</td><td>개념</td><td>슬라이드 최소. 화이트보드에 가져오기→다듬기→반영하기→이어쓰기 그리기</td></tr>
-          <tr><td class="time mono">25–40</td><td>라이브 데모</td><td>강사가 실제로 실행 — <b>실패도 그대로 보여준다</b></td></tr>
-          <tr><td class="time mono">40–75</td><td>실습</td><td>각자 실행. 강사 + 조교가 순회</td></tr>
-          <tr><td class="time mono">75–90</td><td>공유·정리</td><td>완성물 2~3개 화면 공유, 숙제 안내</td></tr>
+          <tr><td class="time mono">0–10</td><td>체크인</td><td>지난주 적용 사례 · 숙제에서 막힌 지점 공유</td></tr>
+          <tr><td class="time mono">10–25</td><td>개념</td><td>화이트보드에 가져오기 → 다듬기 → 반영하기 → 이어쓰기</td></tr>
+          <tr><td class="time mono">25–40</td><td>라이브 데모</td><td>강사가 워크북에서 실제 실행 — <b>실패도 그대로 보여준다</b></td></tr>
+          <tr><td class="time mono">40–75</td><td>실습</td><td>각자 워크북 진행. 강사 + 조교가 순회</td></tr>
+          <tr><td class="time mono">75–90</td><td>공유·정리</td><td>완성물 공유 + <b>[모두 저장] 전원 확인</b> + 숙제</td></tr>
         </tbody>
       </table>
     </div>
@@ -400,18 +457,16 @@
         <h3>운영 원칙</h3>
         <ul>
           <li>실습이 전체의 <b>40% 미만</b>이면 그 회차는 실패다. 개념 설명이 길어지면 잘라낸다.</li>
-          <li>데모에서 AI가 엉뚱한 답을 내면 고치지 말고 <b>그대로 보여준 뒤</b> 같이 진단한다. 가장 기억에 남는다.</li>
-          <li>매 회차 슬랙에 완성물 스레드를 열고 각자 결과를 올린다. <b>제출률이 곧 정착률</b>이다.</li>
-          <li>실습 소재는 <b>전 부서 공용</b>이다. 특정 팀 DB(품번·협력사 같은 칸)를 쓰면 다른 본부 크루는 출발선에 서지도 못한다. 자기 팀 데이터로 해보는 건 숙제로 넘긴다.</li>
+          <li>데모에서 연동이 엉뚱하게 나오면 고치지 말고 <b>그대로 보여준 뒤</b> 같이 진단한다.</li>
+          <li>회차 종료 전 <b>저장 바가 비었는지</b> 전원 확인한다 — 완성물이 곧 기록이다.</li>
         </ul>
       </div>
       <div>
-        <h3>가장 큰 리스크 — 커넥터가 안 붙는 것</h3>
+        <h3>가장 큰 리스크 — 초기 연결</h3>
         <ul>
-          <li>노션 커넥터 관리자 승인은 <b>강의 1주 전</b>에 일괄 요청한다.</li>
-          <li>슬랙 앱 설치 권한이 없어도 3회차는 <b>샘플 이벤트 JSON 검수</b>로 완주 가능하게 설계했다.</li>
-          <li>당일 연결 실패자에겐 <b>플랜 B</b> — Asana CSV·Notion 파일·Slack 샘플 JSON으로 동일 실습.</li>
-          <li>1·2회차는 <b>워크북 Supabase</b>에 저장하고, 3회차는 각자 지정한 프로젝트·페이지·채널에서 미리보기와 확인 후 실행한다.</li>
+          <li>연결 준비 체크리스트를 <b>강의 3일 전</b> 배포하고, 미완료자는 강사 화면에서 확인해 개별 지원.</li>
+          <li>실습장 템플릿·샘플 Asana 프로젝트·Slack 테스트 채널은 강사가 사전 준비.</li>
+          <li>당일 연결 실패자에겐 샘플 소재로 동일 실습이 가능하게 설계.</li>
         </ul>
       </div>
     </div>
@@ -421,13 +476,13 @@
     <h2>안전 규칙</h2>
     <p class="dim">매 회차 첫 화면에 이 네 줄을 그대로 띄웁니다.</p>
     <div class="rules">
-      <div class="rule-item"><span class="n mono">01</span><span class="t"><b>긁지 않는다</b> — 개인 연락처, 급여·평가, 계약 단가, 미공개 재무. 내가 볼 수 있어도 AI에 넘기지 않는다.</span></div>
-      <div class="rule-item"><span class="n mono">02</span><span class="t"><b>쓰기 전에 본다</b> — AI가 노션·슬랙에 무언가 쓰기 전에 반드시 초안을 눈으로 확인한다.</span></div>
-      <div class="rule-item"><span class="n mono">03</span><span class="t"><b>채널 발송은 사람이 누른다</b> — 전사 채널·외부 메일 자동 발송은 이 강의 범위 밖이다.</span></div>
-      <div class="rule-item"><span class="n mono">04</span><span class="t"><b>저장 위치를 구분한다</b> — 1·2회차는 워크북에 저장하고, 3회차 외부 전송은 지정한 대상에 확인 후 실행한다.</span></div>
+      <div class="rule-item"><span class="n mono">01</span><span class="t"><b>긁지 않는다</b> — 개인 연락처, 급여·평가, 계약 단가, 미공개 재무. 내가 볼 수 있어도 다루지 않는다.</span></div>
+      <div class="rule-item"><span class="n mono">02</span><span class="t"><b>쓰기 전에 본다</b> — 모든 SaaS 반영은 미리보기 → 한 번 더 확인 → 실행. 워크북이 이 순서를 강제한다.</span></div>
+      <div class="rule-item"><span class="n mono">03</span><span class="t"><b>채널 발송은 사람이 누른다</b> — 자동 발송은 범위 밖. Slack 실습도 봇 메시지·테스트 채널만.</span></div>
+      <div class="rule-item"><span class="n mono">04</span><span class="t"><b>실습은 복제본에서</b> — 수정 저장 대상은 각자 복제한 실습장·샘플 태스크·봇 메시지뿐이다.</span></div>
     </div>
-    <p class="small dim">덧붙여 매번 짚을 것 — 커넥터의 접근 범위는 <b>본인 계정 권한 범위</b>까지입니다.
-      내가 못 보는 페이지는 AI도 못 봅니다. 이건 제약이자 안심 포인트입니다.</p>
+    <p class="small dim">덧붙여 매번 짚을 것 — 연결의 접근 범위는 <b>본인 계정 권한 범위</b>까지입니다.
+      내가 못 보는 페이지는 AI도 못 봅니다. 제약이자 안심 포인트입니다.</p>
   </section>
 
   <section>
@@ -436,27 +491,26 @@
       <div>
         <h3>정착 장치</h3>
         <ul>
-          <li><b>완성물 제출</b> — 회차별 결과를 슬랙 스레드에 올린다.</li>
-          <li><b>4주 뒤 TOP3</b> — 실제로 굴러가는 자동화 3개를 전사 공지에 발행한다. 다음 기수 모집이 여기서 자동으로 된다.</li>
-          <li><b>케이스 축적</b> — 클리닉 설계서를 노션 한 곳에 모아 다음 기수 실습 소재로 재사용한다.</li>
+          <li><b>기록이 곧 제출</b> — 연동 영수증·레시피·설계서가 워크북에 그대로 남는다.</li>
+          <li><b>기록 내보내기</b> — 4주치 기록을 파일 한 장으로, 다음 실행의 재료로.</li>
+          <li><b>4주 뒤 TOP3</b> — 실제로 굴러가는 연결 3개를 전사 공지로 발행. 다음 기수 모집이 여기서 된다.</li>
         </ul>
       </div>
       <div>
         <h3>강사 준비물</h3>
         <ul>
-          <li>수강생이 연결할 Notion·Asana·Slack 대상과 권한 안내</li>
-          <li><b>공용 샘플 회의록 3건</b> — 연결 실패자 또는 공통 데모용 선택 자료</li>
-          <li>1회차 읽기 실습용 원본 사본 (민감정보 제거)</li>
-          <li>슬랙 실습 채널 개설</li>
-          <li>조교 1명 — 참가자 12명 이상이면 필수</li>
+          <li>워크북 배포(Vercel + Supabase) + 서버 연결값 등록</li>
+          <li>「AX 실습장」 Notion 템플릿 — 수강생 각자 복제</li>
+          <li>Asana 샘플 프로젝트(수정용 태스크 5개+) · Slack 테스트 채널(봇 초대)</li>
+          <li>클래스 플랫폼 연동 승인(2회차) · 조교 1명</li>
         </ul>
       </div>
     </div>
   </section>
 
   <footer>
-    <div>부속 문서 — 연결 준비 체크리스트 · 업무 연결 프롬프트 카드 · 내 업무 연결 설계서</div>
-    <div class="mono">v1 · 2026-08-18</div>
+    <div>부속 문서 — 커리큘럼 마스터 · 회차별 진행안 · 연결 준비 체크리스트 · 샘플 회의록</div>
+    <div class="mono">v2 · 2026-08-19</div>
   </footer>
 
 </div>
