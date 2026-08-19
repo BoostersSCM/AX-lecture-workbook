@@ -5,7 +5,7 @@ import { loadEntries, loadSlackEvents, progressOf, mountStatus, setManualSave, m
 import { SESSIONS, requiredKeys } from './content.js';
 import { el, progressBar, renderBlock } from './render.js';
 import { renderPanelById, renderSlackSendLab } from './practice.js';
-import { isSessionOpen, openSessionsFor, lockedNotice } from './course.js';
+import { isSessionOpen, openSessionsFor, lockedNotice, scheduledDateFor } from './course.js';
 
 const app = document.getElementById('app');
 
@@ -81,7 +81,7 @@ function renderSlackInbox() {
 
   // 회차 개방 게이트 — 강사가 연 회차만 수강생에게 열립니다 (강사는 항상 통과)
   if (!(await isSessionOpen(n, me))) {
-    app.appendChild(lockedNotice(n, await openSessionsFor(me)));
+    app.appendChild(lockedNotice(n, await openSessionsFor(me), await scheduledDateFor(me, n)));
     return;
   }
 

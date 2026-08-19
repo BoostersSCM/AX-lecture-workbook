@@ -5,7 +5,7 @@ import { supabase, toast } from './supabase.js';
 import { loadEntriesOf, progressOf } from './store.js';
 import { SESSIONS, SETUP, CLINIC, requiredKeys } from './content.js';
 import { el } from './render.js';
-import { getOpenMap, setOpenSessionsFor, settingsMissing } from './course.js';
+import { getOpenMap, getScheduleMap, setOpenSessionsFor, setSessionDate, settingsMissing, openEpochOf, formatKstOpenFrom } from './course.js';
 
 const app = document.getElementById('app');
 
@@ -33,11 +33,14 @@ async function renderSessionGate(cohorts) {
     return section;
   }
 
+  const scheduleMap = await getScheduleMap({ fresh: true });
+
   // 관리 대상 기수 = 참가자가 실제로 있는 기수 ∪ 설정에 있는 기수 ∪ 최소 1기
-  const known = new Set([1, ...cohorts, ...Object.keys(map || {}).map(Number)].filter(Number.isInteger));
+  const known = new Set([1, ...cohorts, ...Object.keys(map || {}).map(Number), ...Object.keys(scheduleMap || {}).map(Number)].filter(Number.isInteger));
   const cohortList = [...known].sort((a, b) => a - b);
   let selected = cohortList[0];
   let current = new Set((map?.[String(selected)]) || [1]);
+  let curDates = { ...(scheduleMap?.[String(selected)] || {}) };
 
   function paintCohorts() {
     cohortBox.innerHTML = '';
@@ -46,7 +49,9 @@ async function renderSessionGate(cohorts) {
       chip.addEventListener('click', async () => {
         selected = c;
         const freshMap = await getOpenMap();
+        const freshDates = await getScheduleMap();
         current = new Set((freshMap?.[String(c)]) || [1]);
+        curDates = { ...(freshDates?.[String(c)] || {}) };
         paintCohorts(); paintToggles();
       });
       cohortBox.appendChild(chip);
@@ -60,37 +65,73 @@ async function renderSessionGate(cohorts) {
       cohortList.push(next);
       selected = next;
       current = new Set([1]);
+      curDates = {};
       paintCohorts(); paintToggles();
       toast(`${next}기를 만들고 1회차를 열었습니다.`);
     });
     cohortBox.appendChild(add);
   }
 
+  // 상태 = 수동 개방 ∪ 예약 도달. 잠그려면 토글을 끄고 날짜도 비웁니다.
+  function stateOf(n) {
+    const manual = current.has(n);
+    const dateStr = curDates[String(n)] || '';
+    const epoch = openEpochOf(dateStr);
+    const schedReached = epoch !== null && Date.now() >= epoch;
+    if (manual) return { open: true, label: '열림 · 수동' };
+    if (schedReached) return { open: true, label: '열림 · 예약 도달 — 잠그려면 날짜를 지우세요' };
+    if (epoch !== null) return { open: false, label: `잠김 · ${formatKstOpenFrom(dateStr)} 자동 개방` };
+    return { open: false, label: '잠김' };
+  }
+
   function paintToggles() {
     togglesBox.innerHTML = '';
     for (const s of SESSIONS) {
-      const on = current.has(s.n);
-      const btn = el(`
-        <button type="button" class="gate-toggle${on ? ' open' : ''}">
-          <span class="gate-state">${on ? '열림' : '잠김'}</span>
-          <b>${s.n}회차</b>
-          <small>${esc(s.title)}</small>
-        </button>`);
-      btn.addEventListener('click', async () => {
+      const st = stateOf(s.n);
+      const dateStr = curDates[String(s.n)] || '';
+      const item = el(`
+        <div class="gate-item${st.open ? ' open' : ''}">
+          <button type="button" class="gate-toggle${st.open ? ' open' : ''}">
+            <span class="gate-state">${esc(st.label)}</span>
+            <b>${s.n}회차</b>
+            <small>${esc(s.title)}</small>
+          </button>
+          <label class="gate-date">
+            <span>강의일(KST)</span>
+            <input type="date" value="${esc(dateStr)}">
+            <em>${dateStr ? esc(formatKstOpenFrom(dateStr)) + '부터 예습 개방' : '전날 0시에 자동 개방됩니다'}</em>
+          </label>
+        </div>`);
+
+      item.querySelector('.gate-toggle').addEventListener('click', async (e) => {
         const next = new Set(current);
         if (next.has(s.n)) next.delete(s.n); else next.add(s.n);
-        btn.disabled = true;
+        e.currentTarget.disabled = true;
         const { error } = await setOpenSessionsFor(selected, [...next]);
-        btn.disabled = false;
+        e.currentTarget.disabled = false;
         if (error) { toast('개방 상태 저장에 실패했습니다: ' + error.message, 'error'); return; }
         current = next;
         paintToggles();
-        toast(`${selected}기 ${s.n}회차를 ${next.has(s.n) ? '열었습니다' : '잠갔습니다'}.`);
+        toast(`${selected}기 ${s.n}회차 수동 개방을 ${next.has(s.n) ? '켰습니다' : '껐습니다'}.`);
       });
-      togglesBox.appendChild(btn);
+
+      item.querySelector('input[type="date"]').addEventListener('change', async (e) => {
+        const value = e.currentTarget.value; // '' = 삭제
+        e.currentTarget.disabled = true;
+        const { error } = await setSessionDate(selected, s.n, value);
+        e.currentTarget.disabled = false;
+        if (error) { toast('강의일 저장에 실패했습니다: ' + error.message, 'error'); return; }
+        if (value) curDates[String(s.n)] = value; else delete curDates[String(s.n)];
+        paintToggles();
+        toast(value
+          ? `${selected}기 ${s.n}회차 강의일을 등록했습니다 — ${formatKstOpenFrom(value)}부터 자동 개방`
+          : `${selected}기 ${s.n}회차 강의일을 지웠습니다.`);
+      });
+
+      togglesBox.appendChild(item);
     }
-    const opened = [...current].sort().map(n => n + '회차').join(' · ') || '없음';
-    note.textContent = `${selected}기에 지금 열려 있는 회차 — ${opened}`;
+    const effective = SESSIONS.map(s => s.n).filter(n => stateOf(n).open);
+    note.textContent = `${selected}기에 지금 열려 있는 회차 — ${effective.map(n => n + '회차').join(' · ') || '없음'}`;
   }
 
   paintCohorts();

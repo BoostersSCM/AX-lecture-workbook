@@ -654,3 +654,13 @@ body { background: var(--cream); color: var(--navy); }
 .my-group summary b { flex: 1; }
 .my-group summary a { font-size: 0.82rem; white-space: nowrap; }
 .my-group .my-items { padding: 0 1rem 0.9rem; }
+
+/* ── 개방 관리: 강의일 예약 ───────────────────────────────── */
+.gate-item { display: flex; flex-direction: column; border: 1px solid var(--line-soft, #D3D6D0); background: rgba(17,42,50,0.04); }
+.gate-item.open { background: #eaf4ee; border-color: #bfe0cc; }
+.gate-item .gate-toggle { border: none; background: transparent; }
+.gate-date { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.55rem 0.85rem 0.7rem; border-top: 1px dashed var(--line-soft, #D3D6D0); }
+.gate-date span { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.07em; color: var(--ink-soft, #3C4A47); }
+.gate-date input[type="date"] { font: inherit; font-size: 0.85rem; padding: 0.28rem 0.4rem; border: 1px solid var(--line-soft, #D3D6D0); background: var(--paper, #FCFCFA); max-width: 11rem; }
+.gate-date em { font-style: normal; font-size: 0.74rem; color: var(--ink-soft, #3C4A47); }
+.locked-notice .locked-schedule { font-size: 0.95rem; background: rgba(240,179,109,0.14); display: inline-block; padding: 0.5rem 0.9rem; }

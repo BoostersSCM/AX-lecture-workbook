@@ -4,7 +4,7 @@ import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus, getValue, setManualSave, mountSaveBar, onSaved } from './store.js';
 import { CLINIC, requiredKeys } from './content.js';
 import { el, progressBar, renderField } from './render.js';
-import { isSessionOpen, openSessionsFor, lockedNotice } from './course.js';
+import { isSessionOpen, openSessionsFor, lockedNotice, scheduledDateFor } from './course.js';
 
 const app = document.getElementById('app');
 
@@ -20,7 +20,7 @@ const app = document.getElementById('app');
 
   // 설계서는 4회차와 함께 열립니다
   if (!(await isSessionOpen(4, me))) {
-    app.appendChild(lockedNotice(4, await openSessionsFor(me)));
+    app.appendChild(lockedNotice(4, await openSessionsFor(me), await scheduledDateFor(me, 4)));
     return;
   }
 

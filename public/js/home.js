@@ -4,11 +4,11 @@ import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus } from './store.js';
 import { COURSE, SESSIONS, SETUP, CLINIC, AX_FLOW, INTEGRATIONS, DATA_MODEL, requiredKeys } from './content.js';
 import { el, frag } from './render.js';
-import { openSessionsFor } from './course.js';
+import { openSessionsFor, getScheduleMap, formatKstOpenFrom } from './course.js';
 
 const app = document.getElementById('app');
 
-function sessionCard(session, progress, locked) {
+function sessionCard(session, progress, locked, openFrom) {
   const pct = progress.total ? progress.pct : 0;
   // 잠긴 회차: 링크가 아닌 카드로 — 강의 진도에 맞춰 강사가 엽니다
   const tagOpen  = locked ? '<div' : `<a href="/session?n=${session.n}"`;
@@ -21,7 +21,7 @@ function sessionCard(session, progress, locked) {
         <span class="journey-arrow" aria-hidden="true">${locked ? '🔒' : '↗'}</span>
       </div>
       <h3>${esc(session.title)}</h3>
-      <p>${locked ? '강사가 열면 시작할 수 있습니다. 수업에서 만나요.' : esc(session.goal)}</p>
+      <p>${locked ? (openFrom ? `${esc(openFrom)}(한국 시간)부터 자동으로 열립니다.` : '강사가 열면 시작할 수 있습니다. 수업에서 만나요.') : esc(session.goal)}</p>
       <div class="journey-card-foot">
         <span>${locked ? '잠김' : `${progress.done}/${progress.total} 완료`}</span>
         <span class="mini-progress"><i style="width:${locked ? 0 : pct}%"></i></span>
@@ -40,6 +40,7 @@ function sessionCard(session, progress, locked) {
   // 내 기수에 열린 회차 확인 — 강사는 전부 열림
   const open = await openSessionsFor(me);
   const lockedSet = new Set(open === null ? [] : SESSIONS.map(x => x.n).filter(n => !open.includes(n)));
+  const myDates = (await getScheduleMap())[String(me.cohort)] || {};
   const all = progressOf(requiredKeys('all'), entries);
   const setupP = progressOf(requiredKeys('setup'), entries);
   const clinicP = progressOf(requiredKeys('clinic'), entries);
@@ -107,7 +108,7 @@ function sessionCard(session, progress, locked) {
       <div class="quick-links"><a href="/setup"><span class="quick-index">00</span><div><b>연결 준비</b><small>${setupP.done}/${setupP.total} 완료 · 읽기 범위 확인</small></div><span>→</span></a><a href="/clinic"><span class="quick-index">FIN</span><div><b>내 업무 연결 설계서</b><small>${clinicP.done}/${clinicP.total} 완료 · 4회차 산출물</small></div><span>→</span></a></div>
     </section>
 
-    <section class="sessions-section"><div class="section-heading"><div><span class="section-kicker">WORKBOOK PAGES</span><h2>회차별 실습</h2></div><a class="section-link" href="/prompts">프롬프트 카드 열기 ↗</a></div><div class="journey-grid">${SESSIONS.map(session => sessionCard(session, progressOf(requiredKeys(session.n), entries), lockedSet.has(session.n))).join('')}</div></section>`));
+    <section class="sessions-section"><div class="section-heading"><div><span class="section-kicker">WORKBOOK PAGES</span><h2>회차별 실습</h2></div><a class="section-link" href="/prompts">프롬프트 카드 열기 ↗</a></div><div class="journey-grid">${SESSIONS.map(session => sessionCard(session, progressOf(requiredKeys(session.n), entries), lockedSet.has(session.n), lockedSet.has(session.n) ? formatKstOpenFrom(myDates[String(session.n)]) : '')).join('')}</div></section>`));
 
   const flowLink = document.getElementById('flow-link');
   flowLink?.addEventListener('click', (event) => {
