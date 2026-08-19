@@ -66,10 +66,6 @@ module.exports = async function handler(req, res) {
   }
 
   const channelId = String(event.channel || '');
-  const targetChannelId = env('SLACK_EVENT_CHANNEL_ID');
-  if (targetChannelId && targetChannelId !== channelId) {
-    return json(res, 200, { ok: true, ignored: true, reason: 'channel_filtered' });
-  }
 
   const record = {
     event_id: String(payload.event_id || ''),
