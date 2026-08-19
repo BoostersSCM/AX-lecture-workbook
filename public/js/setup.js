@@ -3,7 +3,7 @@ import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus, saveValue } from './store.js';
 import { toast } from './supabase.js';
-import { SETUP, PROMPTS, requiredKeys } from './content.js';
+import { SETUP, PROMPT_HELP, PROMPTS, requiredKeys } from './content.js';
 import { el, progressBar, renderField, renderPrompt } from './render.js';
 
 const app = document.getElementById('app');
@@ -43,7 +43,7 @@ const app = document.getElementById('app');
           title: '연결 확인 프롬프트',
           note: '이걸 그대로 물어보세요. 페이지 제목이 나오면 성공입니다.',
           body: SETUP.verifyPrompt,
-        }));
+        }, PROMPT_HELP.setup));
       }
     }
 

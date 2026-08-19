@@ -1,6 +1,6 @@
 // js/render.js — 문항을 화면으로 그리고 입력을 저장에 연결
 import { getValue, saveValue } from './store.js';
-import { PROMPTS, VISUALS } from './content.js';
+import { PROMPTS, PROMPT_HELP, VISUALS } from './content.js';
 import { esc, mini } from './shell.js';
 import { toast } from './supabase.js';
 
@@ -11,7 +11,7 @@ export function renderBlock(b) {
     case 'note':   return el(`<div class="note">${mini(b.text)}</div>`);
     case 'visual': return renderVisual(VISUALS[b.id]);
     case 'link':   return el(`<p style="margin:1.2rem 0"><a class="btn-link" href="${b.href}">${esc(b.text)}</a></p>`);
-    case 'prompt': return renderPrompt(PROMPTS[b.id]);
+    case 'prompt': return renderPrompt(PROMPTS[b.id], PROMPT_HELP[b.id]);
     case 'field':  return renderField(b);
     default:       return document.createComment('unknown block');
   }
@@ -44,9 +44,50 @@ function promptGuide(p) {
   return { run: 'Claude 대화창', result: 'Claude 결과 확인 → 아래 워크북 칸에 기록' };
 }
 
-export function renderPrompt(p) {
+function openPromptHelp(help, title) {
+  if (!help) return;
+  const modal = el(`
+    <div class="prompt-help-modal" role="dialog" aria-modal="true" aria-labelledby="prompt-help-title">
+      <div class="prompt-help-backdrop" data-close-help></div>
+      <section class="prompt-help-box">
+        <div class="prompt-help-head">
+          <div><span class="eyebrow">BEGINNER GUIDE</span><h2 id="prompt-help-title"></h2></div>
+          <button class="prompt-help-close" type="button" aria-label="도움말 닫기">×</button>
+        </div>
+        <p class="prompt-help-summary"></p>
+        <div class="prompt-help-section prompt-help-terms"><h3>용어를 풀어보면</h3><dl></dl></div>
+        <div class="prompt-help-section prompt-help-steps"><h3>실제로 하는 순서</h3><ol></ol></div>
+      </section>
+    </div>`);
+  modal.querySelector('#prompt-help-title').textContent = title || '프롬프트 도움말';
+  modal.querySelector('.prompt-help-summary').textContent = help.summary || '';
+  const terms = modal.querySelector('.prompt-help-terms dl');
+  terms.innerHTML = (help.terms || []).map(([term, description]) => `<dt>${esc(term)}</dt><dd>${esc(description)}</dd>`).join('');
+  modal.querySelector('.prompt-help-terms').hidden = !help.terms?.length;
+  const steps = modal.querySelector('.prompt-help-steps ol');
+  steps.innerHTML = (help.steps || []).map(step => `<li>${esc(step)}</li>`).join('');
+  modal.querySelector('.prompt-help-steps').hidden = !help.steps?.length;
+
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    modal.remove();
+  };
+  const onKey = (event) => { if (event.key === 'Escape') close(); };
+  modal.querySelector('.prompt-help-close').addEventListener('click', close);
+  modal.querySelector('[data-close-help]').addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(modal);
+  modal.querySelector('.prompt-help-close').focus();
+}
+
+export function renderPrompt(p, help = null) {
   if (!p) return document.createComment('missing prompt');
   const guide = promptGuide(p);
+  const helpInfo = help || {
+    summary: '이 프롬프트는 원본에서 필요한 정보를 읽고, 정해진 형식으로 결과를 만드는 요청입니다.',
+    terms: [['원본', 'AI가 읽을 실제 자료입니다.'], ['범위', '어디까지 읽을지 정하는 조건입니다.']],
+    steps: ['대괄호 안의 값을 내 업무에 맞게 바꿉니다.', '프롬프트를 복사해 Claude 대화창에 붙여넣습니다.', '결과를 확인하고 워크북 입력란에 기록합니다.'],
+  };
   const personalizeBody = () => {
     const replacements = {
       '[페이지명]': String(getValue('s1.page_name') || '').trim() || '[여기에 Notion 페이지명 입력]',
@@ -59,14 +100,17 @@ export function renderPrompt(p) {
       <div class="prompt-head">
         <span class="prompt-title">${esc(p.title)}</span>
         <button class="copy" type="button">복사</button>
+        <button class="prompt-help-button" type="button" aria-label="${esc(p.title)} 초보자 도움말">?</button>
       </div>
       ${p.note ? `<div class="prompt-note">${mini(p.note)}</div>` : ''}
       <div class="prompt-guide" aria-label="프롬프트 실행 안내">
         <div><span>실행 위치</span><strong>${esc(guide.run)}</strong></div>
         <div><span>결과 확인</span><strong>${esc(guide.result)}</strong></div>
       </div>
+      <div class="prompt-beginner"><span>초보자 메모</span><p></p></div>
       <pre></pre>
     </div>`);
+  wrap.querySelector('.prompt-beginner p').textContent = helpInfo.summary || '';
   const pre = wrap.querySelector('pre');
   const refreshPrompt = () => { pre.textContent = personalizeBody(); };
   refreshPrompt();
@@ -88,6 +132,7 @@ export function renderPrompt(p) {
       toast('직접 복사해주세요 (Ctrl+C)');
     }
   });
+  wrap.querySelector('.prompt-help-button').addEventListener('click', () => openPromptHelp(helpInfo, p.title));
   return wrap;
 }
 

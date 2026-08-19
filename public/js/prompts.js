@@ -1,7 +1,7 @@
 // js/prompts.js — 프롬프트 카드 (읽기 전용 + 복사)
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { PROMPTS, RESCUE } from './content.js';
+import { PROMPT_HELP, PROMPTS, RESCUE } from './content.js';
 import { el, renderPrompt } from './render.js';
 
 const app = document.getElementById('app');
@@ -27,10 +27,10 @@ const GROUPS = [
     </div>`));
 
   for (const g of GROUPS) {
-    const items = Object.values(PROMPTS).filter(p => p.session === g.n);
+    const items = Object.entries(PROMPTS).filter(([, p]) => p.session === g.n);
     if (!items.length) continue;
     app.appendChild(el(`<h2>${esc(g.name)}</h2>`));
-    for (const p of items) app.appendChild(renderPrompt(p));
+    for (const [id, p] of items) app.appendChild(renderPrompt(p, PROMPT_HELP[id]));
   }
 
   app.appendChild(el(`

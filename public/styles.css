@@ -187,14 +187,50 @@ input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visib
   border-bottom: 1px solid var(--rule);
 }
 .prompt-title { font-weight: 700; font-size: 0.9rem; flex: 1; }
+.prompt-help-button {
+  width: 1.45rem; height: 1.45rem; padding: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--teal-strong); border-color: var(--teal-strong); font-size: 0.78rem; font-weight: 800;
+}
+.prompt-help-button:hover { color: #fff; background: var(--teal-strong); }
 .prompt-note {
   font-size: 0.85rem; color: var(--ink-soft); padding: 0.6rem 0.9rem 0;
   text-wrap: pretty;
 }
+.prompt-beginner {
+  display: flex; gap: 0.6rem; align-items: baseline; padding: 0.55rem 0.9rem;
+  background: #fff9ed; border-bottom: 1px solid var(--line-soft);
+}
+.prompt-beginner span { color: var(--copper); font-size: 0.68rem; font-weight: 800; white-space: nowrap; }
+.prompt-beginner p { margin: 0; color: var(--ink-soft); font-size: 0.8rem; line-height: 1.55; text-wrap: pretty; }
 .prompt pre {
   margin: 0; padding: 0.9rem; overflow-x: auto;
   font-family: ui-monospace, "Cascadia Code", Consolas, "D2Coding", monospace;
   font-size: 0.83rem; line-height: 1.65; white-space: pre-wrap; color: var(--ink-soft);
+}
+
+/* ── 프롬프트 초보자 도움말 모달 ─────────────────────── */
+.prompt-help-modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 1rem; }
+.prompt-help-backdrop { position: absolute; inset: 0; background: rgba(17,42,50,0.52); backdrop-filter: blur(3px); }
+.prompt-help-box {
+  position: relative; width: min(42rem, 100%); max-height: min(88vh, 42rem); overflow: auto;
+  background: var(--paper); border: 1px solid var(--line-soft); box-shadow: 0 24px 80px rgba(17,42,50,0.25);
+  padding: clamp(1.1rem, 3vw, 1.8rem);
+}
+.prompt-help-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.prompt-help-head h2 { margin: 0.35rem 0 0; padding: 0; border: 0; font-family: var(--display); font-size: 1.35rem; }
+.prompt-help-close { width: 2rem; height: 2rem; padding: 0; font-size: 1.4rem; line-height: 1; }
+.prompt-help-summary { margin: 1.1rem 0; padding: 0.8rem 0.9rem; background: var(--accent-soft); color: var(--ink-soft); line-height: 1.65; }
+.prompt-help-section { margin-top: 1.2rem; }
+.prompt-help-section h3 { margin: 0 0 0.55rem; color: var(--teal-strong); font-size: 0.82rem; letter-spacing: 0.04em; }
+.prompt-help-terms dl { display: grid; grid-template-columns: minmax(6rem, 0.32fr) 1fr; gap: 0.5rem 0.8rem; margin: 0; }
+.prompt-help-terms dt { font-weight: 750; color: var(--ink); }
+.prompt-help-terms dd { margin: 0; color: var(--ink-soft); line-height: 1.6; }
+.prompt-help-steps ol { margin: 0; padding-left: 1.3rem; color: var(--ink-soft); line-height: 1.7; }
+@media (max-width: 560px) {
+  .prompt-beginner { align-items: flex-start; flex-direction: column; gap: 0.2rem; }
+  .prompt-help-terms dl { grid-template-columns: 1fr; gap: 0.15rem; }
+  .prompt-help-terms dd { margin-bottom: 0.5rem; }
 }
 
 /* ── 버튼 ─────────────────────────────────────── */
