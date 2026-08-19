@@ -45,7 +45,7 @@ function sessionCard(session, progress) {
         <p class="hero-lede">${esc(COURSE.intro)}</p>
         <div class="hero-actions">
           <a class="hero-cta" href="/session?n=1">첫 실습 시작하기 <span>→</span></a>
-          <a class="hero-text-link" href="#journey">전체 흐름 보기</a>
+          <a class="hero-text-link" id="flow-link" href="#journey">전체 흐름 보기</a>
         </div>
         <div class="hero-proof"><span class="proof-line"></span><span>매주 하나의 원본에서 하나의 목적지까지</span></div>
       </div>
@@ -99,6 +99,15 @@ function sessionCard(session, progress) {
     </section>
 
     <section class="sessions-section"><div class="section-heading"><div><span class="section-kicker">WORKBOOK PAGES</span><h2>회차별 실습</h2></div><a class="section-link" href="/prompts">프롬프트 카드 열기 ↗</a></div><div class="journey-grid">${SESSIONS.map(session => sessionCard(session, progressOf(requiredKeys(session.n), entries))).join('')}</div></section>`));
+
+  const flowLink = document.getElementById('flow-link');
+  flowLink?.addEventListener('click', (event) => {
+    event.preventDefault();
+    const target = document.getElementById('journey');
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.replaceState(null, '', '#journey');
+  });
 
   if (needsTeam(me)) {
     const box = el(`<div class="team-card"><div><span class="section-kicker">ONE SMALL SETUP</span><b>소속 팀을 알려주세요</b><p>강사가 참가자 명단을 정리할 때 씁니다. 한 번만 입력하면 됩니다.</p></div><div class="team-input"><input type="text" id="team" placeholder="예: SCM본부 / People"><button class="hero-cta" id="teamsave">저장 <span>→</span></button></div></div>`);

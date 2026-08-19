@@ -431,6 +431,7 @@ body { background: var(--cream); color: var(--navy); }
 .section-heading h2 { font-size: clamp(1.45rem, 3vw, 2.3rem); }
 .section-heading > p, .section-side-note { color: #71807c; font-size: 0.82rem; margin: 0 0 0.22rem; }
 .flow-section, .workspace-section, .progress-section, .sessions-section { padding: 1rem 0 5.7rem; }
+.flow-section { scroll-margin-top: 5.5rem; }
 .flow-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); }
 .flow-step { position: relative; background: var(--paper); min-height: 20rem; padding: 1.25rem 1.25rem 1.35rem; overflow: hidden; }
 .flow-step::after { content: ''; position: absolute; right: -3rem; bottom: -4.5rem; width: 9rem; height: 9rem; border-radius: 50%; background: rgba(12,112,108,0.06); }
