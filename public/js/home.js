@@ -47,7 +47,7 @@ function sessionCard(session, progress) {
           <a class="hero-cta" href="/session?n=1">첫 실습 시작하기 <span>→</span></a>
           <a class="hero-text-link" id="flow-link" href="#journey">전체 흐름 보기</a>
         </div>
-        <div class="hero-proof"><span class="proof-line"></span><span>매주 하나의 원본에서 하나의 목적지까지</span></div>
+        <div class="hero-proof"><span class="proof-line"></span><span>원본 SaaS에서 워크북을 거쳐, 같은 SaaS에 다시 저장</span></div>
       </div>
       <div class="hero-art-wrap">
         <div class="hero-art-label"><span>THE SHIFT</span><b>one source → many outputs</b></div>
@@ -57,12 +57,12 @@ function sessionCard(session, progress) {
     </section>
 
     <section class="home-intro-row">
-      <div><span class="section-kicker">이 워크북의 관통 질문</span><h2>“어디서 읽고, 어떤 형식으로 만들고,<br>어디로 보낼 것인가?”</h2></div>
-      <p>노션만 잘 쓰는 수업이 아닙니다. 같은 봇 구조를 Slack 채널·DM, Asana 프로젝트·태스크, 특정 페이지와 연결해 <em>업무가 다음 사람에게 도착하는 순간</em>까지 설계합니다.</p>
+      <div><span class="section-kicker">이 워크북의 관통 질문</span><h2>“어디서 가져와, 무엇을 고치고,<br>어디에 다시 저장할 것인가?”</h2></div>
+      <p>워크북은 메모장이 아니라 <em>SaaS 편집 작업대</em>입니다. Notion 문단·Asana 태스크·Slack 봇 메시지를 가져와 사람이 고치고, 같은 위치에 다시 저장하는 흐름을 배웁니다.</p>
     </section>
 
     <section class="flow-section" id="journey">
-      <div class="section-heading"><div><span class="section-kicker">ONE THREAD / 04 MOVES</span><h2>4주 동안 하나의 흐름을 만듭니다</h2></div><span class="section-side-note">읽기 → 구조화 → 생성 → 전달</span></div>
+      <div class="section-heading"><div><span class="section-kicker">ONE THREAD / 04 MOVES</span><h2>4주 동안 하나의 흐름을 만듭니다</h2></div><span class="section-side-note">가져오기 → 다듬기 → 반영하기 → 이어쓰기</span></div>
       <div class="flow-rail">
         ${AX_FLOW.map((item, i) => `
           <div class="flow-step flow-${item.tone}">
@@ -82,12 +82,12 @@ function sessionCard(session, progress) {
             <span class="integration-eyebrow">${esc(item.eyebrow)}</span><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p>
           </article>`).join('')}
       </div>
-      <div class="bot-strip"><span class="bot-strip-label">SCM PORTAL에서 가져온 구조</span><div class="bot-flow"><b>원본</b><i>→</i><strong>업무 봇</strong><i>→</i><b>목적지</b></div><p>API를 직접 붙이던 경험을 수강생의 언어로 바꿉니다. “한 번 만든 연결은 다음 업무에서도 다시 쓴다.”</p></div>
+      <div class="bot-strip"><span class="bot-strip-label">SCM PORTAL에서 가져온 구조</span><div class="bot-flow"><b>SaaS 원본</b><i>→</i><strong>워크북 편집</strong><i>→</i><b>SaaS 저장</b></div><p>API를 직접 붙이던 경험을 수강생의 언어로 바꿉니다. “불러온 값을 고치면 원래 업무 도구에도 반영된다.”</p></div>
     </section>
 
     <section class="data-model-section">
       <div class="section-heading"><div><span class="section-kicker">THE WORKBOOK UNDER THE HOOD</span><h2>이 워크북도 하나의 연결 사례입니다</h2></div><span class="section-side-note">Supabase · Auth · RLS</span></div>
-      <div class="data-model-intro"><p>여러분이 입력한 한 문장이 DB의 한 행이 되고, 그 데이터가 다시 진행률·강사 화면·다음 실습의 재료가 됩니다. 2회차와 3회차에서는 이 구조를 직접 읽고, 내 업무 도구에 옮겨봅니다.</p><code>profiles → entries → Asana / Notion / Slack</code></div>
+      <div class="data-model-intro"><p>여러분이 입력한 한 문장이 DB의 한 행이 되고, SaaS 수정 결과도 다시 워크북 기록으로 남습니다. 3회차에서는 원본 값을 가져오고 수정 저장한 뒤, SaaS와 Supabase 양쪽에서 결과를 확인합니다.</p><code>SaaS 원본 ↔ 워크북 편집 → entries 기록</code></div>
       <div class="data-model-grid">
         ${DATA_MODEL.map(item => `<article class="data-model-card data-${item.tone}"><div class="data-card-top"><span class="data-icon">${item.name === 'RLS' ? '↗' : item.name.slice(0, 1).toUpperCase()}</span><code>${esc(item.name)}</code></div><span>${esc(item.label)}</span><p>${esc(item.text)}</p></article>`).join('')}
       </div>

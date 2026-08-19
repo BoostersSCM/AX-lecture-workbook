@@ -9,21 +9,21 @@
 export const COURSE = {
   title: '업무를 연결하는 AI',
   subtitle: '사내 도구와 데이터를 연결해 반복 업무를 줄이는 4주',
-  promise: '흩어진 도구를 연결하고, 일의 흐름을 만듭니다.',
-  intro: '도구 하나를 잘 쓰는 법이 아니라, 원본 데이터가 사람이 보는 채널·페이지·태스크로 이어지는 구조를 설계합니다.',
+  promise: '업무 도구의 값을 가져와 고치고, 원래 도구에 다시 저장합니다.',
+  intro: '이 워크북을 편집 작업대로 사용합니다. Notion·Asana·Slack의 값을 가져오고, 사람이 확인해 수정한 뒤 각 SaaS에 다시 반영하는 흐름을 만듭니다.',
 };
 
 export const AX_FLOW = [
-  { n: '01', verb: '긁기', en: 'COLLECT', title: '원본이 있는 곳을 연결합니다', text: '노션 페이지, 슬랙 채널·DM, 아사나 프로젝트의 원본을 직접 가져옵니다.', tool: 'Notion · Slack · Asana', tone: 'teal' },
-  { n: '02', verb: '정하기', en: 'STRUCTURE', title: '양식을 먼저 정합니다', text: '근거 문장, 담당자, 상태, 마감일처럼 결과가 들어갈 칸을 미리 정해 흔들림을 줄입니다.', tool: 'Database · Page · Task', tone: 'brass' },
-  { n: '03', verb: '만들기', en: 'GENERATE', title: '반복 가능한 봇을 만듭니다', text: '정리된 데이터에서 주간 리포트, 회의 후속조치, 콘텐츠를 같은 규칙으로 생성합니다.', tool: 'Bot · Recipe · Prompt', tone: 'coral' },
-  { n: '04', verb: '보내기', en: 'DELIVER', title: '사람이 보는 곳까지 보냅니다', text: '특정 페이지에 기록하고, Asana 프로젝트에 태스크를 만들고, Slack 채널에 초안을 배달합니다.', tool: 'Slack channel · Asana · Page', tone: 'ink' },
+  { n: '01', verb: '가져오기', en: 'COLLECT', title: '원본이 있는 곳을 연결합니다', text: 'Notion 페이지, Slack 채널·DM, Asana 프로젝트에서 실제 값을 워크북으로 가져옵니다.', tool: 'Notion · Slack · Asana', tone: 'teal' },
+  { n: '02', verb: '다듬기', en: 'STRUCTURE', title: '수정할 모양과 기준을 정합니다', text: '근거 문장, 담당자, 상태, 마감일처럼 사람이 확인하고 고칠 칸을 분명히 만듭니다.', tool: 'Database · Page · Task', tone: 'brass' },
+  { n: '03', verb: '반영하기', en: 'SYNC', title: '고친 값을 원래 SaaS에 저장합니다', text: '기존 태스크·문단·봇 메시지를 미리보기로 확인한 뒤 같은 위치에 수정 저장합니다.', tool: 'Asana · Notion · Slack', tone: 'coral' },
+  { n: '04', verb: '이어쓰기', en: 'REUSE', title: '저장된 결과를 다음 업무에 씁니다', text: 'Supabase 기록을 다시 읽고, 연결 레시피와 데스크톱 자동화로 반복 실행할 구조를 남깁니다.', tool: 'Supabase · Recipe · Desktop', tone: 'ink' },
 ];
 
 export const INTEGRATIONS = [
-  { name: 'Notion', eyebrow: '원본 / 기록', title: '특정 페이지를 읽고 쓰기', text: '회의록을 읽어 액션아이템 DB에 넣거나, 만들어진 결과를 팀 페이지에 쌓습니다.', icon: 'N', tone: 'notion' },
-  { name: 'Slack', eyebrow: '대화 / 전달', title: '채널과 DM을 목적지로 쓰기', text: '채널의 맥락을 읽고, 나에게 먼저 리허설한 뒤 #ax-실습 같은 채널에 초안을 보냅니다.', icon: '#', tone: 'slack' },
-  { name: 'Asana', eyebrow: '실행 / 추적', title: '프로젝트와 태스크로 넘기기', text: '회의의 결정사항을 프로젝트 안 태스크로 만들고, 담당자·기한·상태까지 연결합니다.', icon: 'A', tone: 'asana' },
+  { name: 'Notion', eyebrow: '원본 / 기록', title: '문단을 가져와 같은 자리에 저장', text: '페이지의 기존 문단을 워크북으로 불러와 고친 뒤 같은 Notion 블록에 다시 반영합니다.', icon: 'N', tone: 'notion' },
+  { name: 'Slack', eyebrow: '대화 / 전달', title: '보낸 메시지를 다시 수정', text: '봇으로 채널·DM에 메시지를 보내고, 워크북에서 고친 문구를 같은 메시지에 업데이트합니다.', icon: '#', tone: 'slack' },
+  { name: 'Asana', eyebrow: '실행 / 추적', title: '기존 태스크를 수정 저장', text: '프로젝트 태스크의 이름·마감일·완료 상태를 가져와 검토한 뒤 실제 태스크에 반영합니다.', icon: 'A', tone: 'asana' },
   { name: 'Supabase', eyebrow: '저장 / 재조회', title: '학습 결과를 다시 꺼내기', text: '가져온 원본과 검토한 결과를 내 기록으로 저장하고, 다음 회차에 다시 불러옵니다.', icon: 'S', tone: 'supabase' },
 ];
 
@@ -63,7 +63,34 @@ export const VISUALS = {
 // ── 연결 준비 체크리스트 ──────────────────────────────────────
 export const SETUP = {
   title: '연결 준비',
-  intro: '첫 수업 전에 끝내주세요. 15분이면 됩니다. 운영자는 기존 봇·앱 토큰을 Vercel에 넣고, 수강생은 각자 연결할 Asana 프로젝트·Notion 페이지·Slack 채널을 정합니다.',
+  intro: '첫 수업 전에 끝내주세요. 운영자는 봇·앱 토큰과 「AX 실습장」 템플릿을 준비하고, 수강생은 템플릿을 복제한 뒤 연결할 Asana 프로젝트·Notion 페이지·Slack 채널을 정합니다.',
+  playgroundGuide: {
+    title: '「AX 실습장」은 강사가 먼저 준비합니다',
+    intro: '빈 페이지로 시작하지 않습니다. 강사가 아래 구조의 Notion 템플릿을 배포하고, 수강생은 자기 복제본에 기존 Notion 앱을 연결합니다. 복제가 어려우면 같은 구조를 가진 안전한 개인 연습용 페이지로 대체합니다.',
+    instructor: [
+      'Notion에 「AX 실습장 — 템플릿」 페이지를 만들고 아래 내용을 붙여넣습니다.',
+      'Notion 앱에 Read content와 Update content 권한을 주고 템플릿 페이지에 연결합니다.',
+      '수강생이 각자 복제할 수 있는 템플릿 링크를 배포합니다. 한 공용 페이지를 함께 수정하지 않습니다.',
+    ],
+    student: [
+      '템플릿을 「AX 실습장 — 내 이름」으로 복제합니다.',
+      '페이지 오른쪽 위 ··· → 연결 추가에서 강사가 안내한 기존 앱을 선택합니다.',
+      '복제한 페이지 URL을 아래 Notion 연결 대상에 저장합니다.',
+    ],
+    template: `# AX 실습장 — [내 이름]
+
+## 01. 원본 회의록
+회의 일시: 2026-08-19
+결정사항: 다음 주 수요일까지 캠페인 결과 초안을 공유한다.
+담당자: 김OO
+확인 필요: 최종 공유 채널
+
+## 02. 수정 실습 문단
+이 문장은 워크북으로 불러온 뒤 내용을 고쳐 같은 Notion 문단에 다시 저장합니다.
+
+## 03. 결과 기록
+수정 전·수정 후와 사람이 확인한 내용을 이 아래에 남깁니다.`,
+  },
   groups: [
     {
       name: '1. 계정과 권한',
@@ -81,18 +108,23 @@ export const SETUP = {
       ]
     },
     {
-      name: '3. 실습 데이터 확인',
+      name: '3. AX 실습장 준비',
       fields: [
-        { key: 'setup.playground', kind: 'check', label: '연결 준비에서 지정한 Notion 페이지가 열린다', hint: '고정된 실습장이나 샘플이 없어도 내가 접근 가능한 연습용 페이지로 진행합니다.' },
-        { key: 'setup.db',         kind: 'check', label: '페이지 안의 데이터베이스 또는 하위 콘텐츠 구조가 보인다', hint: 'DB가 없으면 페이지 본문을 읽는 실습으로 진행해도 됩니다.' },
-        { key: 'setup.minutes',    kind: 'check', label: '읽어볼 기록 1~3건을 찾았다', hint: '샘플 회의록이 없으면 실제 연습용 기록 1건으로 대체합니다.' },
+        { key: 'setup.playground', kind: 'check', label: '강사가 배포한 「AX 실습장」을 내 페이지로 복제했다', hint: '공용 원본을 함께 수정하지 않습니다. 복제가 어렵다면 안전한 개인 연습용 페이지를 준비합니다.' },
+        { key: 'setup.db',         kind: 'check', label: '원본 회의록·수정 실습 문단·결과 기록 영역이 보인다', hint: 'Notion DB가 없어도 됩니다. 실제로 고쳐볼 텍스트 문단 하나는 반드시 있어야 합니다.' },
+        { key: 'setup.minutes',    kind: 'check', label: '복제한 페이지에 기존 Notion 앱을 연결했다', hint: '앱에는 Read content와 Update content 권한이 필요합니다.' },
+      ]
+    },
+    {
+      name: '4. 워크북과 다른 SaaS 확인',
+      fields: [
         { key: 'setup.channel',    kind: 'check', label: '슬랙 실습 채널에 들어와 있다' },
         { key: 'setup.asana_project', kind: 'check', label: '아사나 봇을 초대한 프로젝트 또는 샘플 태스크가 열린다', hint: '연동이 막힌 경우 3회차는 샘플 태스크 CSV로 읽기 실습을 진행할 수 있습니다.' },
         { key: 'setup.persisted', kind: 'check', label: '워크북에 짧은 답을 적고 새로고침해도 다시 보인다', hint: '내 입력이 Supabase entries에 저장되고 다시 읽히는지 확인합니다.' },
       ]
     },
     {
-      name: '4. 연결할 대상 정하기',
+      name: '5. 연결할 대상 정하기',
       fields: [
         { key: 'setup.asana_target', kind: 'text', required: true,
           label: 'Asana — 봇을 초대할 프로젝트 URL 또는 Project GID',
@@ -109,13 +141,13 @@ export const SETUP = {
       ]
     },
     {
-      name: '5. 실습 환경',
+      name: '6. 실습 환경',
       fields: [
         { key: 'setup.laptop', kind: 'check', label: '노트북 + 충전기 지참, 사내 와이파이 확인' },
       ]
     },
     {
-      name: '6. 첫 업무 후보',
+      name: '7. 첫 업무 후보',
       fields: [
         { key: 'setup.think', kind: 'textarea', rows: 3, required: true,
           label: '내가 매주 반복하는 업무 중, 없어졌으면 하는 것 하나는?',
@@ -136,9 +168,9 @@ export const SESSIONS = [
     n: 1,
     title: 'AI에게 업무 원본을 읽히는 날',
     tag: '연결',
-    goal: '내 권한 안에서 원본을 실제로 가져오고, 출처와 범위를 구분하게 합니다. 첫날은 원본 도구에는 쓰지 않고 읽기·근거·확인만 연습합니다.',
+    goal: '내 권한 안에서 Notion 원본을 가져오고, 출처와 범위를 확인한 뒤 작은 수정을 같은 문단에 다시 저장합니다.',
     blocks: [
-      { type: 'note', text: '오늘의 중심은 프롬프트를 복사하는 일이 아니라, 연결된 원본을 실제로 가져와 확인하는 일입니다. 아래 버튼으로 읽고, 필요한 결과만 워크북에 저장합니다. 아직 원본 도구에는 쓰지 않습니다.' },
+      { type: 'note', text: '오늘의 중심은 프롬프트를 복사하는 일이 아니라, 연결된 원본을 실제로 가져와 확인하고 다시 저장하는 일입니다. 「AX 실습장」의 수정 실습 문단을 불러와 작은 변경을 만든 뒤 같은 Notion 블록에 반영합니다.' },
       { type: 'visual', id: 'connector' },
       { type: 'note', text: '**비유를 기억하세요.** 커넥터는 AI에게 회사 전체 열쇠를 주는 일이 아니라, 내가 열 수 있는 업무 자료실의 문만 함께 여는 일입니다.' },
 
@@ -147,14 +179,17 @@ export const SESSIONS = [
         hint: '4회차에 이 업무의 연결 흐름을 실제로 설계합니다.' },
 
       { type: 'head', text: '실습 1 — 내 접근 범위 안의 원본 찾기' },
-      { type: 'note', text: '고정된 실습 페이지나 샘플이 필수는 아닙니다. 연결 준비에서 지정한 실제 연습용 페이지·데이터베이스를 선택해 진행하세요. 민감한 업무 원본은 사용하지 않습니다.' },
+      { type: 'note', text: '강사가 배포한 「AX 실습장」 복제본으로 시작합니다. 원본 회의록·수정 실습 문단·결과 기록 영역이 준비되어 있으므로 빈 페이지에서 찾지 않습니다. 복제본에 Notion 앱을 연결하고 민감한 실제 업무 원본은 사용하지 않습니다.' },
       { type: 'prompt', id: 's1a' },
       { type: 'field', key: 's1.source_list', kind: 'textarea', rows: 5, required: true,
         label: '내가 실제로 접근 가능한 원본과 범위',
         hint: '페이지·데이터베이스 이름과 위치, 이번 실습에서 읽지 않을 범위를 함께 적습니다.' },
       { type: 'field', key: 's1.source_snapshot', kind: 'textarea', rows: 6,
         label: '버튼으로 가져온 원본 확인 결과',
-        hint: '실습 패널의 Notion 원본 불러오기 결과가 저장됩니다. 페이지 제목·블록 수·앞부분을 확인합니다.' },
+        hint: '실습 패널이 AX 실습장의 수정 가능한 문단과 block ID를 저장합니다.' },
+      { type: 'field', key: 's1.notion_update', kind: 'textarea', rows: 4,
+        label: '같은 Notion 문단에 다시 저장한 결과',
+        hint: '수정 전후 미리보기를 확인한 뒤 저장하면 page ID·block ID·최종 문장이 기록됩니다.' },
 
       { type: 'head', text: '실습 2 — 페이지 하나를 읽고 업무 맥락으로 바꾸기' },
       { type: 'field', key: 's1.page_name', kind: 'text', required: true,
@@ -277,9 +312,9 @@ export const SESSIONS = [
     n: 3,
     title: 'Asana·Notion·Slack을 실제로 연결하는 날',
     tag: '연동',
-    goal: '운영자가 Vercel에 둔 봇 토큰을 그대로 노출하지 않고, 각자 권한을 부여한 프로젝트·페이지·채널에서 실제 읽기와 보내기·받기를 경험합니다.',
+    goal: '운영자가 Vercel에 둔 봇 토큰을 노출하지 않고, SaaS 원본을 워크북으로 가져와 수정한 뒤 같은 프로젝트·페이지·메시지에 다시 저장합니다.',
     blocks: [
-      { type: 'note', text: '오늘의 중심은 프롬프트 카드가 아니라 실제 연결입니다. 원본을 버튼으로 가져오고, 결과를 사람이 검토한 뒤 Asana·Notion·Slack에 미리보기와 확인 버튼으로 직접 씁니다. 토큰은 Vercel 서버에만 있습니다.' },
+      { type: 'note', text: '오늘의 중심은 **워크북에서 고친 값이 원래 SaaS에 반영되는 경험**입니다. 기존 태스크·문단·봇 메시지를 가져오고, 수정 미리보기 후 같은 위치에 저장합니다. 토큰은 Vercel 서버에만 있습니다.' },
       { type: 'visual', id: 'delivery' },
       { type: 'note', text: '**비유를 기억하세요.** 봇은 마스터키가 아니라, 초대받은 방에서만 일하는 담당자입니다. 프로젝트·페이지·채널마다 초대와 권한을 따로 확인합니다.' },
 
@@ -287,39 +322,39 @@ export const SESSIONS = [
       { type: 'prompt', id: 's3config' },
       { type: 'field', key: 's3.db_flow', kind: 'checks',
         label: '오늘 확인한 연결',
-        options: ['Asana 봇 → 내 프로젝트 읽기', 'Notion 앱 → 내 페이지 읽기', 'Slack 봇 → 원하는 채널 보내기', 'Slack 메시지 → Vercel 웹훅 받기'] },
+        options: ['Asana 태스크 → 워크북 수정 → 같은 태스크 저장', 'Notion 문단 → 워크북 수정 → 같은 문단 저장', 'Slack 봇 메시지 → 워크북 수정 → 같은 메시지 저장', 'Slack 메시지 → Vercel 웹훅 받기'] },
 
-      { type: 'head', text: '실습 1 — Asana: 봇을 내 프로젝트에 초대하고 가져오기' },
-      { type: 'note', text: 'Asana에서는 운영자가 가진 봇 토큰으로 호출하지만, 봇이 프로젝트 멤버로 초대되지 않으면 읽을 수 없습니다. 먼저 초대하고, 프로젝트의 태스크를 읽기 전용으로 가져옵니다.' },
+      { type: 'head', text: '실습 1 — Asana: 기존 태스크를 가져와 수정 저장하기' },
+      { type: 'note', text: '봇을 프로젝트 멤버로 초대한 뒤 기존 태스크를 가져옵니다. 워크북에서 이름·설명·마감일·완료 상태를 고치고, 미리보기 후 같은 태스크에 저장합니다.' },
       { type: 'prompt', id: 's3asana' },
       { type: 'field', key: 's3.asana_project', kind: 'text', required: true,
         label: '연결한 Asana 프로젝트 URL 또는 Project GID' },
       { type: 'field', key: 's3.asana_tasks', kind: 'textarea', rows: 6, required: true,
-        label: 'Asana에서 실제로 가져온 태스크 3개',
-        hint: '태스크명·담당자·마감일·완료 여부를 적고, 읽지 못한 값은 미확인으로 둡니다.' },
+        label: 'Asana에서 가져온 태스크와 수정 대상',
+        hint: '실습 패널이 프로젝트 태스크를 자동으로 저장합니다. 어떤 태스크를 어떻게 고칠지 확인합니다.' },
       { type: 'field', key: 's3.asana_ready', kind: 'check',
-        label: '봇을 프로젝트에 초대한 뒤 태스크 목록을 읽었다' },
+        label: '워크북에서 고친 값을 기존 Asana 태스크에 저장했다' },
 
-      { type: 'head', text: '실습 2 — Notion: 앱을 내 페이지에 연결하고 가져오기' },
-      { type: 'note', text: 'Notion은 앱을 페이지의 연결 목록에 직접 추가해야 합니다. 페이지를 연결한 뒤 페이지 제목·본문 블록 또는 데이터베이스의 행을 읽고, 쓰기는 마지막 확인 뒤에만 시도합니다.' },
+      { type: 'head', text: '실습 2 — Notion: 기존 문단을 가져와 수정 저장하기' },
+      { type: 'note', text: '「AX 실습장」 복제본에 앱을 연결하고 수정 실습 문단을 가져옵니다. 워크북에서 내용을 고친 뒤 같은 Notion 블록에 저장합니다. 기존 문단 전체가 바뀌므로 미리보기를 먼저 확인합니다.' },
       { type: 'prompt', id: 's3notion' },
       { type: 'field', key: 's3.notion_page', kind: 'text', required: true,
         label: '연결한 Notion 페이지 URL 또는 Page ID' },
       { type: 'field', key: 's3.report', kind: 'textarea', rows: 7, required: true,
-        label: 'Notion에서 실제로 가져온 내용',
-        hint: '페이지 제목·핵심 블록·DB라면 행 3개를 적습니다. 출처 페이지도 함께 남깁니다.' },
+        label: 'Notion에서 가져온 문단과 수정 대상',
+        hint: '실습 패널이 페이지의 수정 가능한 문단을 자동으로 저장합니다.' },
       { type: 'field', key: 's3.notion_ready', kind: 'check',
-        label: 'Notion 페이지에 기존 앱을 연결한 뒤 내용을 읽었다' },
+        label: '워크북에서 고친 값을 기존 Notion 문단에 저장했다' },
 
-      { type: 'head', text: '실습 3 — Slack: 봇으로 원하는 채널에 보내기' },
-      { type: 'note', text: '보내기는 채널 ID를 명시하고, 최종 문구를 먼저 미리 본 다음 chat.postMessage로 전송합니다. 테스트 채널에서 성공한 뒤 업무 채널로 넓힙니다.' },
+      { type: 'head', text: '실습 3 — Slack: 봇 메시지를 보내고 다시 수정하기' },
+      { type: 'note', text: '채널 ID를 지정해 봇 메시지를 보낸 뒤, 워크북에서 문구를 다시 고쳐 같은 메시지에 저장합니다. Slack은 봇이 직접 작성한 메시지만 수정할 수 있습니다.' },
       { type: 'prompt', id: 's3slack_send' },
       { type: 'field', key: 's3.slack_channel', kind: 'text', required: true,
         label: '메시지를 보낸 Slack Channel ID' },
       { type: 'field', key: 's3.slack_message', kind: 'textarea', rows: 5, required: true,
-        label: '봇이 실제로 보낸 메시지' },
+        label: '봇이 보내고 수정 저장한 최종 메시지' },
       { type: 'field', key: 's3.dm_sent', kind: 'check',
-        label: '봇이 지정한 채널에 메시지를 보냈다',
+        label: '봇 메시지를 보낸 뒤 같은 메시지에 수정 내용을 저장했다',
         hint: '채널에 봇이 초대되어 있어야 합니다.' },
 
       { type: 'head', text: '실습 4 — Slack: 채널에 쓴 내용을 Vercel 웹훅으로 받기' },
@@ -416,7 +451,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '1. 원본 확인하기 — 무엇을 어디서 읽는가',
+      name: '1. 가져오기 — 무엇을 어디서 읽는가',
       fields: [
         { key: 'clinic.source', kind: 'textarea', rows: 2, required: true,
           label: '출처', hint: '노션 페이지명 / 시트 / 슬랙 채널 / 폴더' },
@@ -434,7 +469,7 @@ export const CLINIC = {
       ]
     },
       {
-      name: '2. 구조 정하기 — 어떤 형식으로 담는가',
+      name: '2. 다듬기 — 어떤 형식으로 고치는가',
         fields: [
         { key: 'clinic.store', kind: 'radio', label: '결과를 어디에 쌓을까?',
           hint: '지금 선택한 도구가 영원한 정답은 아닙니다. 반복해서 꺼내 쓸 필요가 있는지부터 봅니다.',
@@ -448,7 +483,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '3. 결과 만들기 — 누가 무엇을 보는가',
+      name: '3. 반영하기 — 누가 어떤 결과를 확인하는가',
       fields: [
         { key: 'clinic.output', kind: 'checks', label: '결과물 형태',
           options: ['표 / 목록', '요약 글', '노션 DB 항목', '슬랙 메시지', '기타'] },
@@ -457,7 +492,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '4. 도착지 정하기 — 어디로 보내는가',
+      name: '4. 이어쓰기 — 어디에 저장하고 다시 쓰는가',
       fields: [
         { key: 'clinic.dest', kind: 'text', required: true, label: '도착지', hint: '노션 DB / 슬랙 채널 / 문서 / 내 폴더' },
         { key: 'clinic.cycle', kind: 'text', label: '주기', hint: '매일 / 매주 O요일 / 필요할 때' },
@@ -528,7 +563,7 @@ export const PROMPTS = {
 
   s1a: {
     session: 1, title: '1 — 읽을 수 있는 원본 찾기',
-    note: '첫날은 원본을 실제로 가져오되 원본 도구에는 쓰지 않습니다. 연결 준비에서 지정한 페이지·데이터베이스를 기준으로 읽고, 필요한 결과는 워크북에 저장합니다.',
+    note: '첫날부터 「AX 실습장」 원본을 실제로 가져오고, 작은 수정을 같은 Notion 문단에 저장합니다. 공용 템플릿이 아니라 각자 복제본에서 진행합니다.',
     body: `노션에서 내가 현재 접근할 수 있는 페이지와 데이터베이스를 찾아줘.
 
 연결 준비에서 지정한 페이지와 그 하위 항목을 기준으로 찾아줘. 지정한 대상이 없거나 비어 있으면 그렇게 알려줘.
@@ -670,9 +705,9 @@ Slack Events API Request URL은 운영자가 제공하고, 수강생은 입력�
   },
 
   s3asana: {
-    session: 3, title: '1 — Asana 봇을 프로젝트에 초대하고 읽고 만들기',
+    session: 3, title: '1 — Asana 기존 태스크를 가져와 수정 저장하기',
     note: '봇 토큰은 서버가 가지고 있습니다. 수강생은 프로젝트에 봇을 초대한 뒤 Project GID만 전달합니다.',
-    body: `Asana에서 다음 프로젝트를 먼저 읽고, 확인한 뒤 태스크를 만드는 흐름으로 진행해줘.
+    body: `Asana에서 다음 프로젝트의 기존 태스크를 읽고, 워크북에서 수정한 뒤 같은 태스크에 저장하는 흐름으로 진행해줘.
 프로젝트 URL 또는 Project GID: [여기에 입력]
 
 운영자 서버의 ASANA_TOKEN_BOT을 사용하되, 토큰 값은 절대 노출하지 마.
@@ -682,35 +717,36 @@ Slack Events API Request URL은 운영자가 제공하고, 수강생은 입력�
 4. 읽지 못한 값은 추측하지 말고 '미확인'으로 표시
 
 봇이 프로젝트 멤버로 초대되지 않았다면 필요한 권한과 다음 조치를 알려줘.
-먼저 읽기 결과와 만들 태스크 초안을 보여줘. 내가 확인하기 전에는 태스크를 만들거나 수정하지 마.
-확인하면 지정한 프로젝트에 태스크 1건을 만들고, 생성된 task GID와 URL을 알려줘.`
+먼저 수정할 태스크의 기존 값과 수정 후 값을 나란히 보여줘. 내가 확인하기 전에는 태스크를 수정하지 마.
+확인하면 task GID를 기준으로 이름·설명·마감일·완료 상태 중 내가 바꾼 필드만 같은 태스크에 저장하고 URL을 알려줘.`
   },
 
   s3notion: {
-    session: 3, title: '2 — Notion 앱을 페이지에 연결하고 읽고 추가하기',
+    session: 3, title: '2 — Notion 기존 문단을 가져와 수정 저장하기',
     note: 'Notion 페이지의 ··· → 연결 추가에서 기존 앱을 먼저 선택해야 합니다.',
-    body: `Notion에서 다음 페이지를 먼저 읽고, 확인한 결과를 같은 페이지에 추가하는 흐름으로 진행해줘.
+    body: `Notion에서 다음 페이지의 기존 문단을 읽고, 워크북에서 수정한 뒤 같은 블록에 저장하는 흐름으로 진행해줘.
 페이지 URL 또는 Page ID: [여기에 입력]
 
 운영자 서버의 NOTION_TOKEN을 사용하되, 토큰 값은 절대 노출하지 마.
 1. 페이지 제목과 페이지 ID를 확인
 2. 본문 블록을 읽어 핵심 내용 3~5개로 요약
 3. 데이터베이스라면 행 3개를 [제목 / 상태 / 담당자 / 날짜]로 보여주기
-4. 페이지에 연결되지 않았거나 read content 권한이 없으면 원인과 해결 방법을 알려주기
+4. 페이지에 연결되지 않았거나 Read content·Update content 권한이 없으면 원인과 해결 방법을 알려주기
 
-먼저 읽기 결과와 추가할 문단 초안을 보여줘. 내가 확인하기 전에는 페이지를 수정하지 마.
-확인하면 같은 페이지 하단에 초안을 문단 블록으로 추가하고, 추가된 블록 수를 알려줘.`
+먼저 선택한 block ID의 기존 문장과 수정 후 문장을 나란히 보여줘. 내가 확인하기 전에는 페이지를 수정하지 마.
+확인하면 같은 block ID의 rich_text를 수정하고, 저장된 최종 문장을 다시 읽어 보여줘.`
   },
 
   s3slack_send: {
-    session: 3, title: '3 — Slack 봇으로 원하는 채널에 보내기',
+    session: 3, title: '3 — Slack 봇 메시지를 보내고 다시 수정하기',
     body: `Slack Channel ID [여기에 입력]에 다음 메시지를 보내는 작업을 설계해줘.
 
 운영자 서버의 SLACK_BOT_TOKEN을 사용하되, 토큰 값은 절대 노출하지 마.
 1. 먼저 최종 메시지를 화면에 미리 보여주기
 2. 내가 확인하면 chat.postMessage로 지정한 Channel ID에 보내기
 3. 성공 응답에서 channel과 ts를 기록하기
-4. 봇이 채널에 들어와 있지 않거나 권한이 없으면 실제 전송하지 말고 해결 방법을 알려주기
+4. 보낸 뒤 내가 문구를 고치면 같은 channel과 ts로 chat.update 실행하기
+5. 봇이 채널에 들어와 있지 않거나 권한이 없으면 실제 전송하지 말고 해결 방법을 알려주기
 
 메시지는 제목 1줄 + 핵심 불릿 3~5개로 짧게 만들어줘.`
   },
@@ -821,7 +857,7 @@ export const PROMPT_HELP = {
   setup: {
     summary: '연결이 되었는지 확인하는 읽기 전용 테스트입니다. 아직 내용을 수정하거나 보내지 않습니다.',
     terms: [['연결 범위', 'AI가 접근할 수 있도록 허용한 페이지·채널의 범위입니다. 연결되어도 권한이 없는 자료는 읽을 수 없습니다.']],
-    steps: ['연결 준비에서 지정한 Notion 페이지의 접근 범위를 확인합니다.', '필요하면 이 프롬프트를 선택한 AI에 사용하거나 1회차의 원본 가져오기 버튼을 누릅니다.', '페이지 제목이나 목록이 워크북에 표시되고 저장되는지 확인합니다.'],
+    steps: ['강사가 배포한 「AX 실습장」을 복제하고 기존 Notion 앱을 연결합니다.', '1회차의 수정할 문단 불러오기 버튼을 눌러 페이지 제목·block ID·기존 문장을 확인합니다.', '워크북에서 문장을 조금 고치고 미리보기 후 같은 Notion 블록에 저장합니다.'],
   },
   s1a: {
     summary: '첫 단계는 본문을 읽는 것이 아니라, 내가 접근할 수 있는 자료의 목록과 경계를 확인하는 일입니다.',
@@ -831,7 +867,7 @@ export const PROMPT_HELP = {
   s1b: {
     summary: '페이지 하나를 넓게 요약하지 않고, 목적·결정·미결정·다음 질문으로 나눠 업무 맥락을 파악합니다.',
     terms: [['근거 문장', '요약이 원문에 실제로 적혀 있다는 것을 보여주는 문장입니다.'], ['미확인', '원본에서 찾지 못했으므로 사람이 추가 확인해야 한다는 표시입니다.']],
-    steps: ['실습 2의 페이지명 또는 URL 입력란에 읽을 원본을 적습니다.', '원본 읽기 버튼으로 해당 페이지 하나를 가져옵니다. 필요하면 프롬프트 카드의 요약 문장을 사용합니다.', '각 요약 뒤에 원문 근거를 붙이고, 없는 값은 미확인으로 남긴 뒤 저장합니다.'],
+    steps: ['실습 2의 페이지명 또는 URL 입력란에 「AX 실습장」 복제본을 적습니다.', '실습 패널에서 해당 페이지의 문단을 가져옵니다.', '카드의 문장은 버튼 뒤에서 필요한 요약 규칙을 이해하는 참고 자료로 읽고, 근거와 미확인 값을 워크북에 기록합니다.'],
   },
   s1c: {
     summary: 'AI가 요약한 문장을 다시 원본과 대조해, 다른 자료가 섞였거나 지어낸 내용이 없는지 확인합니다.',
@@ -846,7 +882,7 @@ export const PROMPT_HELP = {
   s2raw: {
     summary: '회의록에서 실행 후보를 넓게 뽑는 단계입니다. 이 단계의 결과는 일부러 아직 정제하지 않습니다.',
     terms: [['후보', '액션아이템일 수도 있지만, 아직 결정 여부와 근거를 확인하지 않은 항목입니다.'], ['permalink', 'Slack의 특정 메시지로 바로 이동하는 고유 링크입니다.']],
-    steps: ['회의록 URL이나 Notion 페이지를 입력합니다.', '원본 범위를 적습니다.', '프롬프트를 실행하고 나온 후보 목록을 그대로 기록합니다.'],
+    steps: ['회의록 URL이나 Notion 페이지를 입력합니다.', '원본 범위를 적습니다.', '워크북에서 가져온 원문을 기준으로 후보를 기록하고, 카드의 문장은 후보를 만드는 규칙을 이해하는 데 사용합니다.'],
   },
   s2rules: {
     summary: '후보를 업무 데이터로 바꾸는 단계입니다. 실행할 일인지, 근거가 있는지, 모르는 값은 비워두는지를 판단합니다.',
@@ -864,10 +900,10 @@ export const PROMPT_HELP = {
     steps: ['최종 액션아이템 표를 s2.action_items 입력란에 붙여넣습니다.', '2회차 실습 패널에서 최종 결과 저장 버튼을 누릅니다.', '저장 위치와 다시 읽은 값이 같은지 확인합니다.'],
   },
   s3asana: {
-    summary: 'Asana 봇을 특정 프로젝트에 초대한 뒤 태스크를 읽고, 확인한 결과를 태스크로 생성하는 실습입니다.',
-    setup: ['운영자: Vercel Production에 ASANA_TOKEN_BOT이 설정되어 있어야 합니다. 토큰 값은 수강생에게 공유하지 않습니다.', '수강생: 사용할 Asana 프로젝트를 정하고 프로젝트 멤버에 기존 봇을 초대합니다.', '수강생: 프로젝트 URL 또는 Project GID만 워크북에 입력합니다. 읽기 결과와 생성 초안을 먼저 확인합니다.'],
+    summary: 'Asana 봇을 특정 프로젝트에 초대한 뒤 기존 태스크를 가져와 수정하고, 같은 태스크에 저장하는 실습입니다.',
+    setup: ['운영자: Vercel Production에 ASANA_TOKEN_BOT이 설정되어 있고 태스크 읽기·쓰기 권한이 있어야 합니다. 토큰 값은 수강생에게 공유하지 않습니다.', '수강생: 사용할 Asana 프로젝트를 정하고 프로젝트 멤버에 기존 봇을 초대합니다.', '수강생: 수정해도 되는 샘플 태스크를 1건 이상 만들고 프로젝트 URL 또는 Project GID만 워크북에 입력합니다.'],
     terms: [['Project GID', 'Asana 프로젝트를 API에서 식별하는 고유 숫자 ID입니다.'], ['미리보기', '외부 도구에 쓰기 전에 사람이 결과를 확인하는 화면입니다.']],
-    steps: ['Asana 프로젝트의 멤버 메뉴에서 봇을 초대합니다.', '프로젝트 URL 또는 GID를 입력합니다.', '연결 확인 버튼으로 프로젝트 이름과 태스크를 읽습니다.', '태스크의 담당자·마감일이 비어 있으면 미확인으로 기록합니다.', '생성할 태스크 초안을 검토하고 확인 버튼으로 1건을 만듭니다.', '403·project not found가 나오면 봇 초대와 프로젝트 접근 범위를 다시 확인합니다.'],
+    steps: ['Asana 프로젝트의 멤버 메뉴에서 봇을 초대합니다.', '프로젝트 URL 또는 GID를 입력합니다.', '수정할 태스크 불러오기 버튼으로 기존 값을 가져옵니다.', '이름·설명·마감일·완료 상태를 워크북에서 고칩니다.', '수정 전후 미리보기를 확인한 뒤 같은 태스크에 저장합니다.', '403·project not found가 나오면 봇 초대와 프로젝트 접근 범위를 다시 확인합니다.'],
   },
   s3config: {
     summary: '토큰의 실제 값은 보지 않고, 운영자 서버에 연결이 준비됐는지만 확인하는 단계입니다.',
@@ -876,16 +912,16 @@ export const PROMPT_HELP = {
     steps: ['운영자가 Vercel 환경변수를 Production에 저장합니다.', '환경변수를 새로 넣거나 바꿨다면 다시 배포합니다.', '수강생은 연결할 대상 ID만 워크북에 저장합니다.', '토큰 값이 화면·프롬프트·워크북 답변에 노출되지 않는지 확인합니다.'],
   },
   s3notion: {
-    summary: 'Notion 앱을 특정 페이지에 연결한 뒤, 페이지의 블록이나 DB 행을 읽고 확인한 결과를 같은 페이지에 추가하는 실습입니다.',
-    setup: ['운영자: Vercel Production에 NOTION_TOKEN이 설정되어 있어야 합니다.', '수강생: 읽을 페이지에서 오른쪽 위 ··· → 연결 추가를 열고 운영자가 만든 기존 앱을 선택합니다.', '수강생: 연결한 페이지 URL 또는 Page ID만 입력합니다. 읽기 결과와 추가할 문단 초안을 먼저 확인합니다.'],
-    terms: [['Page ID', 'Notion 페이지를 API에서 식별하는 ID입니다. URL 안에 들어 있거나 URL에서 확인할 수 있습니다.'], ['연결 추가', '페이지의 권한 메뉴에서 기존 앱이 이 페이지를 읽도록 허용하는 절차입니다.']],
-    steps: ['Notion 페이지 오른쪽 위 ··· → 연결 추가를 엽니다.', '운영자가 만든 기존 앱을 선택하고 접근을 허용합니다.', '페이지 URL 또는 ID를 입력합니다.', '연결 확인 버튼으로 페이지 제목과 본문 블록을 읽습니다.', '추가할 문단 초안을 검토하고 확인 버튼으로 같은 페이지에 추가합니다.', 'object_not_found·unauthorized가 나오면 페이지 연결과 상위 페이지 권한을 다시 확인합니다.'],
+    summary: 'Notion 앱을 「AX 실습장」 복제본에 연결한 뒤 기존 문단을 가져와 수정하고, 같은 블록에 저장하는 실습입니다.',
+    setup: ['운영자: Vercel Production에 NOTION_TOKEN이 설정되어 있고 앱에 Read content와 Update content 권한이 있어야 합니다.', '강사: 원본 회의록·수정 실습 문단·결과 기록 영역이 있는 「AX 실습장」 템플릿을 미리 배포합니다.', '수강생: 템플릿을 복제하고 페이지 오른쪽 위 ··· → 연결 추가에서 기존 앱을 선택한 뒤 Page ID를 입력합니다.'],
+    terms: [['Page ID', 'Notion 페이지를 API에서 식별하는 ID입니다. URL 안에 들어 있거나 URL에서 확인할 수 있습니다.'], ['연결 추가', '페이지의 권한 메뉴에서 기존 앱이 이 페이지를 읽고 수정하도록 허용하는 절차입니다.']],
+    steps: ['「AX 실습장」을 내 페이지로 복제합니다.', '페이지 오른쪽 위 ··· → 연결 추가에서 기존 앱을 선택합니다.', '페이지 URL 또는 ID를 입력합니다.', '수정할 문단 불러오기 버튼으로 block ID와 기존 문장을 가져옵니다.', '수정 전후 미리보기를 확인한 뒤 같은 Notion 블록에 저장합니다.', 'object_not_found·unauthorized가 나오면 앱의 Update content 권한과 페이지 연결을 다시 확인합니다.'],
   },
   s3slack_send: {
-    summary: '봇이 지정한 Slack 채널에 메시지를 보내되, 전송 전에 사람이 미리 확인하는 실습입니다.',
+    summary: '봇이 지정한 Slack 채널에 메시지를 보내고, 워크북에서 고친 문구를 같은 메시지에 다시 저장하는 실습입니다.',
     setup: ['운영자: Slack 앱 OAuth & Permissions의 Bot Token Scopes에 chat:write를 추가합니다.', '개인 DM 실습까지 하려면 conversations.open을 위한 im:write도 추가하고, 권한을 바꾼 뒤 Slack 앱을 Workspace에 다시 설치합니다.', '수강생: 공개·비공개 채널에 봇을 초대하고 C로 시작하는 Channel ID를 준비합니다. 개인 DM은 U로 시작하는 Slack User ID를 사용합니다.'],
     terms: [['Channel ID', 'Slack 채널을 API에서 식별하는 C로 시작하는 ID입니다.'], ['chat.postMessage', 'Slack 채널이나 DM에 메시지를 보내는 API 동작입니다.']],
-    steps: ['Slack 앱 권한을 추가했다면 Workspace에 다시 설치합니다.', '봇을 대상 채널에 초대하거나 DM 대상 User ID를 확인합니다.', '메시지를 미리 본 뒤 확인하고 전송합니다.', '성공 응답의 channel과 ts를 워크북에 기록합니다.', 'not_in_channel·missing_scope가 나오면 초대와 권한을 다시 확인합니다.'],
+    steps: ['Slack 앱 권한을 추가했다면 Workspace에 다시 설치합니다.', '봇을 대상 채널에 초대하거나 DM 대상 User ID를 확인합니다.', '메시지를 미리 본 뒤 확인하고 전송합니다.', '워크북에서 문구를 고친 뒤 같은 channel과 ts로 수정 저장합니다.', '봇이 작성한 메시지만 수정할 수 있으며 cant_update_message가 나오면 작성자를 확인합니다.', 'not_in_channel·missing_scope가 나오면 초대와 권한을 다시 확인합니다.'],
   },
   s3slack_event: {
     summary: 'Slack에서 작성한 메시지가 Vercel 웹훅을 거쳐 Supabase 수신함에 들어오는 흐름을 확인합니다.',

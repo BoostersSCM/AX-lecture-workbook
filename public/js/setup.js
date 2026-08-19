@@ -8,6 +8,34 @@ import { el, progressBar, renderField, renderPrompt } from './render.js';
 
 const app = document.getElementById('app');
 
+function renderPlaygroundGuide(guide) {
+  const section = el(`
+    <section class="setup-playground">
+      <div class="setup-playground-head">
+        <div><span class="eyebrow">PRE-CLASS TEMPLATE</span><h3>${esc(guide.title)}</h3></div>
+        <button class="copy" type="button">템플릿 문구 복사</button>
+      </div>
+      <p>${esc(guide.intro)}</p>
+      <div class="setup-playground-roles">
+        <div><strong>강사가 준비할 것</strong><ol>${guide.instructor.map(item => `<li>${esc(item)}</li>`).join('')}</ol></div>
+        <div><strong>수강생이 준비할 것</strong><ol>${guide.student.map(item => `<li>${esc(item)}</li>`).join('')}</ol></div>
+      </div>
+      <pre>${esc(guide.template)}</pre>
+    </section>`);
+  const button = section.querySelector('button');
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(guide.template);
+      button.textContent = '복사됨 ✓';
+      toast('AX 실습장 템플릿 문구를 복사했습니다.');
+      setTimeout(() => { button.textContent = '템플릿 문구 복사'; }, 1600);
+    } catch {
+      toast('복사하지 못했습니다. 템플릿 영역을 직접 선택해주세요.', 'error');
+    }
+  });
+  return section;
+}
+
 (async function main() {
   const me = await requireAuth();
   if (!me) return;
@@ -34,6 +62,10 @@ const app = document.getElementById('app');
   for (const g of SETUP.groups) {
     app.appendChild(el(`<h2>${esc(g.name)}</h2>`));
 
+    if (g.name.startsWith('3.') && SETUP.playgroundGuide) {
+      app.appendChild(renderPlaygroundGuide(SETUP.playgroundGuide));
+    }
+
     for (const f of g.fields) {
       app.appendChild(renderField(f));
 
@@ -47,7 +79,7 @@ const app = document.getElementById('app');
       }
     }
 
-    if (g.name === '4. 연결할 대상 정하기') {
+    if (g.fields.some(f => f.key === 'setup.asana_target')) {
       const saveBox = el(`
         <div class="setup-save">
           <div>
@@ -104,7 +136,7 @@ const app = document.getElementById('app');
       <p style="margin:0 0 0.7rem"><b>내가 올린 회사 자료가 외부 학습에 쓰이나요?</b><br>
       <span style="color:var(--ink-soft)">회사 계정(업무용 플랜)은 기본적으로 학습에 사용되지 않습니다. 다만 강의에서는 급여·평가·계약 단가 등 민감 정보를 아예 다루지 않습니다.</span></p>
       <p style="margin:0"><b>실습하다 노션을 망가뜨리면요?</b><br>
-      <span style="color:var(--ink-soft)">1·2회차는 워크북 Supabase에 저장하고, 3회차 외부 도구 전송은 미리보기와 확인 뒤 본인이 지정한 대상에만 실행합니다.</span></p>
+      <span style="color:var(--ink-soft)">강사가 배포한 「AX 실습장」을 각자 복제해 사용합니다. 3회차 수정 저장은 변경 전후 미리보기와 확인 뒤 내 복제본·샘플 태스크·봇 메시지에만 실행합니다.</span></p>
     </div>`));
 
   app.appendChild(el(`<p style="margin-top:2rem"><a class="btn-link" href="/session?n=1">1회차 워크북으로 →</a></p>`));

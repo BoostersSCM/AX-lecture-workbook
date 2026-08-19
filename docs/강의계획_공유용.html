@@ -279,39 +279,39 @@
     <p class="dim">지금 대부분은 이렇게 씁니다 — 노션 열기 → 드래그 → 복사 → AI에 붙여넣기 → 결과 복사 → 다시 노션에 붙여넣기.
       이 방식은 세 군데서 막힙니다. <b>양</b>(회의록 20건은 복붙이 불가능하다), <b>최신성</b>(붙여넣는 순간 이미 과거다),
       <b>반복 비용</b>(매주 같은 일을 처음부터 한다).</p>
-    <div class="pull">이 강의는 반복 복붙 중심의 업무를 연결된 작업 흐름으로 바꿉니다. <strong>커넥터와 봇</strong>으로 노션·슬랙·아사나를 읽고, 확인한 결과를 필요한 곳에 보낸 뒤 Supabase에 학습 기록을 남깁니다.</div>
+    <div class="pull">이 강의는 워크북을 <strong>SaaS 편집 작업대</strong>로 사용합니다. 노션·아사나·슬랙의 실제 값을 가져와 사람이 고치고, 변경 전후를 확인한 뒤 같은 항목에 다시 저장하며 Supabase에는 실행 기록을 남깁니다.</div>
   </section>
 
   <section>
-    <h2>관통 원리 — 긁·정·만·보</h2>
-    <p class="dim">4주 내내 반복되는 뼈대는 하나입니다. 매 회차 이 네 칸 중 한 칸씩 깊게 팝니다.</p>
+    <h2>관통 원리 — 가져오기·다듬기·반영하기·이어쓰기</h2>
+    <p class="dim">4주 내내 반복되는 뼈대는 하나입니다. 버튼을 눌렀을 때 데이터가 어디에서 와서 어디에 다시 저장되는지 직접 확인합니다.</p>
     <div class="steps">
       <div class="step">
         <div class="step-n mono">01</div>
-        <div class="step-name">긁기</div>
+        <div class="step-name">가져오기</div>
         <div class="step-en mono">Collect</div>
-        <p>흩어진 원본을 AI가 직접 읽게 한다</p>
+        <p>SaaS의 실제 값을 워크북으로 불러온다</p>
       </div>
       <div class="step">
         <div class="step-n mono">02</div>
-        <div class="step-name">정하기</div>
+        <div class="step-name">다듬기</div>
         <div class="step-en mono">Structure</div>
-        <p>읽은 것을 정해진 형식에 넣는다</p>
+        <p>사람이 기준에 맞게 확인하고 고친다</p>
       </div>
       <div class="step">
         <div class="step-n mono">03</div>
-        <div class="step-name">만들기</div>
-        <div class="step-en mono">Generate</div>
-        <p>형식이 잡힌 데이터로 결과물을 만든다</p>
+        <div class="step-name">반영하기</div>
+        <div class="step-en mono">Sync</div>
+        <p>고친 값을 같은 SaaS 항목에 저장한다</p>
       </div>
       <div class="step">
         <div class="step-n mono">04</div>
-        <div class="step-name">보내기</div>
-        <div class="step-en mono">Deliver</div>
-        <p>사람이 볼 곳까지 배달한다</p>
+        <div class="step-name">이어쓰기</div>
+        <div class="step-en mono">Reuse</div>
+        <p>저장 기록을 다음 자동화에 다시 쓴다</p>
       </div>
     </div>
-    <div class="pull">“AI가 못 하는 게 아니라, 우리가 <strong>어디서 긁어서 어떤 형식으로 어디로 보낼지</strong>를 안 정해준 것이다.”</div>
+    <div class="pull">“연결은 값을 보여주는 데서 끝나지 않습니다. <strong>어디서 가져와 무엇을 고치고, 어느 ID에 다시 저장했는지</strong> 확인해야 완성됩니다.”</div>
   </section>
 
   <section>
@@ -322,8 +322,8 @@
         <div class="week-tag mono">1회차</div>
         <div class="week-body">
           <div class="week-title">AI에게 업무 원본을 읽히는 날 <span>· 연결</span></div>
-          <p>커넥터로 노션·슬랙·아사나의 원본을 읽고, 접근 범위·업무 맥락·근거 문장을 확인합니다. 첫날은 원본 도구에 쓰지 않고, 가져온 결과와 검수 기록을 워크북에 저장합니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 읽을 수 있는 원본 목록 + 업무 맥락 요약 1개 + 근거 문장</div>
+          <p>강사가 배포한 「AX 실습장」을 각자 복제하고 Notion 앱을 연결합니다. 실제 문단을 워크북으로 가져와 작은 수정을 만든 뒤, 미리보기 후 같은 block ID에 다시 저장합니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> Notion 원본 스냅샷 + 같은 문단의 수정 저장 결과 + 근거 문장</div>
         </div>
       </article>
 
@@ -331,7 +331,7 @@
         <div class="week-tag mono">2회차</div>
         <div class="week-body">
           <div class="week-title">흩어진 기록에 구조를 더하는 날 <span>· 구조</span></div>
-          <p>각자가 지정한 회의록에서 액션아이템 후보를 뽑아 근거를 검수하고, 최종 표를 워크북 Supabase에 저장합니다. 원본 도구에는 쓰지 않고, 저장된 값을 다시 읽으며 데이터 구조를 익힙니다.
+          <p>각자가 지정한 회의록에서 액션아이템 후보를 뽑아 근거를 검수하고, 최종 표를 워크북 Supabase에 저장합니다. 저장 버튼과 재조회 버튼으로 화면의 입력이 DB 한 행이 되는 과정을 확인합니다.
             원본이 없을 때만 공용 샘플을 사용합니다. 결과 개수를 맞추기보다 미리보기·근거·저장 위치를 확인합니다.</p>
           <div class="deliver"><span class="label mono">완성물</span> 근거가 붙은 최종 액션아이템 표와 Supabase 재조회 기록</div>
         </div>
@@ -342,8 +342,8 @@
         <div class="week-body">
           <div class="week-title">Asana·Notion·Slack을 실제로 연결하는 날 <span>· 연동</span></div>
           <p>기존 봇·앱 토큰은 서버에 두고, 각자가 원하는 Asana 프로젝트·Notion 페이지·Slack 채널을 연결합니다.
-            읽기·보내기·웹훅 받기까지 확인한 뒤, 다음 사람이 다시 실행할 연결 레시피를 남깁니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 세 도구 연결 결과 + 연결 레시피 1개</div>
+            기존 태스크·문단·봇 메시지를 가져와 워크북에서 고친 뒤 같은 ID에 다시 저장하고, Slack 웹훅 수신까지 확인합니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 세 SaaS의 수정 저장 결과 + 연결 레시피 1개</div>
         </div>
       </article>
 
@@ -388,7 +388,7 @@
         <thead><tr><th>시간</th><th>블록</th><th>내용</th></tr></thead>
         <tbody>
           <tr><td class="time mono">0–10</td><td>체크인</td><td>지난주 적용 사례 1~2명 공유</td></tr>
-          <tr><td class="time mono">10–25</td><td>개념</td><td>슬라이드 최소. 화이트보드에 긁·정·만·보 그리기</td></tr>
+          <tr><td class="time mono">10–25</td><td>개념</td><td>슬라이드 최소. 화이트보드에 가져오기→다듬기→반영하기→이어쓰기 그리기</td></tr>
           <tr><td class="time mono">25–40</td><td>라이브 데모</td><td>강사가 실제로 실행 — <b>실패도 그대로 보여준다</b></td></tr>
           <tr><td class="time mono">40–75</td><td>실습</td><td>각자 실행. 강사 + 조교가 순회</td></tr>
           <tr><td class="time mono">75–90</td><td>공유·정리</td><td>완성물 2~3개 화면 공유, 숙제 안내</td></tr>

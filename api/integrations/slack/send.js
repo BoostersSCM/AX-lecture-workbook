@@ -6,7 +6,7 @@ const {
 } = require('../../_lib/integration');
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'POST only' });
+  if (!['POST', 'PATCH'].includes(req.method)) return json(res, 405, { ok: false, error: 'POST 또는 PATCH only' });
   if (!await requireIntegrationAccess(req, res)) return;
 
   const token = env('SLACK_BOT_TOKEN');
@@ -20,6 +20,42 @@ module.exports = async function handler(req, res) {
   const text = String(body.text || '').trim();
   if (!channel || !text) {
     return json(res, 400, { ok: false, error: 'channel과 text 필요' });
+  }
+
+  if (req.method === 'PATCH') {
+    const ts = String(body.ts || '').trim();
+    if (!ts) return json(res, 400, { ok: false, error: '수정할 메시지 ts 필요' });
+    if (!/^[CDG][A-Z0-9]+$/i.test(channel)) {
+      return json(res, 400, { ok: false, error: '메시지 수정에는 실제 Channel ID 또는 DM Channel ID가 필요합니다.' });
+    }
+    try {
+      const response = await fetch('https://slack.com/api/chat.update', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({ channel, ts, text }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        return json(res, response.ok ? 502 : response.status, {
+          ok: false,
+          error: result.error || 'Slack 메시지 수정 실패',
+        });
+      }
+      return json(res, 200, {
+        ok: true,
+        updated: true,
+        channel: result.channel,
+        ts: result.ts,
+        text: result.text || result.message?.text || text,
+        message: result.message || null,
+      });
+    } catch (error) {
+      console.error('[integrations/slack/update]', error);
+      return json(res, 502, { ok: false, error: error.message || 'Slack 메시지 수정 실패' });
+    }
   }
 
   let destination = channel;

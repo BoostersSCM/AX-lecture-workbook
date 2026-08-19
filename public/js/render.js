@@ -33,15 +33,15 @@ function promptGuide(p) {
     return { run: 'Slack 테스트 채널에 메시지 작성', result: '3회차 수신함에서 확인 → 저장 상태 점검' };
   }
   if (title.includes('Asana')) {
-    return { run: '3회차 Asana 가져오기 패널', result: '미리보기 확인 → Asana 프로젝트에서 확인' };
+    return { run: '3회차 Asana 수정 작업대', result: '변경 전후 확인 → 같은 Asana 태스크에서 확인' };
   }
   if (title.includes('Notion')) {
-    return { run: '3회차 Notion 가져오기·추가 패널', result: '미리보기 확인 → Notion 페이지에서 확인' };
+    return { run: `${p.session === 1 ? '1회차' : '3회차'} Notion 수정 작업대`, result: '변경 전후 확인 → 같은 Notion 문단에서 확인' };
   }
   if (title.includes('Slack')) {
-    return { run: '3회차 Slack 전송 패널', result: '미리보기 확인 → Slack 채널·DM에서 확인' };
+    return { run: '3회차 Slack 전송·수정 작업대', result: '변경 전후 확인 → 같은 Slack 메시지에서 확인' };
   }
-  return { run: '해당 회차 연결 실습 패널 또는 선택한 AI', result: '결과 검토 → 워크북 저장·전송 버튼' };
+  return { run: '해당 회차의 연동 작업대', result: '결과 검토 → 워크북 또는 같은 SaaS에 저장' };
 }
 
 function openPromptHelp(help, title) {
@@ -91,7 +91,7 @@ export function renderPrompt(p, help = null) {
     summary: '이 프롬프트는 원본에서 필요한 정보를 읽고, 정해진 형식으로 결과를 만드는 요청입니다.',
     setup: ['대괄호 안의 값을 내 업무에 맞게 준비합니다.'],
     terms: [['원본', 'AI가 읽을 실제 자료입니다.'], ['범위', '어디까지 읽을지 정하는 조건입니다.']],
-    steps: ['대괄호 안의 값을 내 업무에 맞게 바꿉니다.', '회차 실습 패널에서 원본을 가져옵니다. 필요하면 이 문장을 선택한 AI에 사용합니다.', '결과를 검토한 뒤 회차의 저장·전송 버튼을 누르고 다시 읽어봅니다.'],
+    steps: ['대괄호 안에 어떤 대상과 범위가 필요한지 확인합니다.', '회차의 연동 작업대에서 원본을 가져와 수정합니다.', '변경 전후를 검토한 뒤 저장 버튼을 누르고 같은 SaaS 항목을 다시 확인합니다.'],
   };
   const personalizeBody = () => {
     const replacements = {

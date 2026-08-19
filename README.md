@@ -23,12 +23,14 @@
 
 Vercel API:
 
-- `/api/integrations/asana/tasks` — 인증된 Asana 프로젝트 태스크 읽기·1건 생성
-- `/api/integrations/notion/page` — 인증된 Notion 페이지·블록 읽기 + 확인 후 페이지에 문단 추가
-- `/api/integrations/slack/send` — 인증된 Slack 채널 발송
+- `/api/integrations/asana/tasks` — 인증된 Asana 프로젝트 태스크 읽기·생성·기존 태스크 수정
+- `/api/integrations/notion/page` — 인증된 Notion 페이지·블록 읽기·문단 추가·기존 블록 수정
+- `/api/integrations/slack/send` — 인증된 Slack 채널·DM 발송 및 봇 메시지 수정
 - `/api/slack/events` — Slack Events API 수신·서명 검증 (채널 범위는 각 사용자의 워크북 설정으로 관리)
 
-실습의 기본 동작은 `가져오기 → 화면에서 검토 → 명시적 저장/전송 → 다시 읽기`입니다. 프롬프트 카드는 변환 규칙을 참고하는 자료이고, 수강생은 별도 MCP 설정 없이 워크북의 연동 버튼으로 Asana·Notion·Slack·Supabase의 흐름을 확인합니다. 외부 도구에 쓰는 동작은 미리보기 후 한 번 더 확인해야 실행됩니다.
+실습의 기본 동작은 `SaaS에서 가져오기 → 워크북에서 수정 → 변경 전후 검토 → 같은 SaaS 항목에 저장 → 다시 읽기`입니다. 프롬프트 카드는 변환 규칙을 참고하는 자료이고, 수강생은 별도 MCP 설정 없이 워크북에서 기존 Asana 태스크·Notion 문단·Slack 봇 메시지를 수정합니다. 외부 도구에 쓰는 동작은 미리보기 후 한 번 더 확인해야 실행됩니다.
+
+「AX 실습장」은 강사가 사전에 만드는 Notion 템플릿입니다. 원본 회의록·수정 실습 문단·결과 기록 영역을 포함하고, 수강생은 각자 복제한 페이지에 기존 Notion 앱을 연결합니다. 앱에는 Read content와 Update content 권한이 필요합니다.
 
 Slack Events API는 `SUPABASE_SERVICE_ROLE_KEY`가 설정되면 `slack_events`에 저장되고, 3회차 워크북의 Slack 수신함에서 RLS 범위에 맞게 표시됩니다. 이 키는 Vercel 서버에만 둡니다.
 

@@ -30,7 +30,7 @@ function blockText(block) {
 }
 
 module.exports = async function handler(req, res) {
-  if (!['GET', 'POST'].includes(req.method)) return json(res, 405, { ok: false, error: 'GET 또는 POST only' });
+  if (!['GET', 'POST', 'PATCH'].includes(req.method)) return json(res, 405, { ok: false, error: 'GET, POST 또는 PATCH only' });
   if (!await requireIntegrationAccess(req, res)) return;
 
   const token = env('NOTION_TOKEN');
@@ -69,6 +69,46 @@ module.exports = async function handler(req, res) {
         source: 'notion',
         page_id: pageId,
         appended_blocks: (appended.results || []).length,
+      });
+    }
+
+    if (req.method === 'PATCH') {
+      const body = await readJsonBody(req);
+      const blockId = idFromInput(body.blockId);
+      const text = String(body.text || '').trim();
+      if (!blockId || !text) return json(res, 400, { ok: false, error: 'blockId와 text 필요' });
+      if (text.length > 1800) return json(res, 400, { ok: false, error: '한 블록은 1,800자 이하로 수정해주세요.' });
+
+      const children = await upstreamJson(
+        NOTION_API + '/blocks/' + encodeURIComponent(pageId) + '/children?page_size=100',
+        { headers }
+      );
+      const target = (children.results || []).find((block) => block.id.replace(/-/g, '') === blockId.replace(/-/g, ''));
+      const editableTypes = new Set(['paragraph', 'heading_1', 'heading_2', 'heading_3', 'bulleted_list_item', 'numbered_list_item', 'to_do', 'toggle', 'quote', 'callout', 'code']);
+      if (!target) return json(res, 403, { ok: false, error: '선택한 블록이 지정한 페이지의 바로 아래 블록이 아닙니다.' });
+      if (!editableTypes.has(target.type)) return json(res, 400, { ok: false, error: `수정할 수 없는 Notion 블록 유형입니다: ${target.type}` });
+
+      const updated = await upstreamJson(
+        NOTION_API + '/blocks/' + encodeURIComponent(target.id),
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({
+            [target.type]: {
+              rich_text: [{ type: 'text', text: { content: text } }],
+            },
+          }),
+        }
+      );
+      return json(res, 200, {
+        ok: true,
+        source: 'notion',
+        page_id: pageId,
+        block: {
+          id: updated.id,
+          type: updated.type,
+          text: blockText(updated),
+        },
       });
     }
 

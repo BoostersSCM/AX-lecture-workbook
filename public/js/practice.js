@@ -30,7 +30,7 @@ function panelShell(n, title, intro) {
           <div class="eyebrow">CLICK TO CONNECT · ${String(n).padStart(2, '0')}</div>
           <h2>${esc(title)}</h2>
         </div>
-        <span class="practice-status">연결 실험</span>
+        <span class="practice-status">연동 작업대</span>
       </div>
       <p class="practice-intro">${esc(intro)}</p>
       <div class="practice-actions"></div>
@@ -67,6 +67,19 @@ function setFieldValue(key, value) {
   const id = 'f_' + key.replace(/[^\w]/g, '_');
   const input = document.getElementById(id);
   if (input) input.value = value;
+}
+
+function resetConfirmation(input, button, label = '미리보기') {
+  input.addEventListener('input', () => {
+    button.dataset.confirm = '';
+    button.textContent = label;
+  });
+}
+
+async function saveIntegrationReceipt(key, value) {
+  const saved = await saveValue(key, value, { immediate: true });
+  if (!saved) throw new Error('연동 결과를 워크북에 저장하지 못했습니다.');
+  setFieldValue(key, value);
 }
 
 function addNotionReader(panel, { storeKey = '' } = {}) {
@@ -135,7 +148,7 @@ function addNotionAppender(panel) {
   const page = valueOf('setup.notion_target', 's3.notion_page');
   const card = el(`
     <article class="practice-action practice-create">
-      <div><h3>Notion 페이지에 결과 추가</h3><p>${page ? `연결 대상: ${esc(page)} · 미리보기 후 페이지 하단에 문단을 추가합니다.` : '연결 준비에서 Notion 페이지 URL 또는 ID를 먼저 적습니다.'}</p></div>
+      <div><h3>Notion 새 문단 추가 <small>선택 실습</small></h3><p>${page ? `연결 대상: ${esc(page)} · 기존 문단 수정 실습을 마친 뒤, 필요하면 페이지 하단에 새 문단을 추가합니다.` : '연결 준비에서 Notion 페이지 URL 또는 ID를 먼저 적습니다.'}</p></div>
       <textarea class="practice-input" rows="4" placeholder="예: 이번 회차 확인 결과와 다음 액션을 적어보세요." aria-label="Notion에 추가할 결과"></textarea>
       <button class="practice-button" type="button">미리보기</button>
     </article>`);
@@ -298,7 +311,7 @@ function addClassPostWriter(panel) {
 
 function addAsanaReader(panel, { storeKey = '' } = {}) {
   const project = valueOf('setup.asana_target', 's3.asana_project');
-  const card = actionCard('Asana 태스크 불러오기', project ? `연결 대상: ${project}` : '연결 준비에서 Asana 프로젝트 URL 또는 GID를 먼저 적습니다.', '태스크 3개 읽기');
+  const card = actionCard('Asana 태스크 불러오기', project ? `연결 대상: ${project}` : '연결 준비에서 Asana 프로젝트 URL 또는 GID를 먼저 적습니다.', '태스크 읽기');
   panel.querySelector('.practice-actions').appendChild(card);
   card.querySelector('button').addEventListener('click', async () => {
     if (!project) return showOutput(panel, 'Asana 연결값 필요', '연결 준비 화면에서 Asana 프로젝트 URL 또는 Project GID를 먼저 입력하세요.', 'error');
@@ -322,7 +335,7 @@ function addAsanaCreator(panel) {
   const project = valueOf('setup.asana_target', 's3.asana_project');
   const card = el(`
     <article class="practice-action practice-create">
-      <div><h3>Asana 태스크 1건 만들기</h3><p>먼저 이름을 입력하고 미리보기 후 확인하면 실제 프로젝트에 생성합니다.</p></div>
+      <div><h3>Asana 새 태스크 만들기 <small>선택 실습</small></h3><p>기존 태스크 수정 실습을 마친 뒤, 필요하면 새 태스크 1건을 추가합니다.</p></div>
       <input class="practice-input" type="text" placeholder="예: AX 실습 후속 확인" aria-label="Asana 새 태스크 이름">
       <button class="practice-button" type="button">미리보기</button>
     </article>`);
@@ -350,6 +363,188 @@ function addAsanaCreator(panel) {
   });
 }
 
+function addAsanaEditor(panel) {
+  const project = valueOf('setup.asana_target', 's3.asana_project');
+  const card = el(`
+    <article class="practice-action practice-workbench">
+      <div class="workbench-heading">
+        <span class="workbench-step">가져오기 → 수정 → 저장</span>
+        <h3>Asana 기존 태스크 수정</h3>
+        <p>${project ? `연결 대상: ${esc(project)}` : '연결 준비에서 Asana 프로젝트 URL 또는 GID를 먼저 적습니다.'}</p>
+      </div>
+      <button class="practice-button workbench-load" type="button">수정할 태스크 불러오기</button>
+      <div class="workbench-editor" hidden>
+        <label class="workbench-field"><span>수정할 태스크</span><select class="practice-input" data-task-select></select></label>
+        <div class="workbench-grid">
+          <label class="workbench-field workbench-wide"><span>태스크 이름</span><input class="practice-input" data-task-name type="text"></label>
+          <label class="workbench-field"><span>마감일</span><input class="practice-input" data-task-due type="date"></label>
+          <label class="workbench-field"><span>완료 상태</span><select class="practice-input" data-task-completed><option value="false">진행 중</option><option value="true">완료</option></select></label>
+          <label class="workbench-field workbench-wide"><span>설명</span><textarea class="practice-input" data-task-notes rows="4"></textarea></label>
+        </div>
+        <div class="workbench-submit"><span>미리보기에서 변경 내용을 확인한 뒤 실제 Asana에 저장합니다.</span><button class="practice-button" data-task-save type="button">수정 미리보기</button></div>
+      </div>
+    </article>`);
+  panel.querySelector('.practice-actions').appendChild(card);
+  const loadButton = card.querySelector('.workbench-load');
+  const editor = card.querySelector('.workbench-editor');
+  const select = card.querySelector('[data-task-select]');
+  const nameInput = card.querySelector('[data-task-name]');
+  const dueInput = card.querySelector('[data-task-due]');
+  const completedInput = card.querySelector('[data-task-completed]');
+  const notesInput = card.querySelector('[data-task-notes]');
+  const saveButton = card.querySelector('[data-task-save]');
+  let tasks = [];
+
+  function fillTask() {
+    const task = tasks.find((item) => item.gid === select.value) || tasks[0];
+    if (!task) return;
+    nameInput.value = task.name || '';
+    dueInput.value = task.due_on || '';
+    completedInput.value = String(Boolean(task.completed));
+    notesInput.value = task.notes || '';
+    saveButton.dataset.confirm = '';
+    saveButton.textContent = '수정 미리보기';
+  }
+
+  loadButton.addEventListener('click', async () => {
+    if (!project) return showOutput(panel, 'Asana 연결값 필요', '연결 준비 화면에서 Asana 프로젝트 URL 또는 Project GID를 먼저 입력하세요.', 'error');
+    try {
+      loadButton.disabled = true;
+      const result = await callIntegration('/api/integrations/asana/tasks?projectGid=' + encodeURIComponent(project));
+      tasks = result.tasks || [];
+      if (!tasks.length) throw new Error('이 프로젝트에서 수정할 태스크를 찾지 못했습니다. 샘플 태스크를 먼저 준비해주세요.');
+      select.innerHTML = tasks.map((task) => `<option value="${esc(task.gid)}">${esc(task.name || '(이름 없음)')}</option>`).join('');
+      editor.hidden = false;
+      fillTask();
+      const snapshot = [`프로젝트: ${result.project?.name || '이름 미확인'}`, '', ...tasks.map(task => `• ${task.name || '(이름 없음)'} / ${task.completed ? '완료' : '진행 중'} / ${task.due_on || '마감일 없음'} / GID ${task.gid}`)].join('\n');
+      await saveIntegrationReceipt('s3.asana_tasks', snapshot);
+      showOutput(panel, 'Asana 태스크를 워크북으로 가져왔습니다', `${snapshot}\n\n아래 편집칸에서 태스크를 고쳐 실제 Asana에 다시 저장하세요.`);
+    } catch (error) { showError(panel, error); }
+    finally { loadButton.disabled = false; }
+  });
+
+  select.addEventListener('change', fillTask);
+  [nameInput, dueInput, completedInput, notesInput].forEach((input) => resetConfirmation(input, saveButton, '수정 미리보기'));
+  saveButton.addEventListener('click', async () => {
+    const task = tasks.find((item) => item.gid === select.value);
+    const name = nameInput.value.trim();
+    if (!task || !name) return showOutput(panel, '수정할 태스크 필요', '태스크를 불러오고 이름을 입력해주세요.', 'error');
+    const preview = `프로젝트: ${project}\n태스크 GID: ${task.gid}\n\n이름: ${task.name || '(없음)'} → ${name}\n마감일: ${task.due_on || '없음'} → ${dueInput.value || '없음'}\n상태: ${task.completed ? '완료' : '진행 중'} → ${completedInput.value === 'true' ? '완료' : '진행 중'}\n설명: ${notesInput.value.trim() || '없음'}`;
+    if (saveButton.dataset.confirm !== 'yes') {
+      showOutput(panel, 'Asana 수정 전 미리보기', `${preview}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 실제 태스크에 저장하세요.`);
+      saveButton.dataset.confirm = 'yes';
+      saveButton.textContent = '확인하고 Asana에 저장';
+      return;
+    }
+    try {
+      saveButton.disabled = true;
+      const result = await callIntegration('/api/integrations/asana/tasks?projectGid=' + encodeURIComponent(project), {
+        method: 'PUT',
+        body: {
+          taskGid: task.gid,
+          name,
+          dueOn: dueInput.value,
+          completed: completedInput.value === 'true',
+          notes: notesInput.value,
+        },
+      });
+      const updated = result.task || {};
+      Object.assign(task, updated);
+      const receipt = `Asana 수정 저장 완료\n프로젝트: ${result.project?.name || project}\n태스크: ${updated.name || name}\nGID: ${updated.gid || task.gid}\n상태: ${updated.completed ? '완료' : '진행 중'}\n마감일: ${updated.due_on || '없음'}\nURL: ${updated.permalink_url || '확인 필요'}`;
+      await saveIntegrationReceipt('s3.asana_update', receipt);
+      select.options[select.selectedIndex].textContent = updated.name || name;
+      showOutput(panel, 'Asana에 수정 저장 완료', receipt);
+      saveButton.dataset.confirm = '';
+      saveButton.textContent = '수정 미리보기';
+    } catch (error) { showError(panel, error); }
+    finally { saveButton.disabled = false; }
+  });
+}
+
+function addNotionBlockEditor(panel, {
+  snapshotKey = 's3.report',
+  receiptKey = 's3.notion_update',
+  title = 'Notion 기존 문단 수정',
+} = {}) {
+  const page = valueOf('setup.notion_target', 's3.notion_page');
+  const editableTypes = new Set(['paragraph', 'heading_1', 'heading_2', 'heading_3', 'bulleted_list_item', 'numbered_list_item', 'to_do', 'toggle', 'quote', 'callout', 'code']);
+  const card = el(`
+    <article class="practice-action practice-workbench">
+      <div class="workbench-heading">
+        <span class="workbench-step">가져오기 → 수정 → 저장</span>
+        <h3>${esc(title)}</h3>
+        <p>${page ? `연결 대상: ${esc(page)}` : '연결 준비에서 Notion 페이지 URL 또는 ID를 먼저 적습니다.'}</p>
+      </div>
+      <button class="practice-button workbench-load" type="button">수정할 문단 불러오기</button>
+      <div class="workbench-editor" hidden>
+        <label class="workbench-field"><span>수정할 Notion 블록</span><select class="practice-input" data-block-select></select></label>
+        <label class="workbench-field"><span>워크북에서 고칠 내용</span><textarea class="practice-input" data-block-text rows="6" maxlength="1800"></textarea></label>
+        <div class="workbench-submit"><span>기존 문단 전체가 이 내용으로 바뀝니다. 먼저 미리보기를 확인하세요.</span><button class="practice-button" data-block-save type="button">수정 미리보기</button></div>
+      </div>
+    </article>`);
+  panel.querySelector('.practice-actions').appendChild(card);
+  const loadButton = card.querySelector('.workbench-load');
+  const editor = card.querySelector('.workbench-editor');
+  const select = card.querySelector('[data-block-select]');
+  const textInput = card.querySelector('[data-block-text]');
+  const saveButton = card.querySelector('[data-block-save]');
+  let blocks = [];
+
+  function fillBlock() {
+    const block = blocks.find((item) => item.id === select.value) || blocks[0];
+    if (!block) return;
+    textInput.value = block.text || '';
+    saveButton.dataset.confirm = '';
+    saveButton.textContent = '수정 미리보기';
+  }
+
+  loadButton.addEventListener('click', async () => {
+    if (!page) return showOutput(panel, 'Notion 연결값 필요', '연결 준비 화면에서 Notion 페이지 URL 또는 Page ID를 먼저 입력하세요.', 'error');
+    try {
+      loadButton.disabled = true;
+      const result = await callIntegration('/api/integrations/notion/page?pageId=' + encodeURIComponent(page));
+      blocks = (result.blocks || []).filter((block) => editableTypes.has(block.type) && String(block.text || '').trim());
+      if (!blocks.length) throw new Error('이 페이지에서 수정할 텍스트 문단을 찾지 못했습니다. AX 실습장에 수정용 문단을 먼저 준비해주세요.');
+      select.innerHTML = blocks.map((block) => `<option value="${esc(block.id)}">${esc(`${block.type} · ${(block.text || '').slice(0, 70)}`)}</option>`).join('');
+      editor.hidden = false;
+      fillBlock();
+      const snapshot = [`페이지: ${notionTitle(result.page)}`, '', ...blocks.map(block => `• [${block.type}] ${block.text}`)].join('\n');
+      await saveIntegrationReceipt(snapshotKey, snapshot);
+      showOutput(panel, 'Notion 문단을 워크북으로 가져왔습니다', `${snapshot}\n\n아래 편집칸에서 문단을 고쳐 같은 Notion 블록에 다시 저장하세요.`);
+    } catch (error) { showError(panel, error); }
+    finally { loadButton.disabled = false; }
+  });
+
+  select.addEventListener('change', fillBlock);
+  resetConfirmation(textInput, saveButton, '수정 미리보기');
+  saveButton.addEventListener('click', async () => {
+    const block = blocks.find((item) => item.id === select.value);
+    const text = textInput.value.trim();
+    if (!block || !text) return showOutput(panel, '수정할 문단 필요', '문단을 불러오고 수정할 내용을 입력해주세요.', 'error');
+    if (saveButton.dataset.confirm !== 'yes') {
+      showOutput(panel, 'Notion 수정 전 미리보기', `페이지: ${page}\n블록: ${block.id}\n\n기존:\n${block.text}\n\n수정 후:\n${text}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 같은 문단에 저장하세요.`);
+      saveButton.dataset.confirm = 'yes';
+      saveButton.textContent = '확인하고 Notion에 저장';
+      return;
+    }
+    try {
+      saveButton.disabled = true;
+      const result = await callIntegration('/api/integrations/notion/page?pageId=' + encodeURIComponent(page), {
+        method: 'PATCH',
+        body: { pageId: page, blockId: block.id, text },
+      });
+      block.text = result.block?.text || text;
+      const receipt = `Notion 수정 저장 완료\n페이지: ${page}\n블록 ID: ${result.block?.id || block.id}\n블록 유형: ${result.block?.type || block.type}\n수정 내용: ${block.text}`;
+      await saveIntegrationReceipt(receiptKey, receipt);
+      select.options[select.selectedIndex].textContent = `${block.type} · ${block.text.slice(0, 70)}`;
+      showOutput(panel, 'Notion에 수정 저장 완료', receipt);
+      saveButton.dataset.confirm = '';
+      saveButton.textContent = '수정 미리보기';
+    } catch (error) { showError(panel, error); }
+    finally { saveButton.disabled = false; }
+  });
+}
+
 function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기', detail = '메시지를 미리 본 뒤 확인하면 지정 채널로 봇이 보냅니다.', placeholder = '예: AX 실습 연결 테스트입니다.', storeKey = '' } = {}) {
   const channel = target || valueOf('setup.slack_target', 's3.slack_channel');
   const card = el(`
@@ -357,10 +552,21 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
       <div><h3>${esc(title)}</h3><p>${esc(detail)}</p></div>
       <textarea class="practice-input" rows="3" placeholder="${esc(placeholder)}" aria-label="Slack 메시지"></textarea>
       <button class="practice-button" type="button">미리보기</button>
+      <div class="practice-message-edit" hidden>
+        <div><strong>방금 보낸 메시지 다시 수정하기</strong><span>봇이 작성한 메시지만 같은 위치에서 수정할 수 있습니다.</span></div>
+        <textarea class="practice-input" rows="3" aria-label="Slack 수정 메시지"></textarea>
+        <button class="practice-button" type="button">수정 미리보기</button>
+      </div>
     </article>`);
   panel.querySelector('.practice-actions').appendChild(card);
   const input = card.querySelector('textarea');
   const button = card.querySelector('button');
+  const editZone = card.querySelector('.practice-message-edit');
+  const editInput = editZone.querySelector('textarea');
+  const editButton = editZone.querySelector('button');
+  let sentMessage = null;
+  resetConfirmation(input, button);
+  resetConfirmation(editInput, editButton, '수정 미리보기');
   button.addEventListener('click', async () => {
     const text = input.value.trim();
     if (!channel) return showOutput(panel, 'Slack 연결값 필요', title.includes('DM') ? '연결 준비 화면에서 Slack User ID를 먼저 입력하세요.' : '연결 준비 화면에서 Slack Channel ID를 먼저 입력하세요.', 'error');
@@ -379,17 +585,50 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
         setFieldValue(storeKey, text);
       }
       showOutput(panel, 'Slack 전송 완료', `채널: ${result.channel}\nts: ${result.ts}`);
+      sentMessage = { channel: result.channel, ts: result.ts };
+      editInput.value = text;
+      editZone.hidden = false;
+      editButton.dataset.confirm = '';
+      editButton.textContent = '수정 미리보기';
       button.dataset.confirm = '';
       button.textContent = '미리보기';
     } catch (error) { showError(panel, error); }
     finally { button.disabled = false; }
   });
+
+  editButton.addEventListener('click', async () => {
+    const text = editInput.value.trim();
+    if (!sentMessage) return showOutput(panel, '먼저 메시지를 보내주세요', 'Slack에 봇 메시지를 한 번 보낸 뒤 같은 메시지를 수정할 수 있습니다.', 'error');
+    if (!text) return showOutput(panel, '수정할 메시지 필요', '수정할 메시지를 입력하세요.', 'error');
+    if (editButton.dataset.confirm !== 'yes') {
+      showOutput(panel, 'Slack 수정 전 미리보기', `채널: ${sentMessage.channel}\nts: ${sentMessage.ts}\n\n수정 후 메시지:\n${text}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 같은 메시지를 수정하세요.`);
+      editButton.dataset.confirm = 'yes';
+      editButton.textContent = '확인하고 Slack에 저장';
+      return;
+    }
+    try {
+      editButton.disabled = true;
+      const result = await callIntegration('/api/integrations/slack/send', {
+        method: 'PATCH',
+        body: { channel: sentMessage.channel, ts: sentMessage.ts, text },
+      });
+      if (storeKey) await saveIntegrationReceipt(storeKey, text);
+      showOutput(panel, 'Slack 메시지 수정 저장 완료', `채널: ${result.channel}\nts: ${result.ts}\n수정 내용:\n${result.text || text}`);
+      editButton.dataset.confirm = '';
+      editButton.textContent = '수정 미리보기';
+    } catch (error) { showError(panel, error); }
+    finally { editButton.disabled = false; }
+  });
 }
 
 export function renderPracticePanel(n) {
   if (n === 1) {
-    const panel = panelShell(n, '원본을 직접 불러오고 근거 남기기', '연결된 Notion 페이지에서 실제 원본을 가져온 뒤, 확인한 내용과 근거를 워크북에 저장합니다.');
-    addNotionReader(panel, { storeKey: 's1.source_snapshot' });
+    const panel = panelShell(n, 'Notion 원본을 가져와 고치고 다시 저장하기', '「AX 실습장」의 실제 문단을 워크북으로 가져와 확인하고, 작은 수정을 같은 Notion 문단에 저장해 첫 연결을 완성합니다.');
+    addNotionBlockEditor(panel, {
+      snapshotKey: 's1.source_snapshot',
+      receiptKey: 's1.notion_update',
+      title: 'AX 실습장 문단 가져와 수정 저장',
+    });
     addSaveEntryButton(panel, 's1.evidence', '읽기 결과와 근거 저장', '아래 근거 입력란을 완성한 뒤 명시적으로 저장합니다.');
     addEntriesReader(panel, n, '1회차 기록 다시 읽기', 's1.');
     return panel;
@@ -402,10 +641,10 @@ export function renderPracticePanel(n) {
     return panel;
   }
   if (n === 3) {
-    const panel = panelShell(n, '원본을 읽고 실제 도구에 쓰기', '프롬프트 카드는 참고 자료입니다. 아래 버튼으로 원본을 가져오고, 결과를 검토한 뒤 Asana·Notion·Slack에 직접 기록합니다.');
-    addAsanaReader(panel, { storeKey: 's3.asana_tasks' });
+    const panel = panelShell(n, 'SaaS 원본을 가져와 수정하고 다시 저장하기', '이 워크북이 편집 작업대입니다. Asana 태스크와 Notion 문단을 가져와 수정 저장하고, Slack 봇 메시지도 전송 후 다시 고쳐 같은 메시지에 반영합니다.');
+    addAsanaEditor(panel);
     addAsanaCreator(panel);
-    addNotionReader(panel, { storeKey: 's3.report' });
+    addNotionBlockEditor(panel);
     addNotionAppender(panel);
     addSlackSender(panel, { storeKey: 's3.slack_message' });
     addSlackSender(panel, {
