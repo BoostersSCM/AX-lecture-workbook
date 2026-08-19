@@ -22,6 +22,12 @@ const app = document.getElementById('app');
       <p class="lede">${esc(SETUP.intro)}</p>
     </div>`));
 
+  app.appendChild(el(`
+    <figure class="lesson-visual setup-analogy">
+      <div class="lesson-visual-art"><img src="/assets/water-to-pipeline.png" alt="우물에서 물을 길어 나르던 방식이 파이프 연결로 집 안까지 흐르는 모습" loading="eager"></div>
+      <figcaption><span>연결의 비유</span><strong>매번 직접 옮기던 정보를, 필요한 도구까지 흐르게 만드는 준비입니다.</strong></figcaption>
+    </figure>`));
+
   app.appendChild(progressBar(progressOf(requiredKeys('setup'), entries)));
 
   for (const g of SETUP.groups) {
