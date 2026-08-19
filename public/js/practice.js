@@ -99,7 +99,13 @@ function addClassPostWriter(panel) {
     <article class="practice-action practice-class-post">
       <div>
         <h3>클래스 2회차에 글 남기기</h3>
-        <p>작성한 글을 클래스 플랫폼의 <code>class_posts</code>에 저장합니다. 저장 후 실제 클래스의 2회차 탭에서 확인할 수 있습니다.</p>
+        <p>클래스 사이트로 먼저 이동할 필요는 없습니다. 이 워크북에서 연결하고 저장하면 같은 원격 <code>class_posts</code>에 기록되고, 클래스 사이트의 2회차에서 확인할 수 있습니다.</p>
+      </div>
+      <div class="class-post-flow" aria-label="클래스 글 저장 흐름">
+        <div><span>01</span><strong>연결</strong><p>아래 버튼으로 클래스 계정 로그인</p></div>
+        <div><span>02</span><strong>복귀</strong><p>로그인 후 이 워크북 2회차로 자동 복귀</p></div>
+        <div><span>03</span><strong>저장</strong><p>아래 글 저장 버튼으로 class_posts에 기록</p></div>
+        <div><span>04</span><strong>확인</strong><p>클래스 사이트 2회차에서 결과 확인</p></div>
       </div>
       <div class="class-post-auth"></div>
       <div class="class-post-list" aria-live="polite"></div>
@@ -111,7 +117,7 @@ function addClassPostWriter(panel) {
 
   function renderPosts(posts) {
     listBox.innerHTML = posts.length
-      ? `<div class="class-post-list-title">2회차에 이미 남긴 글</div>${posts.map(post => `
+      ? `<div class="class-post-list-title">원격 class_posts에서 다시 읽은 2회차 글</div>${posts.map(post => `
           <article class="class-post-item">
             <div><strong>${esc(post.author?.name || '클래스 참여자')}</strong><span>${esc(new Date(post.created_at).toLocaleString('ko-KR'))}</span></div>
             <p>${esc(post.body || '')}</p>
@@ -137,7 +143,7 @@ function addClassPostWriter(panel) {
     const session = await getClassSession();
     if (!session) {
       authBox.innerHTML = `
-        <p class="class-post-hint">클래스 플랫폼 계정을 한 번 연결하면 이 워크북에서 바로 2회차 글을 저장할 수 있습니다.</p>
+        <p class="class-post-hint"><strong>1단계 · 클래스 계정 연결</strong><br>버튼을 누르면 클래스 플랫폼의 Google 로그인 화면으로 이동합니다. 로그인에 성공하면 별도 조작 없이 이 워크북의 2회차로 돌아옵니다.</p>
         <button class="practice-button" type="button">클래스 계정 연결</button>`;
       authBox.querySelector('button').addEventListener('click', async (event) => {
         event.currentTarget.disabled = true;
@@ -152,10 +158,12 @@ function addClassPostWriter(panel) {
 
     const profile = await getClassProfile(session);
     authBox.innerHTML = `
-      <div class="class-post-user">${esc(profile?.name || session.user.email || '클래스 계정')}으로 연결됨</div>
+      <div class="class-post-user"><span class="class-post-badge">연결됨</span> ${esc(profile?.name || session.user.email || '클래스 계정')}</div>
+      <p class="class-post-hint"><strong>2단계 · 이 워크북에서 작성</strong><br>연결 상태는 이 브라우저에 남습니다. 아래 글을 저장하면 클래스 플랫폼의 <code>class_posts</code>에 바로 기록됩니다. 클래스 사이트에 먼저 들어갈 필요는 없습니다.</p>
       <textarea class="practice-input class-post-input" rows="4" maxlength="2000" placeholder="예: 오늘 회의록에서 근거문장을 남기면 AI 결과를 검수하기 쉬워진다는 걸 확인했습니다."></textarea>
       <button class="practice-button" type="button">2회차 글 저장</button>
-      <p class="class-post-hint"><a href="${CLASS_TARGET.session2Url}" target="_blank" rel="noopener">클래스 플랫폼의 2회차에서 확인하기 ↗</a></p>`;
+      <p class="class-post-hint"><strong>3단계 · 클래스 사이트에서 확인</strong><br>저장 후 아래 링크를 새 탭으로 열어 2회차 글을 확인하세요. 두 사이트의 로그인 세션은 별도일 수 있어 클래스 사이트가 다시 로그인을 요구할 수 있지만, 이미 저장한 글은 그대로 남습니다.<br><a href="${CLASS_TARGET.session2Url}" target="_blank" rel="noopener">클래스 플랫폼의 2회차에서 확인하기 ↗</a></p>
+      <p class="class-post-save-status" aria-live="polite"></p>`;
 
     const input = authBox.querySelector('textarea');
     const button = authBox.querySelector('button');
@@ -174,6 +182,7 @@ function addClassPostWriter(panel) {
       } else {
         input.value = '';
         toast('클래스 2회차에 글이 저장되었습니다.');
+        authBox.querySelector('.class-post-save-status').textContent = '저장 완료 · 클래스 사이트의 2회차에서 같은 글을 확인할 수 있습니다.';
         await loadPosts();
       }
       button.disabled = false;

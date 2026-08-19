@@ -245,6 +245,7 @@ export const SESSIONS = [
         hint: '이게 AI가 지어낸 행입니다. 1회차 B 과제에서 재미로 봤던 그것입니다.' },
 
       { type: 'head', text: '실습 3 — Supabase에 내 학습 결과 남기기' },
+      { type: 'note', text: '클래스 계정 연결은 **이 워크북에서** 아래 버튼으로 진행합니다. Google 로그인 후 자동으로 이 2회차로 돌아오며, 글 저장 버튼이 클래스 플랫폼의 `class_posts`에 직접 기록합니다. 클래스 사이트는 저장 후 결과를 확인하는 곳입니다. 두 사이트의 로그인 세션은 별도로 남을 수 있지만, 같은 원격 DB의 글은 서로 보입니다.' },
       { type: 'prompt', id: 's2insert' },
       { type: 'field', key: 's2.entered', kind: 'number',
         label: '최종 표에 남긴 액션아이템 수' },

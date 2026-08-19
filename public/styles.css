@@ -478,9 +478,18 @@ body { background: var(--cream); color: var(--navy); }
 .practice-class-post > div:first-child { min-width: 0; }
 .class-post-auth { display: grid; gap: 0.6rem; }
 .class-post-user { color: var(--teal-strong); font-size: 0.82rem; font-weight: 700; }
+.class-post-badge { display: inline-block; padding: 0.18rem 0.42rem; border-radius: 999px; background: #e4f2e8; color: #2e7354; font-size: 0.68rem; letter-spacing: 0.03em; }
 .class-post-hint { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.55; }
 .class-post-hint a { color: var(--teal-strong); }
+.class-post-hint code { color: var(--ink); font-size: 0.76rem; }
+.class-post-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; padding: 0.75rem 0; }
+.class-post-flow > div { min-width: 0; padding: 0.65rem 0.7rem; border: 1px solid var(--line-soft); background: #fff9ed; }
+.class-post-flow span { display: block; color: var(--copper); font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; }
+.class-post-flow strong { display: block; margin-top: 0.18rem; color: var(--ink); font-size: 0.82rem; }
+.class-post-flow p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.72rem; line-height: 1.45; }
 .class-post-input { min-height: 5.5rem; }
+.class-post-save-status { margin: 0; color: var(--teal-strong); font-size: 0.8rem; font-weight: 700; }
+@media (max-width: 620px) { .class-post-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .class-post-list { display: grid; gap: 0.55rem; }
 .class-post-list-title { color: var(--muted); font-size: 0.74rem; font-weight: 750; letter-spacing: 0.04em; }
 .class-post-item { padding: 0.7rem 0.8rem; border: 1px solid var(--rule); background: var(--ground); }
