@@ -4,21 +4,20 @@ import { mountShell, esc } from './shell.js';
 import { loadEntries, loadSlackEvents, progressOf, mountStatus } from './store.js';
 import { SESSIONS, requiredKeys } from './content.js';
 import { el, progressBar, renderBlock } from './render.js';
-import { renderPracticePanel } from './practice.js';
+import { renderPracticePanel, renderSlackSendLab } from './practice.js';
 
 const app = document.getElementById('app');
 
 function renderSlackInbox() {
   const panel = el(`
-    <section class="slack-inbox">
-      <div class="slack-inbox-head">
-        <div>
-          <div class="eyebrow">LIVE CHECK · Slack Events API</div>
-          <h2>Slack 수신함</h2>
-        </div>
+    <section class="slack-lab-card slack-inbox">
+      <div class="slack-lab-card-head slack-inbox-head">
+        <span class="slack-lab-index">B</span>
+        <div><div class="eyebrow">INBOUND · Slack Events API</div><h2>Slack에서 받기</h2></div>
         <button class="copy slack-refresh" type="button">새로고침</button>
       </div>
-      <p class="slack-inbox-intro">내가 연결 준비에 적은 Channel ID의 메시지만 표시됩니다. Slack에서 테스트 메시지를 보낸 뒤 새로고침하세요.</p>
+      <p class="slack-inbox-intro">이번에는 방향이 반대입니다. 사람이 Slack 테스트 채널에 직접 쓴 메시지를 Events API가 Vercel로 보내고, 연결 준비에 적은 Channel ID와 일치하는 이벤트만 이 수신함에 표시합니다.</p>
+      <div class="slack-receive-steps"><span>1. Slack 채널에 직접 작성</span><i>→</i><span>2. Events API 수신</span><i>→</i><span>3. 수신함 새로고침</span></div>
       <div class="slack-event-list" aria-live="polite">불러오는 중…</div>
     </section>`);
   const list = panel.querySelector('.slack-event-list');
@@ -33,7 +32,7 @@ function renderSlackInbox() {
       return;
     }
     if (!events.length) {
-      list.innerHTML = '<p class="slack-empty">아직 받은 메시지가 없습니다. Slack 테스트 채널에 메시지를 보내보세요.</p>';
+      list.innerHTML = '<div class="slack-empty"><strong>아직 받은 메시지가 없습니다.</strong><span>Slack 앱이 들어 있는 테스트 채널에서 사람이 직접 메시지를 작성한 뒤 새로고침하세요. 위 A 실습에서 봇이 보낸 메시지는 중복 방지를 위해 수신 대상에서 제외될 수 있습니다.</span></div>';
       return;
     }
     list.innerHTML = events.map(event => {
@@ -79,9 +78,22 @@ function renderSlackInbox() {
 
   app.appendChild(progressBar(progressOf(requiredKeys(s.n), entries)));
   app.appendChild(renderPracticePanel(s.n));
+  if (n === 3) {
+    const slackLab = el(`
+      <section class="slack-lab-shell">
+        <div class="slack-lab-head">
+          <div><span class="eyebrow">TWO-WAY SLACK LAB</span><h2>Slack은 보내기와 받기를 따로 연습합니다</h2></div>
+          <p><b>A</b>는 워크북이 Slack API를 호출하는 흐름이고, <b>B</b>는 Slack이 워크북의 Vercel 엔드포인트를 호출하는 흐름입니다.</p>
+        </div>
+        <div class="slack-lab-grid"></div>
+      </section>`);
+    const grid = slackLab.querySelector('.slack-lab-grid');
+    grid.appendChild(renderSlackSendLab());
+    grid.appendChild(renderSlackInbox());
+    app.appendChild(slackLab);
+  }
 
   for (const b of s.blocks) app.appendChild(renderBlock(b));
-  if (n === 3) app.appendChild(renderSlackInbox());
 
   // 이전/다음 회차
   const prev = SESSIONS.find(x => x.n === n - 1);

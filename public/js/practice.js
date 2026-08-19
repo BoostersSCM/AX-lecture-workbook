@@ -545,28 +545,46 @@ function addNotionBlockEditor(panel, {
   });
 }
 
-function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기', detail = '메시지를 미리 본 뒤 확인하면 지정 채널로 봇이 보냅니다.', placeholder = '예: AX 실습 연결 테스트입니다.', storeKey = '' } = {}) {
+function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기', detail = '메시지를 미리 본 뒤 확인하면 지정 채널로 봇이 보냅니다.', placeholder = '예: AX 실습 연결 테스트입니다.', draftKey = '', storeKey = '' } = {}) {
   const channel = target || valueOf('setup.slack_target', 's3.slack_channel');
   const card = el(`
-    <article class="practice-action practice-create">
-      <div><h3>${esc(title)}</h3><p>${esc(detail)}</p></div>
-      <textarea class="practice-input" rows="3" placeholder="${esc(placeholder)}" aria-label="Slack 메시지"></textarea>
-      <button class="practice-button" type="button">미리보기</button>
+    <article class="practice-action practice-slack-send">
+      <div class="slack-send-copy">
+        <span class="workbench-step">메시지 작성 → 미리보기 → Slack 전송</span>
+        <h3>${esc(title)}</h3>
+        <p>${esc(detail)}</p>
+        <code>${esc(channel || (title.includes('DM') ? 'Slack User ID를 먼저 입력하세요' : 'Slack Channel ID를 먼저 입력하세요'))}</code>
+      </div>
+      <label class="workbench-field slack-message-field">
+        <span>Slack에 보낼 메시지</span>
+        <textarea class="practice-input" data-slack-message rows="4" placeholder="${esc(placeholder)}"></textarea>
+      </label>
+      <div class="workbench-submit slack-send-submit">
+        <span>입력한 메시지는 바로 전송되지 않습니다. 먼저 미리보기에서 채널과 내용을 확인합니다.</span>
+        <button class="practice-button" data-slack-send type="button">전송 미리보기</button>
+      </div>
       <div class="practice-message-edit" hidden>
         <div><strong>방금 보낸 메시지 다시 수정하기</strong><span>봇이 작성한 메시지만 같은 위치에서 수정할 수 있습니다.</span></div>
-        <textarea class="practice-input" rows="3" aria-label="Slack 수정 메시지"></textarea>
-        <button class="practice-button" type="button">수정 미리보기</button>
+        <label class="workbench-field"><span>수정해서 다시 저장할 메시지</span><textarea class="practice-input" data-slack-edit rows="3"></textarea></label>
+        <button class="practice-button" data-slack-edit-send type="button">수정 미리보기</button>
       </div>
     </article>`);
   panel.querySelector('.practice-actions').appendChild(card);
-  const input = card.querySelector('textarea');
-  const button = card.querySelector('button');
+  const input = card.querySelector('[data-slack-message]');
+  const button = card.querySelector('[data-slack-send]');
   const editZone = card.querySelector('.practice-message-edit');
-  const editInput = editZone.querySelector('textarea');
-  const editButton = editZone.querySelector('button');
+  const editInput = editZone.querySelector('[data-slack-edit]');
+  const editButton = editZone.querySelector('[data-slack-edit-send]');
   let sentMessage = null;
-  resetConfirmation(input, button);
+  if (draftKey) input.value = valueOf(draftKey);
+  resetConfirmation(input, button, '전송 미리보기');
   resetConfirmation(editInput, editButton, '수정 미리보기');
+  if (draftKey) {
+    input.addEventListener('input', () => {
+      saveValue(draftKey, input.value);
+      setFieldValue(draftKey, input.value);
+    });
+  }
   button.addEventListener('click', async () => {
     const text = input.value.trim();
     if (!channel) return showOutput(panel, 'Slack 연결값 필요', title.includes('DM') ? '연결 준비 화면에서 Slack User ID를 먼저 입력하세요.' : '연결 준비 화면에서 Slack Channel ID를 먼저 입력하세요.', 'error');
@@ -574,7 +592,7 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
     if (button.dataset.confirm !== 'yes') {
       showOutput(panel, '전송 전 미리보기', `채널: ${channel}\n메시지:\n${text}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 전송하세요.`);
       button.dataset.confirm = 'yes';
-      button.textContent = '확인하고 전송';
+      button.textContent = '확인하고 Slack에 전송';
       return;
     }
     try {
@@ -591,7 +609,7 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
       editButton.dataset.confirm = '';
       editButton.textContent = '수정 미리보기';
       button.dataset.confirm = '';
-      button.textContent = '미리보기';
+      button.textContent = '전송 미리보기';
     } catch (error) { showError(panel, error); }
     finally { button.disabled = false; }
   });
@@ -621,6 +639,27 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
   });
 }
 
+export function renderSlackSendLab() {
+  const panel = el(`
+    <section class="slack-lab-card slack-send-lab">
+      <div class="slack-lab-card-head">
+        <span class="slack-lab-index">A</span>
+        <div><div class="eyebrow">OUTBOUND · chat.postMessage</div><h2>Slack으로 보내기</h2></div>
+      </div>
+      <p class="slack-lab-intro">워크북에서 보낼 내용을 직접 작성합니다. 미리보기로 Channel ID와 메시지를 확인한 뒤 봇이 Slack에 전송합니다.</p>
+      <div class="practice-actions"></div>
+      <div class="practice-output" aria-live="polite"><p class="practice-empty">메시지를 작성하고 전송 미리보기를 누르면 결과가 여기에 나타납니다.</p></div>
+    </section>`);
+  addSlackSender(panel, { draftKey: 's3.slack_draft', storeKey: 's3.slack_message' });
+  addSlackSender(panel, {
+    target: valueOf('setup.slack_user_id'),
+    title: '내 Slack DM으로 보내기',
+    detail: '선택 실습입니다. 연결 준비에 적은 Slack User ID(U...)로 봇이 개인 메시지를 보냅니다.',
+    placeholder: '예: 내 개인 DM으로 도착할 AX 알림 테스트입니다.',
+  });
+  return panel;
+}
+
 export function renderPracticePanel(n) {
   if (n === 1) {
     const panel = panelShell(n, 'Notion 원본을 가져와 고치고 다시 저장하기', '「AX 실습장」의 실제 문단을 워크북으로 가져와 확인하고, 작은 수정을 같은 Notion 문단에 저장해 첫 연결을 완성합니다.');
@@ -641,18 +680,11 @@ export function renderPracticePanel(n) {
     return panel;
   }
   if (n === 3) {
-    const panel = panelShell(n, 'SaaS 원본을 가져와 수정하고 다시 저장하기', '이 워크북이 편집 작업대입니다. Asana 태스크와 Notion 문단을 가져와 수정 저장하고, Slack 봇 메시지도 전송 후 다시 고쳐 같은 메시지에 반영합니다.');
+    const panel = panelShell(n, 'Asana·Notion 원본을 가져와 수정하고 다시 저장하기', '이 워크북이 편집 작업대입니다. Asana 태스크와 Notion 문단을 가져와 수정 저장한 뒤, 아래의 독립된 Slack 보내기·받기 실습으로 양방향 연결을 확인합니다.');
     addAsanaEditor(panel);
     addAsanaCreator(panel);
     addNotionBlockEditor(panel);
     addNotionAppender(panel);
-    addSlackSender(panel, { storeKey: 's3.slack_message' });
-    addSlackSender(panel, {
-      target: valueOf('setup.slack_user_id'),
-      title: 'Slack 개인 DM 보내기',
-      detail: '내 Slack User ID(U...)로 봇이 직접 메시지를 보냅니다. 먼저 미리보기 후 확인합니다.',
-      placeholder: '예: 내 개인 DM으로 도착할 AX 알림 테스트입니다.',
-    });
     addSaveEntryButton(panel, 's3.recipe', '연결 레시피를 워크북에 저장', '실제로 성공한 원본·권한·목적지·검수 절차를 레시피로 남깁니다.');
     return panel;
   }

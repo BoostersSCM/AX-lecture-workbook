@@ -32,7 +32,7 @@ Vercel API:
 
 「AX 실습장」은 강사가 사전에 만드는 Notion 템플릿입니다. 원본 회의록·수정 실습 문단·결과 기록 영역을 포함하고, 수강생은 각자 복제한 페이지에 기존 Notion 앱을 연결합니다. 앱에는 Read content와 Update content 권한이 필요합니다.
 
-Slack Events API는 `SUPABASE_SERVICE_ROLE_KEY`가 설정되면 `slack_events`에 저장되고, 3회차 워크북의 Slack 수신함에서 RLS 범위에 맞게 표시됩니다. 이 키는 Vercel 서버에만 둡니다.
+3회차 Slack 실습은 `A. Slack으로 보내기`와 `B. Slack에서 받기`로 분리됩니다. A 카드에서는 보낼 메시지를 직접 작성하고 미리보기 후 봇으로 전송합니다. B 카드에서는 사람이 Slack 채널에 직접 쓴 메시지를 Events API로 받아 확인합니다. 수신 이벤트는 `SUPABASE_SERVICE_ROLE_KEY`가 설정되면 `slack_events`에 저장되고, 수강생이 지정한 Channel ID 범위만 표시됩니다. 이 키는 Vercel 서버에만 둡니다.
 
 ---
 
