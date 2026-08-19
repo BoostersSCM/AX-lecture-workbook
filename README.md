@@ -3,7 +3,13 @@
 부스터스 사내 AX 강의 **「업무를 연결하는 AI」**의 참가자용 워크북입니다.
 
 참가자는 회사 구글 계정으로 로그인해 회차별 실습을 기록하고, 마지막에 「내 업무 연결 설계서」를 작성합니다.
-입력은 타이핑하는 즉시 자동 저장되며, 최종 결과는 회차별 저장·전송 버튼으로 확정합니다. 기록은 **본인과 강사만** 볼 수 있습니다.
+기록은 **본인과 강사만** 볼 수 있습니다.
+
+**저장 정책** — 회차(1~4)와 설계서 페이지는 자동 저장하지 않습니다. 입력은 로컬 초안(localStorage)에 쌓이고,
+화면 하단 저장 바의 **[모두 저장]** 버튼이 한 번의 일괄 upsert로 DB에 보냅니다(타이핑마다 DB에 쓰지 않음).
+저장 없이 떠나려 하면 브라우저가 경고하고, 초안은 다음 방문 때 입력칸에 복원됩니다.
+연결 준비(`/setup`) 페이지의 체크리스트는 예외적으로 자동 저장(디바운스)을 유지합니다.
+연동 실습의 결과 저장 버튼(영수증)은 모드와 무관하게 즉시 저장됩니다.
 
 - 운영: Vercel + Supabase
 - 강의안 원본: [`docs/`](docs/) — 커리큘럼, 회차별 진행안, 프롬프트 카드, 사내봇 연결값, 샘플 회의록
@@ -45,11 +51,12 @@ boosters-ax의 구조를 그대로 따랐습니다.
 - **DB·인증**: Supabase (PostgreSQL + RLS + Google OAuth). 클라이언트가 RLS에 의존해 직접 쿼리
 - **호스팅**: Vercel. `vercel.json`의 buildCommand 한 줄이 빌드의 전부 (`public/env.js` 생성)
 
-데이터 모델은 테이블 두 개뿐입니다.
+데이터 모델은 테이블 세 개입니다.
 
 ```
 profiles(id, email, name, team, role)      -- role: member | instructor
 entries(user_id, item_key, value)          -- 워크북의 모든 입력
+slack_events(event_id, channel_id, ...)    -- 3회차 B실습: Events API로 받은 Slack 메시지
 ```
 
 `entries`가 key-value인 이유: **문항을 추가·수정해도 DB 마이그레이션이 필요 없게** 하기 위해서입니다.
@@ -128,11 +135,12 @@ entries(user_id, item_key, value)          -- 워크북의 모든 입력
 > `persistSession`도 같은 localStorage를 쓰기 때문에, 기산점만 지워서 우회하려 하면 세션 자체가 함께 사라집니다.
 > 클라이언트 측 제한이라 Pro의 서버 강제만큼 엄밀하진 않지만, 실제 위협(공용 PC에 방치된 세션)에는 충분히 작동합니다.
 
-세션이 끊겼을 때 참가자가 쓰던 내용을 잃지 않도록 [`store.js`](public/js/store.js)가 이렇게 막습니다.
+세션이 끊겨도 참가자가 쓰던 내용을 잃지 않도록 [`store.js`](public/js/store.js)가 이렇게 막습니다.
 
-1. 저장 실패한 값은 **localStorage에 보관**(`axwb.pending`)
+1. 미저장 입력·저장 실패분은 **localStorage에 보관**(`axwb.pending`)
 2. 세션이 끊긴 게 원인이면 *"로그인이 만료되어 저장하지 못했습니다"* 안내 + 재로그인 링크 표시
-3. 다시 로그인해 페이지를 열면 보관해둔 값을 **자동으로 다시 올리고** 복구 개수를 알려줍니다
+3. 다시 로그인해 페이지를 열면 — 자동 저장 페이지(`/setup`)는 보관분을 자동 재업로드하고,
+   수동 저장 페이지(회차·설계서)는 입력칸에 복원한 뒤 저장 바에 "저장 안 된 변경 N개"로 보여줍니다
 
 #### 증상별 해결
 
@@ -163,7 +171,9 @@ http://localhost:3000 — **포트는 3000 고정**입니다 (Supabase 리다이
 
 ### 5. 배포
 
-Vercel 프로젝트에 기본 환경변수와 클래스 플랫폼 연동 환경변수를 등록하고 배포합니다.
+Vercel 프로젝트에 환경변수를 등록하고 배포합니다.
+
+**클라이언트 노출** ([`build-env.js`](build-env.js)가 `public/env.js`로 주입):
 
 | 키 | 값 |
 |---|---|
@@ -171,6 +181,18 @@ Vercel 프로젝트에 기본 환경변수와 클래스 플랫폼 연동 환경�
 | `SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public |
 | `CLASS_SUPABASE_URL` | `https://utoczgjuaiwdattgchcx.supabase.co` |
 | `CLASS_SUPABASE_ANON_KEY` | 클래스 플랫폼 Supabase의 anon public 키 |
+| `CLASS_PLATFORM_CLASS_ID` / `CLASS_PLATFORM_SESSION_2_ID` | 비우면 코드의 기본값 사용 |
+
+**서버 전용** (`api/*`만 사용 — Vercel Sensitive로 등록, 브라우저에 절대 노출 금지):
+
+| 키 | 용도 |
+|---|---|
+| `AX_INTEGRATION_SECRET` | `/api/integrations/*` 호출 인증 비밀값 |
+| `ASANA_TOKEN_BOT` | Asana 태스크 읽기·생성·수정 |
+| `NOTION_TOKEN` (+ 선택 `NOTION_VERSION`) | Notion 페이지·블록 읽기·추가·수정 |
+| `SLACK_BOT_TOKEN` | Slack 발송·봇 메시지 수정 (`chat:write` 등) |
+| `SLACK_SIGNING_SECRET` | `/api/slack/events` 서명 검증 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Slack 수신 이벤트를 `slack_events`에 기록 |
 
 2회차의 `class_posts` 글 저장을 사용하려면 클래스 플랫폼 Supabase의 Authentication → URL Configuration → Redirect URLs에 아래 주소도 추가합니다.
 
