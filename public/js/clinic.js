@@ -1,9 +1,10 @@
 // js/clinic.js — 4회차 케이스 클리닉 설계서
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { loadEntries, progressOf, mountStatus, getValue, setManualSave, mountSaveBar } from './store.js';
+import { loadEntries, progressOf, mountStatus, getValue, setManualSave, mountSaveBar, onSaved } from './store.js';
 import { CLINIC, requiredKeys } from './content.js';
 import { el, progressBar, renderField } from './render.js';
+import { isSessionOpen, openSessionsFor, lockedNotice } from './course.js';
 
 const app = document.getElementById('app');
 
@@ -17,6 +18,12 @@ const app = document.getElementById('app');
   setManualSave(true);
   mountSaveBar();
 
+  // 설계서는 4회차와 함께 열립니다
+  if (!(await isSessionOpen(4, me))) {
+    app.appendChild(lockedNotice(4, await openSessionsFor(me)));
+    return;
+  }
+
   const entries = await loadEntries();
 
   app.appendChild(el(`
@@ -26,7 +33,13 @@ const app = document.getElementById('app');
       <p class="lede">${esc(CLINIC.intro)}</p>
     </div>`));
 
-  app.appendChild(progressBar(progressOf(requiredKeys('clinic'), entries)));
+  const bar = progressBar(progressOf(requiredKeys('clinic'), entries));
+  app.appendChild(bar);
+  onSaved(() => {
+    const p = progressOf(requiredKeys('clinic'));
+    bar.querySelector('.prog-fill').style.width = p.pct + '%';
+    bar.querySelector('.prog-num').textContent = `${p.done}/${p.total}`;
+  });
 
   for (const g of CLINIC.groups) {
     app.appendChild(el(`<h2>${esc(g.name)}</h2>`));

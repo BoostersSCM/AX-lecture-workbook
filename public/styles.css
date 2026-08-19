@@ -587,3 +587,70 @@ body { background: var(--cream); color: var(--navy); }
 /* 클래스 연결 문제 해결 힌트 */
 .class-post-trouble { opacity: 0.85; }
 .class-post-trouble code { word-break: break-all; }
+
+/* ── 작업대 자동 기록(읽기전용) 칸 ─────────────────────────── */
+.field input.auto-filled, .field textarea.auto-filled {
+  background: rgba(17,42,50,0.045);
+  color: var(--ink-soft, #3C4A47);
+  border-style: dashed;
+  cursor: default;
+}
+
+/* ── 본문 흐름 안의 Slack lab 단독 카드 ────────────────────── */
+.slack-lab-single { margin: 1.2rem 0 1.6rem; }
+.slack-lab-single .slack-lab-card { margin: 0; }
+
+/* 클래스 글 목록 — 내 글 강조 */
+.class-post-item.mine { border-left: 3px solid #f0b36d; }
+.class-post-item .class-post-badge { margin: 0 0.5rem; }
+
+/* ── 온보딩(가입) ──────────────────────────────────────────── */
+.onboarding-card { max-width: 30rem; }
+.onboarding-form { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; }
+.ob-field { display: flex; flex-direction: column; gap: 0.45rem; }
+.ob-field > span { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.02em; }
+.ob-cohorts { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.ob-cohort { padding: 0.5rem 0.95rem; border: 1px solid var(--line-soft, #D3D6D0); background: transparent; border-radius: 999px; font-weight: 700; cursor: pointer; }
+.ob-cohort.on { background: #112a32; color: #f7f3e9; border-color: #112a32; }
+
+/* ── 잠긴 회차 안내 ───────────────────────────────────────── */
+.locked-notice { text-align: center; padding: 3.2rem 1rem 3.6rem; }
+.locked-notice .locked-icon { font-size: 2.6rem; }
+.locked-notice h2 { border: none; margin: 0.8rem 0 0.4rem; }
+.locked-notice p { max-width: 34rem; margin: 0.35rem auto; }
+.locked-notice .locked-open { font-size: 0.92rem; }
+.locked-notice .btn-link { margin-top: 0.9rem; }
+
+/* 홈 카드 잠금 */
+.journey-card.journey-locked { opacity: 0.62; filter: saturate(0.55); cursor: default; }
+.nav-locked { opacity: 0.6; }
+
+/* ── 강사: 기수별 개방 관리 ───────────────────────────────── */
+.gate-panel { border: 1px solid var(--line-soft, #D3D6D0); background: var(--paper, #FCFCFA); padding: 1.2rem 1.3rem 1.35rem; margin: 0.4rem 0 1.4rem; }
+.gate-head h2 { border: none; margin: 0.1rem 0 0.2rem; padding: 0; }
+.gate-head p { font-size: 0.9rem; color: var(--ink-soft, #3C4A47); }
+.gate-cohorts { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.9rem 0 0.7rem; }
+.gate-cohort { padding: 0.34rem 0.85rem; border-radius: 999px; border: 1px solid var(--line-soft, #D3D6D0); background: transparent; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+.gate-cohort.on { background: #112a32; color: #f7f3e9; border-color: #112a32; }
+.gate-cohort-add { border-style: dashed; opacity: 0.85; }
+.gate-toggles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; }
+.gate-toggle { text-align: left; display: flex; flex-direction: column; gap: 0.18rem; padding: 0.75rem 0.85rem; border: 1px solid var(--line-soft, #D3D6D0); background: rgba(17,42,50,0.04); cursor: pointer; }
+.gate-toggle b { font-size: 1rem; }
+.gate-toggle small { color: var(--ink-soft, #3C4A47); line-height: 1.4; }
+.gate-toggle .gate-state { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; color: #8a5a2b; }
+.gate-toggle.open { background: #eaf4ee; border-color: #bfe0cc; }
+.gate-toggle.open .gate-state { color: #2e7354; }
+.gate-note { font-size: 0.85rem; color: var(--ink-soft, #3C4A47); margin-top: 0.8rem; }
+
+/* ── 마이페이지 ───────────────────────────────────────────── */
+.my-profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.6rem 1.2rem; margin-bottom: 0.9rem; }
+.my-profile-grid .my-label { display: block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.07em; color: var(--ink-soft, #3C4A47); }
+.my-edit { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: flex-end; }
+.my-edit .ob-field { flex: 1 1 12rem; }
+.my-edit input { width: 100%; }
+.my-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0.8rem 0 1.2rem; align-items: center; }
+.my-group { border: 1px solid var(--line-soft, #D3D6D0); background: var(--paper, #FCFCFA); margin: 0.7rem 0; }
+.my-group summary { display: flex; gap: 0.7rem; align-items: baseline; padding: 0.8rem 1rem; cursor: pointer; list-style: none; }
+.my-group summary b { flex: 1; }
+.my-group summary a { font-size: 0.82rem; white-space: nowrap; }
+.my-group .my-items { padding: 0 1rem 0.9rem; }

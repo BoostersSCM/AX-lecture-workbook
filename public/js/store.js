@@ -20,6 +20,13 @@ export function setManualSave(on = true) {
   manualMode = Boolean(on);
 }
 
+// 저장 성공 시 알림 — 진행률 바 등 화면 갱신용
+const savedCallbacks = [];
+export function onSaved(fn) { savedCallbacks.push(fn); }
+function notifySaved() {
+  for (const fn of savedCallbacks) { try { fn(); } catch (e) { console.error(e); } }
+}
+
 export async function loadEntries({ fresh = false } = {}) {
   if (cache && !fresh) return cache;
   const me = await getMe();
@@ -127,6 +134,7 @@ export function saveValue(key, value, { immediate = false } = {}) {
       clearPending(key);
       updateSaveBar();
       setStatus('saved');
+      notifySaved();
       return true;
     }
   };
@@ -218,6 +226,7 @@ export async function saveDirty() {
   if (cache) for (const k of keys) cache[k] = p[k];
   updateSaveBar();
   setStatus('saved');
+  notifySaved();
   return true;
 }
 
@@ -232,6 +241,7 @@ async function flushPending() {
   if (!error) {
     writePending({});
     if (cache) for (const k of keys) cache[k] = p[k];
+    notifySaved();
     toast(`저장하지 못했던 ${keys.length}개 항목을 복구했습니다.`);
   }
 }

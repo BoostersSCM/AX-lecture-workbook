@@ -20,12 +20,14 @@
 
 | 경로 | 내용 |
 |---|---|
-| `/` | 홈 — 전체 진행률, 회차 카드 |
+| `/` | 홈 — 전체 진행률, 회차 카드 (잠긴 회차는 🔒) |
+| `/onboarding` | 첫 로그인 가입 화면 — **기수(차수) + 소속 팀** 입력. 완료 전에는 다른 페이지로 못 갑니다 |
 | `/setup` | 연결 준비 체크리스트 (강의 전 배포) |
-| `/session?n=1..4` | 회차별 워크북 — 실습 기록·숙제 제출 |
-| `/clinic` | 내 업무 연결 설계서 (4회차) |
+| `/session?n=1..4` | 회차별 워크북 — **강사가 기수별로 연 회차만** 접근 가능 |
+| `/clinic` | 내 업무 연결 설계서 (4회차와 함께 열림) |
 | `/prompts` | 프롬프트 카드 — 연동 변환 레시피·초보자 도움말·복사 버튼 |
-| `/admin` | 강사 전용 — 참가자 진행 현황·답변 열람 |
+| `/my` | 마이페이지 — 내 정보(팀·기수) 수정, 내 기록 열람, md 내보내기 |
+| `/admin` | 강사 전용 — **기수별 회차 개방 관리**, 참가자 진행 현황·답변 열람 |
 
 Vercel API:
 
@@ -54,9 +56,10 @@ boosters-ax의 구조를 그대로 따랐습니다.
 데이터 모델은 테이블 세 개입니다.
 
 ```
-profiles(id, email, name, team, role)      -- role: member | instructor
-entries(user_id, item_key, value)          -- 워크북의 모든 입력
-slack_events(event_id, channel_id, ...)    -- 3회차 B실습: Events API로 받은 Slack 메시지
+profiles(id, email, name, team, cohort, role)  -- cohort: 기수 / role: member | instructor
+entries(user_id, item_key, value)              -- 워크북의 모든 입력
+slack_events(event_id, channel_id, ...)        -- 3회차 B실습: Events API로 받은 Slack 메시지
+course_settings(key, value)                    -- 기수별 회차 개방: open_sessions_by_cohort = {"1":[1,2]}
 ```
 
 `entries`가 key-value인 이유: **문항을 추가·수정해도 DB 마이그레이션이 필요 없게** 하기 위해서입니다.
@@ -70,7 +73,19 @@ slack_events(event_id, channel_id, ...)    -- 3회차 B실습: Events API로 받
 
 1. 프로젝트 생성 (현재 연결: `https://xxusvukjjxmcnmbvwybz.supabase.co`)
 2. **SQL Editor**에 [`supabase/schema.sql`](supabase/schema.sql) 전체를 붙여넣고 실행
-3. Google OAuth 연결 — 아래 [Google OAuth 설정](#2-google-oauth-설정) 참고
+3. **이미 운영 중인 DB라면** [`supabase/002_course_settings.sql`](supabase/002_course_settings.sql)을 실행
+   — `profiles.cohort` 컬럼과 `course_settings` 테이블을 추가합니다.
+   ⚠️ **이 SQL 없이 새 코드를 배포하면 수강생이 가입(기수 선택)에서 막힙니다. 배포보다 먼저 실행하세요.**
+4. Google OAuth 연결 — 아래 [Google OAuth 설정](#2-google-oauth-설정) 참고
+
+### 기수·회차 개방 운영
+
+- 참가자는 첫 로그인 때 `/onboarding`에서 **기수(1기, 2기, …)와 팀**을 입력합니다
+- 강사는 `/admin` 상단 **기수별 회차 개방**에서 기수를 고르고 회차 토글을 켭니다
+  (새 기수 시작은 `＋ 기수` — 만들면 1회차가 열린 상태로 시작)
+- 수강생은 자기 기수에 열린 회차만 들어올 수 있고, 잠긴 회차는 🔒 잠금 화면을 봅니다.
+  강사 계정은 항상 전부 열려 있습니다
+- 설정 테이블이 없으면(002 미실행) 전부 열림으로 동작하고 `/admin`에 경고가 뜹니다
 
 ### 2. Google OAuth 설정
 

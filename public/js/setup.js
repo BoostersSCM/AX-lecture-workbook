@@ -72,8 +72,8 @@ function renderPlaygroundGuide(guide) {
       // 연결 확인 항목 아래에 확인용 프롬프트를 바로 붙여줍니다
       if (f.key === 'setup.verify') {
         app.appendChild(renderPrompt({
-          title: '연결 확인 프롬프트',
-          note: '이걸 그대로 물어보세요. 페이지 제목이 나오면 성공입니다.',
+          title: '연결 확인 프롬프트 (선택)',
+          note: '어디에 물어보나요? 사내 AI 도구(예: Claude)에 이 문장을 붙여넣으면 됩니다. AI 도구가 없다면 건너뛰고, 1회차 작업대의 「수정할 문단 불러오기」 버튼이 같은 확인을 대신합니다.',
           body: SETUP.verifyPrompt,
         }, PROMPT_HELP.setup));
       }

@@ -258,23 +258,29 @@ function addClassPostWriter(panel) {
   const authBox = card.querySelector('.class-post-auth');
   const listBox = card.querySelector('.class-post-list');
 
-  function renderPosts(posts) {
-    listBox.innerHTML = posts.length
-      ? `<div class="class-post-list-title">원격 class_posts에서 다시 읽은 2회차 글</div>${posts.map(post => `
-          <article class="class-post-item">
-            <div><strong>${esc(post.author?.name || '클래스 참여자')}</strong><span>${esc(new Date(post.created_at).toLocaleString('ko-KR'))}</span></div>
-            <p>${esc(post.body || '')}</p>
-          </article>`).join('')}`
-      : '<p class="class-post-empty">아직 2회차 글이 없습니다. 첫 기록을 남겨보세요.</p>';
+  function renderPosts(posts, myId) {
+    if (!posts.length) {
+      listBox.innerHTML = '<p class="class-post-empty">아직 2회차 글이 없습니다. 첫 기록을 남겨보세요.</p>';
+      return;
+    }
+    // 내 글이 최신 N건에 밀려 안 보이면 "저장이 안 된 줄" 오해가 생기므로 내 글을 맨 위로
+    const mine = posts.filter(post => post.user_id === myId);
+    const others = posts.filter(post => post.user_id !== myId);
+    const ordered = [...mine, ...others];
+    listBox.innerHTML = `<div class="class-post-list-title">원격 class_posts에서 다시 읽은 2회차 글</div>${ordered.map(post => `
+        <article class="class-post-item${post.user_id === myId ? ' mine' : ''}">
+          <div><strong>${esc(post.author?.name || '클래스 참여자')}</strong>${post.user_id === myId ? '<span class="class-post-badge">내 글</span>' : ''}<span>${esc(new Date(post.created_at).toLocaleString('ko-KR'))}</span></div>
+          <p>${esc(post.body || '')}</p>
+        </article>`).join('')}`;
   }
 
   async function loadPosts() {
-    const { data, error } = await listTargetSessionPosts();
+    const [{ data, error }, session] = await Promise.all([listTargetSessionPosts(), getClassSession()]);
     if (error) {
       listBox.innerHTML = '<p class="class-post-empty">클래스 글을 불러오지 못했습니다. 클래스 계정과 참여 권한을 확인해주세요.</p>';
       return;
     }
-    renderPosts(data);
+    renderPosts(data, session?.user?.id || null);
   }
 
   async function renderAuth() {
@@ -703,37 +709,62 @@ export function renderSlackSendLab() {
   return panel;
 }
 
-export function renderPracticePanel(n) {
-  if (n === 1) {
-    const panel = panelShell(n, 'Notion 원본을 가져와 고치고 다시 저장하기', '「AX 실습장」의 실제 문단을 워크북으로 가져와 확인하고, 작은 수정을 같은 Notion 문단에 저장해 첫 연결을 완성합니다.');
-    addNotionBlockEditor(panel, {
-      snapshotKey: 's1.source_snapshot',
-      receiptKey: 's1.notion_update',
-      title: 'AX 실습장 문단 가져와 수정 저장',
-    });
-    addSaveEntryButton(panel, 's1.evidence', '읽기 결과와 근거 저장', '아래 근거 입력란을 완성한 뒤 명시적으로 저장합니다.');
-    addEntriesReader(panel, n, '1회차 기록 다시 읽기', 's1.');
-    return panel;
+// ── 회차 본문에 끼워 넣는 작업대 ─────────────────────────────
+// content.js 의 { type: 'panel', id: '…' } 마커가 이 레지스트리를 호출합니다.
+// 모든 회차가 같은 골격을 갖습니다: 안내 → 프롬프트 → 대상 입력 → 작업대 → 자동 기록 → 확인 체크
+export function renderPanelById(id) {
+  switch (id) {
+    case 's1-notion': {
+      const panel = panelShell(1, 'Notion 작업대 — 문단을 가져와 고치고 같은 자리에 저장', '「AX 실습장」 복제본의 수정 실습 문단을 불러와 작은 변경을 만들고, 미리보기 확인 후 같은 Notion 블록에 저장합니다.');
+      addNotionBlockEditor(panel, {
+        snapshotKey: 's1.source_snapshot',
+        receiptKey: 's1.notion_update',
+        title: 'AX 실습장 문단 가져와 수정 저장',
+      });
+      return panel;
+    }
+    case 's1-save': {
+      const panel = panelShell(1, '기록 작업대 — 결과를 저장하고 다시 읽기', '위 근거 입력란을 완성한 뒤 명시적으로 저장하고, Supabase에서 다시 읽어 저장을 확인합니다.');
+      addSaveEntryButton(panel, 's1.evidence', '읽기 결과와 근거 저장', '위 근거 입력란(s1.evidence)을 완성한 뒤 누르세요.');
+      addEntriesReader(panel, 1, '1회차 기록 다시 읽기', 's1.');
+      return panel;
+    }
+    case 's2-save': {
+      const panel = panelShell(2, '기록 작업대 — 최종 표 저장과 클래스 기록', '최종 액션아이템 표를 직접 저장해 다시 읽고, 학습 기록 한 건을 클래스 플랫폼에 남깁니다.');
+      addSupabaseCommitter(panel);
+      addClassPostWriter(panel);
+      addEntriesReader(panel, 2, 'Supabase entries 다시 읽기', 's2.');
+      return panel;
+    }
+    case 's3-asana': {
+      const panel = panelShell(3, 'Asana 작업대 — 태스크를 가져와 수정 저장', '위에 입력한 프로젝트의 기존 태스크를 불러와 고치고, 미리보기 확인 후 같은 태스크에 저장합니다.');
+      addAsanaEditor(panel);
+      addAsanaCreator(panel);
+      return panel;
+    }
+    case 's3-notion': {
+      const panel = panelShell(3, 'Notion 작업대 — 문단을 가져와 수정 저장', '위에 입력한 페이지의 기존 문단을 불러와 고치고, 미리보기 확인 후 같은 블록에 저장합니다.');
+      addNotionBlockEditor(panel);
+      addNotionAppender(panel);
+      return panel;
+    }
+    case 's3-recipe': {
+      const panel = panelShell(3, '기록 작업대 — 연결 레시피 저장', '위 레시피 입력란을 완성한 뒤 명시적으로 저장합니다.');
+      addSaveEntryButton(panel, 's3.recipe', '연결 레시피를 워크북에 저장', '실제로 성공한 원본·권한·목적지·검수 절차를 레시피로 남깁니다.');
+      return panel;
+    }
+    case 's4-read': {
+      const panel = panelShell(4, '기록 작업대 — 3주치 기록 다시 읽고 내보내기', '1~4회차 동안 쌓인 결과를 Supabase에서 다시 읽고, 다음 업무에 재사용할 수 있는 파일로 저장합니다.');
+      addEntriesReader(panel, 4, 'Supabase에 쌓인 내 워크북 기록 보기', ['s1.', 's2.', 's3.', 's4.']);
+      addWorkbookExport(panel);
+      return panel;
+    }
+    case 's4-desktop': {
+      const panel = panelShell(4, '기록 작업대 — 자동정리 규칙 저장', '위 규칙 입력란을 완성한 뒤 명시적으로 저장합니다.');
+      addSaveEntryButton(panel, 's4.desktop_plan', '내 자동정리 규칙 저장', '파일 자동정리 규칙을 완성한 뒤 누르세요.');
+      return panel;
+    }
+    default:
+      return document.createComment('unknown panel: ' + id);
   }
-  if (n === 2) {
-    const panel = panelShell(n, '결과를 저장하고 다시 읽기', '자동 저장에만 의존하지 않고, 최종 액션아이템 표를 직접 저장한 뒤 Supabase에서 다시 읽어 데이터 흐름을 확인합니다.');
-    addClassPostWriter(panel);
-    addSupabaseCommitter(panel);
-    addEntriesReader(panel, n, 'Supabase entries 다시 읽기', 's2.');
-    return panel;
-  }
-  if (n === 3) {
-    const panel = panelShell(n, 'Asana·Notion 원본을 가져와 수정하고 다시 저장하기', '이 워크북이 편집 작업대입니다. Asana 태스크와 Notion 문단을 가져와 수정 저장한 뒤, 아래의 독립된 Slack 보내기·받기 실습으로 양방향 연결을 확인합니다.');
-    addAsanaEditor(panel);
-    addAsanaCreator(panel);
-    addNotionBlockEditor(panel);
-    addNotionAppender(panel);
-    addSaveEntryButton(panel, 's3.recipe', '연결 레시피를 워크북에 저장', '실제로 성공한 원본·권한·목적지·검수 절차를 레시피로 남깁니다.');
-    return panel;
-  }
-  const panel = panelShell(n, '기록을 다시 읽고 다음 실행으로 내보내기', '1~4회차 동안 쌓인 결과를 Supabase에서 다시 읽고, 다음 업무에 재사용할 수 있는 파일로 저장합니다.');
-  addEntriesReader(panel, n, 'Supabase에 쌓인 내 워크북 기록 보기', ['s1.', 's2.', 's3.', 's4.']);
-  addSaveEntryButton(panel, 's4.desktop_plan', '내 자동정리 규칙 저장', '파일 자동정리 규칙을 완성한 뒤 명시적으로 저장합니다.');
-  addWorkbookExport(panel);
-  return panel;
 }

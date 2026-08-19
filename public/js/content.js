@@ -104,7 +104,6 @@ export const SETUP = {
         { key: 'setup.notion', kind: 'check', label: '노션 연결 — 접근 범위에 내가 보는 팀 페이지를 포함' },
         { key: 'setup.slack',  kind: 'check', label: '슬랙 연결' },
         { key: 'setup.asana',  kind: 'check', label: '아사나 연결 — 실습 프로젝트 또는 태스크 접근 권한 포함' },
-        { key: 'setup.verify', kind: 'check', label: '읽기 범위 확인이 끝났다', hint: '연결 준비에서는 접근 범위만 확인합니다. 원본을 가져와 워크북에 저장하는 일은 1회차 실습 패널에서 진행합니다.' },
       ]
     },
     {
@@ -138,6 +137,9 @@ export const SETUP = {
         { key: 'setup.slack_user_id', kind: 'text', required: true,
           label: 'Slack — 봇이 DM을 보낼 내 사용자 ID',
           hint: 'U로 시작하는 Slack User ID를 적습니다. 프로필 메뉴 → 프로필 보기 → ··· → 멤버 ID 복사에서 확인합니다.' },
+        { key: 'setup.verify', kind: 'check',
+          label: '위에 적은 대상의 읽기 범위 확인이 끝났다',
+          hint: '가장 확실한 확인은 1회차 작업대의 「수정할 문단 불러오기」 버튼입니다. 사내 AI 도구를 쓴다면 아래 프롬프트를 그대로 물어봐도 됩니다.' },
       ]
     },
     {
@@ -174,8 +176,9 @@ export const SESSIONS = [
       { type: 'visual', id: 'connector' },
       { type: 'note', text: '**비유를 기억하세요.** 커넥터는 AI에게 회사 전체 열쇠를 주는 일이 아니라, 내가 열 수 있는 업무 자료실의 문만 함께 여는 일입니다.' },
 
+      { type: 'head', text: '실습 0 — 체크인' },
       { type: 'field', key: 's1.checkin', kind: 'textarea', rows: 2, required: true,
-        label: '체크인 — 내가 매주 반복하는 업무 중 없어졌으면 하는 것',
+        label: '내가 매주 반복하는 업무 중 없어졌으면 하는 것',
         hint: '4회차에 이 업무의 연결 흐름을 실제로 설계합니다.' },
 
       { type: 'head', text: '실습 1 — 내 접근 범위 안의 원본 찾기' },
@@ -184,17 +187,18 @@ export const SESSIONS = [
       { type: 'field', key: 's1.source_list', kind: 'textarea', rows: 5, required: true,
         label: '내가 실제로 접근 가능한 원본과 범위',
         hint: '페이지·데이터베이스 이름과 위치, 이번 실습에서 읽지 않을 범위를 함께 적습니다.' },
-      { type: 'field', key: 's1.source_snapshot', kind: 'textarea', rows: 6,
+      { type: 'panel', id: 's1-notion' },
+      { type: 'field', key: 's1.source_snapshot', kind: 'textarea', rows: 6, readonly: true,
         label: '버튼으로 가져온 원본 확인 결과',
-        hint: '실습 패널이 AX 실습장의 수정 가능한 문단과 block ID를 저장합니다.' },
-      { type: 'field', key: 's1.notion_update', kind: 'textarea', rows: 4,
+        hint: '위 작업대의 불러오기 버튼이 자동으로 기록합니다.' },
+      { type: 'field', key: 's1.notion_update', kind: 'textarea', rows: 4, readonly: true,
         label: '같은 Notion 문단에 다시 저장한 결과',
-        hint: '수정 전후 미리보기를 확인한 뒤 저장하면 page ID·block ID·최종 문장이 기록됩니다.' },
+        hint: '수정 전후 미리보기를 확인한 뒤 저장하면 page ID·block ID·최종 문장이 자동으로 기록됩니다.' },
 
       { type: 'head', text: '실습 2 — 페이지 하나를 읽고 업무 맥락으로 바꾸기' },
       { type: 'field', key: 's1.page_name', kind: 'text', required: true,
         label: '이번에 읽을 Notion 페이지명',
-        hint: 'Notion에서 페이지 제목을 그대로 복사해 붙여넣으세요. 페이지 URL 또는 ID를 함께 적으면 더 정확하게 찾을 수 있습니다.' },
+        hint: 'Notion에서 페이지 제목을 그대로 복사해 붙여넣으세요. 여기 적은 값이 아래 프롬프트의 [페이지명] 자리에 실시간으로 들어갑니다.' },
       { type: 'prompt', id: 's1b' },
       { type: 'field', key: 's1.context', kind: 'textarea', rows: 7, required: true,
         label: '업무 맥락 요약',
@@ -205,6 +209,7 @@ export const SESSIONS = [
       { type: 'field', key: 's1.evidence', kind: 'textarea', rows: 6, required: true,
         label: '요약의 근거 문장과 비어 있는 정보',
         hint: '각 핵심 내용이 어느 원문에서 나왔는지 적고, 원본에서 확인할 수 없는 값은 빈칸으로 남깁니다.' },
+      { type: 'panel', id: 's1-save' },
 
       { type: 'head', text: '정리' },
       { type: 'field', key: 's1.stuck', kind: 'textarea', rows: 2,
@@ -254,7 +259,7 @@ export const SESSIONS = [
       { type: 'note', text: '공용 샘플 회의록은 선택사항입니다. 아래에 내가 접근 가능한 회의록 URL·Notion 페이지·Slack permalink를 직접 넣고, 실제 원본의 분량과 형식에 맞춰 결과를 관찰합니다. 정해진 정답 개수는 없습니다.' },
       { type: 'field', key: 's2.source_urls', kind: 'textarea', rows: 3, required: true,
         label: '이번에 읽을 회의록 원본 URL 또는 페이지',
-        hint: '1~3개를 줄바꿈으로 적습니다. Notion 페이지 URL이나 Slack 메시지 링크 등 내가 실제로 열 수 있는 원본을 사용하세요.' },
+        hint: '1~3개를 줄바꿈으로 적습니다. 여기 적은 값이 아래 프롬프트의 [회의록 원본] 자리에 실시간으로 들어갑니다.' },
       { type: 'field', key: 's2.source_scope', kind: 'text',
         label: '읽을 범위와 제외할 범위',
         hint: '예: 8월 1일 이후 결정사항만 읽고, 개인정보가 있는 부록은 제외' },
@@ -280,11 +285,12 @@ export const SESSIONS = [
       { type: 'prompt', id: 's2verify' },
       { type: 'field', key: 's2.fabricated', kind: 'textarea', rows: 3,
         label: '근거를 못 찾아서 지운 행이 있다면 적어주세요',
-        hint: '이게 AI가 지어낸 행입니다. 1회차 B 과제에서 재미로 봤던 그것입니다.' },
+        hint: '이게 AI가 지어낸 행입니다. 삭제가 아니라 "확인 필요"로 다루는 것이 원칙입니다.' },
 
       { type: 'head', text: '실습 3 — Supabase에 내 학습 결과 남기기' },
-      { type: 'note', text: '클래스 계정 연결은 **이 워크북에서** 아래 버튼으로 진행합니다. Google 로그인 후 자동으로 이 2회차로 돌아오며, 글 저장 버튼이 클래스 플랫폼의 `class_posts`에 직접 기록합니다. 클래스 사이트는 저장 후 결과를 확인하는 곳입니다. 두 사이트의 로그인 세션은 별도로 남을 수 있지만, 같은 원격 DB의 글은 서로 보입니다.' },
-      { type: 'note', text: '최종 표를 완성한 뒤 위 실습 패널의 **최종 결과 저장** 버튼을 누르세요. 저장 위치와 다시 읽은 값이 화면에 나타나야 이 실습이 끝납니다.' },
+      { type: 'note', text: '클래스 계정 연결은 **이 워크북에서** 아래 작업대의 버튼으로 진행합니다. Google 로그인 후 자동으로 이 2회차로 돌아오며, 글 저장 버튼이 클래스 플랫폼의 `class_posts`에 직접 기록합니다. 클래스 사이트는 저장 후 결과를 확인하는 곳입니다. 두 사이트의 로그인 세션은 별도로 남을 수 있지만, 같은 원격 DB의 글은 서로 보입니다.' },
+      { type: 'note', text: '최종 표를 완성한 뒤 아래 작업대의 **최종 결과 저장** 버튼을 누르세요. 저장 위치와 다시 읽은 값이 화면에 나타나야 이 실습이 끝납니다.' },
+      { type: 'panel', id: 's2-save' },
       { type: 'field', key: 's2.entered', kind: 'number',
         label: '검수 후 최종 표에 남긴 행 수',
         hint: '이 숫자는 댓글의 본문이 아니라, 저장한 표를 확인하기 위한 보조 기록입니다.' },
@@ -329,9 +335,13 @@ export const SESSIONS = [
       { type: 'prompt', id: 's3asana' },
       { type: 'field', key: 's3.asana_project', kind: 'text', required: true,
         label: '연결한 Asana 프로젝트 URL 또는 Project GID' },
-      { type: 'field', key: 's3.asana_tasks', kind: 'textarea', rows: 6, required: true,
+      { type: 'panel', id: 's3-asana' },
+      { type: 'field', key: 's3.asana_tasks', kind: 'textarea', rows: 6, required: true, readonly: true,
         label: 'Asana에서 가져온 태스크와 수정 대상',
-        hint: '실습 패널이 프로젝트 태스크를 자동으로 저장합니다. 어떤 태스크를 어떻게 고칠지 확인합니다.' },
+        hint: '위 작업대의 불러오기 버튼이 자동으로 기록합니다.' },
+      { type: 'field', key: 's3.asana_update', kind: 'textarea', rows: 4, readonly: true,
+        label: '같은 Asana 태스크에 다시 저장한 결과',
+        hint: '수정 저장에 성공하면 태스크명·GID·상태·URL 영수증이 자동으로 기록됩니다.' },
       { type: 'field', key: 's3.asana_ready', kind: 'check',
         label: '워크북에서 고친 값을 기존 Asana 태스크에 저장했다' },
 
@@ -340,9 +350,13 @@ export const SESSIONS = [
       { type: 'prompt', id: 's3notion' },
       { type: 'field', key: 's3.notion_page', kind: 'text', required: true,
         label: '연결한 Notion 페이지 URL 또는 Page ID' },
-      { type: 'field', key: 's3.report', kind: 'textarea', rows: 7, required: true,
+      { type: 'panel', id: 's3-notion' },
+      { type: 'field', key: 's3.report', kind: 'textarea', rows: 7, required: true, readonly: true,
         label: 'Notion에서 가져온 문단과 수정 대상',
-        hint: '실습 패널이 페이지의 수정 가능한 문단을 자동으로 저장합니다.' },
+        hint: '위 작업대의 불러오기 버튼이 자동으로 기록합니다.' },
+      { type: 'field', key: 's3.notion_update', kind: 'textarea', rows: 4, readonly: true,
+        label: '같은 Notion 문단에 다시 저장한 결과',
+        hint: '수정 저장에 성공하면 페이지·블록 ID·최종 문장 영수증이 자동으로 기록됩니다.' },
       { type: 'field', key: 's3.notion_ready', kind: 'check',
         label: '워크북에서 고친 값을 기존 Notion 문단에 저장했다' },
 
@@ -351,11 +365,13 @@ export const SESSIONS = [
       { type: 'prompt', id: 's3slack_send' },
       { type: 'field', key: 's3.slack_channel', kind: 'text', required: true,
         label: 'A 카드에서 메시지를 보낼 Slack Channel ID' },
-      { type: 'field', key: 's3.slack_draft', kind: 'textarea', rows: 4, required: true,
+      { type: 'panel', id: 's3-slack-send' },
+      { type: 'field', key: 's3.slack_draft', kind: 'textarea', rows: 4, required: true, readonly: true,
         label: 'A 카드에서 작성한 전송 메시지 초안',
-        hint: '「Slack에 보낼 메시지」 입력란과 연결되어 자동 저장됩니다. 누구에게 어떤 행동을 요청하는지 확인합니다.' },
-      { type: 'field', key: 's3.slack_message', kind: 'textarea', rows: 5, required: true,
-        label: '봇이 보내고 수정 저장한 최종 메시지' },
+        hint: '위 A 카드의 「Slack에 보낼 메시지」 입력란이 자동으로 기록합니다. 수정은 A 카드에서 하세요.' },
+      { type: 'field', key: 's3.slack_message', kind: 'textarea', rows: 5, required: true, readonly: true,
+        label: '봇이 보내고 수정 저장한 최종 메시지',
+        hint: '전송·수정 저장에 성공하면 자동으로 기록됩니다.' },
       { type: 'field', key: 's3.dm_sent', kind: 'check',
         label: '봇 메시지를 보낸 뒤 같은 메시지에 수정 내용을 저장했다',
         hint: '채널에 봇이 초대되어 있어야 합니다.' },
@@ -363,13 +379,14 @@ export const SESSIONS = [
       { type: 'head', text: '실습 3B — Slack에서 받기: 사람이 채널에 쓴 메시지를 수신하기' },
       { type: 'note', text: 'B 실습은 방향이 반대입니다. 사람이 Slack 테스트 채널에 직접 쓴 메시지를 Events API가 공개 Vercel 엔드포인트로 보내고, 서명 검증 후 수신함과 Supabase에 표시합니다. A에서 봇이 보낸 메시지는 중복 방지를 위해 제외될 수 있습니다.' },
       { type: 'prompt', id: 's3slack_event' },
+      { type: 'panel', id: 's3-slack-inbox' },
       { type: 'field', key: 's3.slack_event', kind: 'textarea', rows: 6, required: true,
         label: '웹훅으로 받은 이벤트와 처리 결과',
         hint: 'channel_id·user·text·event_ts를 확인하고, 무시한 봇 메시지가 있다면 이유도 적습니다.' },
       { type: 'field', key: 's3.event_ready', kind: 'check',
         label: 'Slack에 쓴 테스트 메시지가 Vercel 웹훅에 도착했다' },
 
-      { type: 'head', text: '실습 5 — 같은 원본을 세 목적지에 맞게 바꾸기' },
+      { type: 'head', text: '실습 4 — 같은 원본을 세 목적지에 맞게 바꾸기' },
       { type: 'prompt', id: 's3flow' },
       { type: 'field', key: 's3.destinations', kind: 'checks',
         label: '목적지별 결과를 구분했다',
@@ -378,18 +395,20 @@ export const SESSIONS = [
         label: '사람이 마지막으로 확인해야 할 값',
         hint: '담당자·마감일·공개 범위처럼 AI가 확정하면 안 되는 값을 적습니다.' },
 
-      { type: 'head', text: '정리 — 내 연결 레시피 저장 ★' },
+      { type: 'head', text: '실습 5 — 내 연결 레시피 저장 ★' },
       { type: 'prompt', id: 's3recipe' },
       { type: 'field', key: 's3.recipe', kind: 'textarea', rows: 8, required: true,
         label: '완성된 연결 레시피를 붙여넣으세요',
         hint: '원본·권한·목적지·확인 지점·실패 시 대체 경로까지 한 덩어리로 남깁니다.' },
+      { type: 'panel', id: 's3-recipe' },
       { type: 'field', key: 's3.recipe_where', kind: 'text', required: true,
         label: '이 레시피를 어디에 저장하셨나요?',
         hint: '개인 노션 페이지, 메모장, 어디든 좋습니다. 다음 주 월요일에 찾을 수 있는 곳이면 됩니다.' },
 
       { type: 'head', text: '정리' },
-      { type: 'field', key: 's3.homework', kind: 'check',
-        label: '숙제 — 다음 주에 같은 연결을 실제 업무 데이터로 1회 다시 실행한다' },
+      { type: 'field', key: 's3.homework', kind: 'textarea', rows: 2,
+        label: '숙제 — 다음 주에 실제 업무 데이터로 다시 실행할 연결 한 줄',
+        hint: '예: 우리 팀 회의록 페이지를 가져와 액션아이템을 고치고 같은 페이지에 저장' },
       { type: 'field', key: 's3.next_case', kind: 'textarea', rows: 2, required: true,
         label: '★ 4회차에 가져올 "내 업무" 하나를 지금 정해주세요',
         hint: '이게 없으면 4회차에 할 게 없습니다. 1회차 체크인에 적으신 것 그대로여도 됩니다.' },
@@ -402,11 +421,16 @@ export const SESSIONS = [
     tag: '정착',
     goal: '내 반복 업무와 파일 정리까지 연결해, 다음 주에도 다시 쓸 수 있는 연결 설계서를 완성합니다.',
     blocks: [
-      { type: 'note', text: '오늘은 새 프롬프트를 만드는 날이 아니라, 1~3회차에 저장한 기록을 다시 읽어 다음 실행으로 묶는 날입니다. 실습 패널에서 DB 기록을 불러오고, 레시피 파일로 내보낸 뒤, 내 업무 설계서에 반영합니다.' },
-      { type: 'head', text: '파트 1 — 개인 루틴' },
-      { type: 'note', text: '지금까지는 회사 데이터라 승인이 필요했습니다. 이 세 개는 내 폴더, 내 기록입니다. 오늘 퇴근하고 바로 켤 수 있습니다.' },
+      { type: 'note', text: '오늘은 새 프롬프트를 만드는 날이 아니라, 1~3회차에 저장한 기록을 다시 읽어 다음 실행으로 묶는 날입니다. 아래 작업대에서 DB 기록을 불러오고, 레시피 파일로 내보낸 뒤, 내 업무 설계서에 반영합니다.' },
       { type: 'visual', id: 'recipe' },
       { type: 'note', text: '**비유를 기억하세요.** 연결 설계서는 요리 레시피와 같습니다. 재료·순서·검수·도착지를 적어야 다음 주에도 다시 만들 수 있습니다.' },
+
+      { type: 'head', text: '실습 0 — 3주치 기록 다시 읽기' },
+      { type: 'note', text: '설계서를 쓰기 전에, 지금까지 저장한 내 기록을 한 번 훑습니다. 이게 오늘의 재료입니다.' },
+      { type: 'panel', id: 's4-read' },
+
+      { type: 'head', text: '실습 1 — 개인 루틴' },
+      { type: 'note', text: '지금까지는 회사 데이터라 승인이 필요했습니다. 이 세 개는 내 폴더, 내 기록입니다. 오늘 퇴근하고 바로 켤 수 있습니다.' },
       { type: 'field', key: 's4.routines', kind: 'checks',
         label: '오늘 따라해본 것',
         options: ['수신함 정리 (주 20분)', '일일 로그 (매일 10분)', '주간 회고 (주 30분)'] },
@@ -415,16 +439,17 @@ export const SESSIONS = [
       { type: 'field', key: 's4.routine_note', kind: 'textarea', rows: 3,
         label: '해보니 어땠나요? 바로 쓸 만한가요?' },
 
-      { type: 'head', text: '파트 2 — 케이스 클리닉' },
-      { type: 'note', text: '설계서는 별도 페이지에서 작성합니다. 아래 버튼을 눌러 이동하세요.' },
+      { type: 'head', text: '실습 2 — 내 업무 연결 설계서 (케이스 클리닉)' },
+      { type: 'note', text: '설계서는 별도 페이지에서 작성합니다. 아래 버튼을 눌러 이동하세요. 작성 15분 → 2인 1조 상호 리뷰 10분.' },
       { type: 'link', href: '/clinic', text: '내 업무 연결 설계서 작성하기 →' },
 
-      { type: 'head', text: '파트 3 — 파일 정리까지 자동화해보기' },
+      { type: 'head', text: '실습 3 — 파일 정리까지 자동화해보기' },
       { type: 'note', text: '마지막 확장은 화면 밖의 파일입니다. 데스크톱 앱이 다운로드 폴더·카카오톡 받은 파일·프로젝트 폴더를 살펴보고, 규칙에 맞는 파일만 안전하게 정리하도록 설계합니다.' },
       { type: 'prompt', id: 's4desktop' },
       { type: 'field', key: 's4.desktop_plan', kind: 'textarea', rows: 5, required: true,
         label: '내 데스크톱 자동정리의 첫 규칙',
         hint: '예: 파일명에 “견적”이 들어간 PDF는 Downloads/_정리함/견적/YYYY-MM으로 이동 제안. 애매한 파일은 그대로 둔다.' },
+      { type: 'panel', id: 's4-desktop' },
       { type: 'field', key: 's4.desktop_safety', kind: 'checks',
         label: '자동화 전에 지킬 안전장치',
         options: ['Dry Run 결과를 먼저 본다', '최근 파일과 폴더는 건드리지 않는다', '애매한 파일은 보류한다', '삭제하지 않고 이동만 한다', '이동 기록과 undo 방법을 남긴다'] },
@@ -545,8 +570,8 @@ export const PROMPTS = {
   frame: {
     session: 0, title: '모든 프롬프트의 공통 골격',
     note: '좋은 요청은 이 네 칸이 다 채워져 있습니다. 막히면 어느 칸이 비었는지 먼저 확인하세요.',
-    body: `[어디서]  노션 「내 업무(연습용)」 DB에서
-[무엇을]  이번 주 마감인 항목만
+    body: `[어디서]  연결 준비에 지정한 Notion 페이지(내 AX 실습장 복제본)에서
+[무엇을]  이번 주에 확인이 필요한 항목만
 [어떤 형식으로]  작업 이름 / 담당자 / 상태 / 마감일 4개 열의 표로
 [어디로]  화면에 먼저 보여줘 (아직 아무데도 쓰지 마)
 
@@ -674,7 +699,7 @@ item_key와 value가 어떤 모습일지 예시 한 행으로 보여줘.
   },
 
   s2insert: {
-    session: 2, title: '3 — 저장되는 한 행을 확인하기',
+    session: 2, title: '참고 — 저장되는 한 행 이해하기',
     body: `방금 만든 최종 액션아이템 표가 이 워크북의 Supabase entries에 저장된다고 가정하고,
 다음 구조를 비개발자도 이해할 수 있게 한 건만 예시로 보여줘.
 
@@ -775,7 +800,7 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
   },
 
   s3flow: {
-    session: 3, title: '5 — 같은 원본을 목적지별로 바꾸기',
+    session: 3, title: '4 — 같은 원본을 목적지별로 바꾸기',
     body: `한 개의 업무 원본을 아래 세 목적지에 맞게 변환하는 표를 만들어줘.
 
 원본: [Asana에서 읽은 태스크 또는 Notion에서 읽은 페이지]
@@ -789,7 +814,7 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
   },
 
   s3recipe: {
-    session: 3, title: '6 — 연결 레시피로 저장',
+    session: 3, title: '5 — 연결 레시피로 저장',
     body: `방금 한 연결 실습을 다음 사람이 다시 실행할 수 있는 한 덩어리의 레시피로 정리해줘.
 
 반드시 포함해:
@@ -965,16 +990,22 @@ export const RESCUE = [
   ['결과가 너무 길다', '핵심만 5줄로 줄여줘'],
   ['형식이 매번 다르다', '지금 형식을 템플릿으로 고정하고, 앞으로 이 형식으로만 답해'],
   ['지어낸 것 같다', '근거가 된 원문 문장을 각 항목마다 붙여줘'],
-  ['실수로 뭔가 썼다', '방금 만든 항목들 목록을 보여줘 → 노션에서 직접 삭제'],
-  ['아예 접근이 안 된다', '커넥터 연결 상태 확인 → 안 되면 파일 다운로드 후 업로드'],
+  ['실수로 SaaS에 저장했다', '같은 작업대에서 원래 값으로 한 번 더 수정 저장하면 됩니다 (미리보기에서 멈추면 애초에 실행되지 않습니다)'],
+  ['불러오기가 실패한다', '봇 초대(Asana)·연결 추가(Notion)·채널 초대(Slack)를 확인 → 그래도 안 되면 연결 준비의 플랜 B(파일 업로드)로 진행'],
 ];
 
 // ── 진행률 계산용: 필수 항목 키 목록 ─────────────────────────
 export function requiredKeys(scope) {
   const out = [];
-  if (scope === 'setup' || scope === 'all') {
+  if (scope === 'setup') {
+    // 체크리스트 페이지 자체의 진행률: 모든 체크 + 필수 입력
     for (const g of SETUP.groups)
       for (const f of g.fields) if (f.kind === 'check' || f.required) out.push(f.key);
+  }
+  if (scope === 'all') {
+    // 전체 진행률: 회차와 같은 기준(필수만) — 체크박스 수가 전체 %를 지배하지 않게
+    for (const g of SETUP.groups)
+      for (const f of g.fields) if (f.required) out.push(f.key);
   }
   if (scope === 'clinic' || scope === 'all') {
     for (const g of CLINIC.groups)

@@ -1,28 +1,32 @@
 // js/home.js — 학습 여정 허브
-import { requireAuth, needsTeam, saveTeam } from './auth.js';
+import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus } from './store.js';
 import { COURSE, SESSIONS, SETUP, CLINIC, AX_FLOW, INTEGRATIONS, DATA_MODEL, requiredKeys } from './content.js';
 import { el, frag } from './render.js';
+import { openSessionsFor } from './course.js';
 
 const app = document.getElementById('app');
 
-function sessionCard(session, progress) {
+function sessionCard(session, progress, locked) {
   const pct = progress.total ? progress.pct : 0;
+  // 잠긴 회차: 링크가 아닌 카드로 — 강의 진도에 맞춰 강사가 엽니다
+  const tagOpen  = locked ? '<div' : `<a href="/session?n=${session.n}"`;
+  const tagClose = locked ? '</div>' : '</a>';
   return `
-    <a class="journey-card journey-${session.n}" href="/session?n=${session.n}">
+    ${tagOpen} class="journey-card journey-${session.n}${locked ? ' journey-locked' : ''}"${locked ? ' aria-disabled="true"' : ''}>
       <div class="journey-card-top">
         <span class="journey-number">0${session.n}</span>
         <span class="journey-tag">${esc(session.tag)}</span>
-        <span class="journey-arrow" aria-hidden="true">↗</span>
+        <span class="journey-arrow" aria-hidden="true">${locked ? '🔒' : '↗'}</span>
       </div>
       <h3>${esc(session.title)}</h3>
-      <p>${esc(session.goal)}</p>
+      <p>${locked ? '강사가 열면 시작할 수 있습니다. 수업에서 만나요.' : esc(session.goal)}</p>
       <div class="journey-card-foot">
-        <span>${progress.done}/${progress.total} 완료</span>
-        <span class="mini-progress"><i style="width:${pct}%"></i></span>
+        <span>${locked ? '잠김' : `${progress.done}/${progress.total} 완료`}</span>
+        <span class="mini-progress"><i style="width:${locked ? 0 : pct}%"></i></span>
       </div>
-    </a>`;
+    ${tagClose}`;
 }
 
 (async function main() {
@@ -32,6 +36,10 @@ function sessionCard(session, progress) {
   mountStatus(document.getElementById('savestate'));
 
   const entries = await loadEntries();
+
+  // 내 기수에 열린 회차 확인 — 강사는 전부 열림
+  const open = await openSessionsFor(me);
+  const lockedSet = new Set(open === null ? [] : SESSIONS.map(x => x.n).filter(n => !open.includes(n)));
   const all = progressOf(requiredKeys('all'), entries);
   const setupP = progressOf(requiredKeys('setup'), entries);
   const clinicP = progressOf(requiredKeys('clinic'), entries);
@@ -95,11 +103,11 @@ function sessionCard(session, progress) {
     </section>
 
     <section class="progress-section">
-      <div class="progress-main"><span class="section-kicker">YOUR WORKBOOK</span><h2>${esc(me.name)} 님의 연결 현황</h2><p>입력한 내용은 자동 저장됩니다. 지금의 기록이 4회차에 나만의 봇 설계서가 됩니다.</p><div class="big-progress"><span style="width:${all.pct}%"></span></div><div class="progress-meta"><strong>${all.pct}%</strong><span>${all.done} / ${all.total} 항목 완료</span></div></div>
+      <div class="progress-main"><span class="section-kicker">YOUR WORKBOOK</span><h2>${esc(me.name)} 님의 연결 현황</h2><p>입력은 각 회차 하단의 [모두 저장]으로 확정됩니다. 지금의 기록이 4회차에 나만의 봇 설계서가 됩니다.</p><div class="big-progress"><span style="width:${all.pct}%"></span></div><div class="progress-meta"><strong>${all.pct}%</strong><span>${all.done} / ${all.total} 항목 완료</span></div></div>
       <div class="quick-links"><a href="/setup"><span class="quick-index">00</span><div><b>연결 준비</b><small>${setupP.done}/${setupP.total} 완료 · 읽기 범위 확인</small></div><span>→</span></a><a href="/clinic"><span class="quick-index">FIN</span><div><b>내 업무 연결 설계서</b><small>${clinicP.done}/${clinicP.total} 완료 · 4회차 산출물</small></div><span>→</span></a></div>
     </section>
 
-    <section class="sessions-section"><div class="section-heading"><div><span class="section-kicker">WORKBOOK PAGES</span><h2>회차별 실습</h2></div><a class="section-link" href="/prompts">프롬프트 카드 열기 ↗</a></div><div class="journey-grid">${SESSIONS.map(session => sessionCard(session, progressOf(requiredKeys(session.n), entries))).join('')}</div></section>`));
+    <section class="sessions-section"><div class="section-heading"><div><span class="section-kicker">WORKBOOK PAGES</span><h2>회차별 실습</h2></div><a class="section-link" href="/prompts">프롬프트 카드 열기 ↗</a></div><div class="journey-grid">${SESSIONS.map(session => sessionCard(session, progressOf(requiredKeys(session.n), entries), lockedSet.has(session.n))).join('')}</div></section>`));
 
   const flowLink = document.getElementById('flow-link');
   flowLink?.addEventListener('click', (event) => {
@@ -110,14 +118,4 @@ function sessionCard(session, progress) {
     history.replaceState(null, '', '#journey');
   });
 
-  if (needsTeam(me)) {
-    const box = el(`<div class="team-card"><div><span class="section-kicker">ONE SMALL SETUP</span><b>소속 팀을 알려주세요</b><p>강사가 참가자 명단을 정리할 때 씁니다. 한 번만 입력하면 됩니다.</p></div><div class="team-input"><input type="text" id="team" placeholder="예: SCM본부 / People"><button class="hero-cta" id="teamsave">저장 <span>→</span></button></div></div>`);
-    box.querySelector('#teamsave').addEventListener('click', async () => {
-      const value = box.querySelector('#team').value.trim();
-      if (!value) return;
-      await saveTeam(value);
-      location.reload();
-    });
-    app.insertBefore(box, app.firstChild);
-  }
 })();

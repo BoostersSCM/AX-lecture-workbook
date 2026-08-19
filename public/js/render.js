@@ -248,8 +248,15 @@ export function renderField(f) {
   }
   input.id = id;
   input.value = getValue(f.key);
-  input.addEventListener('input', () => saveValue(f.key, input.value));
-  input.addEventListener('blur',  () => saveValue(f.key, input.value));
+  if (f.readonly) {
+    // 작업대가 자동 기록하는 영수증 칸 — 직접 입력하는 곳이 아님을 분명히
+    input.readOnly = true;
+    input.classList.add('auto-filled');
+    input.placeholder = '작업대 버튼을 실행하면 자동으로 기록됩니다';
+  } else {
+    input.addEventListener('input', () => saveValue(f.key, input.value));
+    input.addEventListener('blur',  () => saveValue(f.key, input.value));
+  }
   box.appendChild(input);
   return box;
 }

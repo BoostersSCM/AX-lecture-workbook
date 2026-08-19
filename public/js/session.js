@@ -1,12 +1,20 @@
 // js/session.js — 회차별 워크북 (/session?n=1..4)
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { loadEntries, loadSlackEvents, progressOf, mountStatus, setManualSave, mountSaveBar } from './store.js';
+import { loadEntries, loadSlackEvents, progressOf, mountStatus, setManualSave, mountSaveBar, onSaved } from './store.js';
 import { SESSIONS, requiredKeys } from './content.js';
 import { el, progressBar, renderBlock } from './render.js';
-import { renderPracticePanel, renderSlackSendLab } from './practice.js';
+import { renderPanelById, renderSlackSendLab } from './practice.js';
+import { isSessionOpen, openSessionsFor, lockedNotice } from './course.js';
 
 const app = document.getElementById('app');
+
+// Slack lab 카드를 본문 흐름 안에 단독 배치할 때의 여백 래퍼
+function wrapSlackCard(card) {
+  const wrap = el('<div class="slack-lab-single"></div>');
+  wrap.appendChild(card);
+  return wrap;
+}
 
 function renderSlackInbox() {
   const panel = el(`
@@ -71,6 +79,12 @@ function renderSlackInbox() {
 
   document.title = `${s.n}회차 ${s.title} · AX 워크북`;
 
+  // 회차 개방 게이트 — 강사가 연 회차만 수강생에게 열립니다 (강사는 항상 통과)
+  if (!(await isSessionOpen(n, me))) {
+    app.appendChild(lockedNotice(n, await openSessionsFor(me)));
+    return;
+  }
+
   const entries = await loadEntries();
 
   app.appendChild(el(`
@@ -80,24 +94,30 @@ function renderSlackInbox() {
       <p class="lede">${esc(s.goal)}</p>
     </div>`));
 
-  app.appendChild(progressBar(progressOf(requiredKeys(s.n), entries)));
-  app.appendChild(renderPracticePanel(s.n));
-  if (n === 3) {
-    const slackLab = el(`
-      <section class="slack-lab-shell">
-        <div class="slack-lab-head">
-          <div><span class="eyebrow">TWO-WAY SLACK LAB</span><h2>Slack은 보내기와 받기를 따로 연습합니다</h2></div>
-          <p><b>A</b>는 워크북이 Slack API를 호출하는 흐름이고, <b>B</b>는 Slack이 워크북의 Vercel 엔드포인트를 호출하는 흐름입니다.</p>
-        </div>
-        <div class="slack-lab-grid"></div>
-      </section>`);
-    const grid = slackLab.querySelector('.slack-lab-grid');
-    grid.appendChild(renderSlackSendLab());
-    grid.appendChild(renderSlackInbox());
-    app.appendChild(slackLab);
-  }
+  // 진행률 바 — 저장 성공 시마다 다시 계산해서 "채워지고 있다"가 보이게
+  const bar = progressBar(progressOf(requiredKeys(s.n), entries));
+  app.appendChild(bar);
+  onSaved(() => {
+    const p = progressOf(requiredKeys(s.n));
+    bar.querySelector('.prog-fill').style.width = p.pct + '%';
+    bar.querySelector('.prog-num').textContent = `${p.done}/${p.total}`;
+  });
 
-  for (const b of s.blocks) app.appendChild(renderBlock(b));
+  // 회차 골격은 content.js 블록 순서 그대로 — 작업대(panel)와 Slack lab도
+  // 해당 실습 위치에 끼워 넣습니다. 버튼이 설명보다 먼저 나오지 않게 하기 위함입니다.
+  for (const b of s.blocks) {
+    if (b.type === 'panel') {
+      if (b.id === 's3-slack-send') {
+        app.appendChild(wrapSlackCard(renderSlackSendLab()));
+      } else if (b.id === 's3-slack-inbox') {
+        app.appendChild(wrapSlackCard(renderSlackInbox()));
+      } else {
+        app.appendChild(renderPanelById(b.id));
+      }
+      continue;
+    }
+    app.appendChild(renderBlock(b));
+  }
 
   // 이전/다음 회차
   const prev = SESSIONS.find(x => x.n === n - 1);

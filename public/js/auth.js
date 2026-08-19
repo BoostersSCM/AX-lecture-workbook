@@ -90,21 +90,40 @@ export function needsTeam(me) {
   return !me?.team || me.team === '미지정';
 }
 
+// 첫 로그인 온보딩(팀 + 기수)이 끝났는가 — 강사는 기수 없이도 통과
+export function needsOnboarding(me) {
+  if (!me) return false;
+  if (isInstructor(me)) return false; // 강사는 기수 선택 없이 통과
+  return needsTeam(me) || !me.cohort;
+}
+
 export async function saveTeam(team) {
+  return saveProfileBits({ team });
+}
+
+// 온보딩에서 팀·기수를 한 번에 저장
+export async function saveProfileBits(bits) {
   const me = await getMe();
   if (!me) return null;
   const { data, error } = await supabase
-    .from('profiles').update({ team }).eq('id', me.id).select().single();
-  if (error) { toast('팀 저장에 실패했습니다.', 'error'); return null; }
+    .from('profiles').update(bits).eq('id', me.id).select().single();
+  if (error) { toast('저장에 실패했습니다: ' + error.message, 'error'); return null; }
   _me = data;
   return data;
 }
 
-// 페이지 보호 — 로그인 필수
+// 페이지 보호 — 로그인 필수 (+ 온보딩 미완료면 가입 화면으로)
 export async function requireAuth() {
   const st = await getSessionState();
 
-  if (st.profile) { _me = st.profile; return st.profile; }
+  if (st.profile) {
+    _me = st.profile;
+    if (needsOnboarding(_me) && !location.pathname.startsWith('/onboarding')) {
+      location.replace('/onboarding');
+      return null;
+    }
+    return st.profile;
+  }
 
   // 세션 만료·남의 도메인·프로필 없음은 세션을 끊고 이유를 알려줍니다.
   // (이걸 안 하면 참가자가 이유도 모른 채 로그인 화면만 반복하게 됩니다)

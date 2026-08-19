@@ -1,5 +1,6 @@
 // js/shell.js — 공통 헤더/네비
 import { getMe, signOut, isInstructor, watchSessionExpiry } from './auth.js';
+import { openSessionsFor } from './course.js';
 
 const NAV = [
   { href: '/',        label: '홈' },
@@ -10,6 +11,7 @@ const NAV = [
   { href: '/session?n=4', label: '4회차', match: 'n=4' },
   { href: '/clinic',  label: '업무 설계서' },
   { href: '/prompts', label: '프롬프트 카드' },
+  { href: '/my',      label: '마이' },
 ];
 
 export async function mountShell() {
@@ -18,13 +20,23 @@ export async function mountShell() {
   const path = location.pathname.replace(/\.html$/, '') || '/';
   const qs   = location.search;
 
+  // 잠긴 회차는 네비에도 자물쇠로 표시 (강사는 전부 열림)
+  const open = me ? await openSessionsFor(me) : null;
+  const isLockedNav = (item) => {
+    if (!item.match || open === null) return false;
+    const n = Number(item.match.replace('n=', ''));
+    return !open.includes(n);
+  };
+
   const links = NAV.map(item => {
     const base = item.href.split('?')[0];
     let on = false;
     if (item.match) on = path.startsWith('/session') && qs.includes(item.match);
     else if (base === '/') on = path === '/' || path === '/index';
     else on = path === base;
-    return `<a href="${item.href}"${on ? ' class="on"' : ''}>${item.label}</a>`;
+    const locked = isLockedNav(item);
+    const cls = [on ? 'on' : '', locked ? 'nav-locked' : ''].filter(Boolean).join(' ');
+    return `<a href="${item.href}"${cls ? ` class="${cls}"` : ''}${locked ? ' title="강사가 아직 열지 않았습니다"' : ''}>${item.label}${locked ? ' 🔒' : ''}</a>`;
   }).join('');
 
   const adminLink = me && isInstructor(me)

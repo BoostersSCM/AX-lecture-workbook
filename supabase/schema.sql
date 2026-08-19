@@ -13,6 +13,7 @@ create table if not exists public.profiles (
   email       text not null unique,
   name        text not null,
   team        text not null default '미지정',
+  cohort      int,                            -- 기수 (첫 로그인 온보딩에서 선택)
   role        text not null default 'member' check (role in ('member','instructor')),
   created_at  timestamptz not null default now()
 );
@@ -173,3 +174,32 @@ create policy slack_events_select on public.slack_events
 -- 확인:
 --   select email, name, team, role from public.profiles order by created_at;
 -- ============================================================
+
+-- ────────────────────────────────────────────
+-- 5. course_settings — 회차 개방 제어 (강사가 /admin에서 관리)
+--    (기존 DB에는 002_course_settings.sql을 실행)
+-- ────────────────────────────────────────────
+create table if not exists public.course_settings (
+  key         text primary key,
+  value       text,
+  updated_at  timestamptz not null default now()
+);
+
+alter table public.course_settings enable row level security;
+
+drop policy if exists course_settings_select on public.course_settings;
+create policy course_settings_select on public.course_settings
+  for select using (auth.uid() is not null);
+
+drop policy if exists course_settings_write on public.course_settings;
+create policy course_settings_write on public.course_settings
+  for all using (public.is_instructor()) with check (public.is_instructor());
+
+drop trigger if exists course_settings_touch on public.course_settings;
+create trigger course_settings_touch
+  before update on public.course_settings
+  for each row execute function public.touch_updated_at();
+
+insert into public.course_settings (key, value)
+values ('open_sessions_by_cohort', '{"1":[1]}')
+on conflict (key) do nothing;
