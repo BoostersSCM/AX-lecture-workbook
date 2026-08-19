@@ -110,6 +110,47 @@ async function saveIntegrationReceipt(key, value) {
   setFieldValue(key, value);
 }
 
+// 경계 실험 — "같은 워크스페이스면 다 읽히겠지"라는 오해를 실패로 깨는 카드.
+// 봇은 연결 추가(초대)된 페이지만 읽습니다. 성공과 실패를 한 카드에서 직접 봅니다.
+function addNotionBoundaryTester(panel) {
+  const card = el(`
+    <article class="practice-action practice-create">
+      <div>
+        <h3>경계 실험 — 아무 페이지나 불러와보기</h3>
+        <p>① 먼저 위에서 성공한 <b>내 복제본</b> URL로 눌러보고, ② 이번엔 <b>연결 추가를 하지 않은</b> 워크스페이스의 아무 페이지 URL로 눌러보세요. 같은 워크스페이스라도 초대 안 된 페이지는 실패합니다 — 그 실패 문구가 오늘의 배움입니다.</p>
+      </div>
+      <input class="practice-input" type="text" placeholder="Notion 페이지 URL 또는 Page ID" aria-label="경계 실험용 Notion 페이지">
+      <button class="practice-button" type="button">이 페이지 읽어보기</button>
+      <div class="slack-inline-preview" data-boundary-result hidden></div>
+    </article>`);
+  panel.querySelector('.practice-actions').appendChild(card);
+  const input = card.querySelector('input');
+  const button = card.querySelector('button');
+  const result = card.querySelector('[data-boundary-result]');
+
+  function show(title, text, ok) {
+    result.className = 'slack-inline-preview' + (ok ? ' ok' : '');
+    result.innerHTML = `<div class="slack-inline-title">${esc(title)}</div><pre>${esc(text)}</pre>`;
+    result.hidden = false;
+  }
+
+  button.addEventListener('click', async () => {
+    const page = input.value.trim();
+    if (!page) return show('페이지 필요', '실험할 Notion 페이지 URL 또는 Page ID를 입력하세요.', false);
+    button.disabled = true;
+    try {
+      const res = await callIntegration('/api/integrations/notion/page?pageId=' + encodeURIComponent(page));
+      show('✅ 읽기 성공 — 이 페이지는 봇이 초대되어 있습니다',
+        `페이지: ${notionTitle(res.page)}\n읽은 블록 수: ${res.blocks?.length || 0}\n\n→ 연결 추가가 된 페이지만 이렇게 열립니다.`, true);
+    } catch (error) {
+      show('🔒 읽기 실패 — 예상된 결과입니다',
+        `${error.message || error}\n\n→ 같은 워크스페이스여도 봇을 연결(초대)하지 않은 페이지는 읽을 수 없습니다.\n→ 접근 범위는 "워크스페이스"가 아니라 "초대된 페이지"입니다. 이 문구를 아래 경계 실험 기록에 옮겨 적으세요.`, false);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 function addNotionReader(panel, { storeKey = '' } = {}) {
   const page = valueOf('setup.notion_target', 's3.notion_page');
   const card = actionCard('Notion 원본 불러오기', page ? `연결 대상: ${page}` : '연결 준비에서 Notion 페이지 URL 또는 ID를 먼저 적습니다.', '읽어오기');
@@ -715,7 +756,8 @@ export function renderSlackSendLab() {
 export function renderPanelById(id) {
   switch (id) {
     case 's1-notion': {
-      const panel = panelShell(1, 'Notion 작업대 — 문단을 가져와 고치고 같은 자리에 저장', '「AX 실습장」 복제본의 수정 실습 문단을 불러와 작은 변경을 만들고, 미리보기 확인 후 같은 Notion 블록에 저장합니다.');
+      const panel = panelShell(1, 'Notion 작업대 — 경계를 확인하고, 문단을 가져와 같은 자리에 저장', '먼저 경계 실험으로 "초대된 페이지만 읽힌다"를 눈으로 확인하고, 이어서 내 복제본의 문단을 가져와 작은 수정을 같은 Notion 블록에 저장합니다.');
+      addNotionBoundaryTester(panel);
       addNotionBlockEditor(panel, {
         snapshotKey: 's1.source_snapshot',
         receiptKey: 's1.notion_update',
