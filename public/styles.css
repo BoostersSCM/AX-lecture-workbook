@@ -211,6 +211,22 @@ button.primary {
 button.primary:hover { filter: brightness(1.08); }
 button.copy { font-size: 0.78rem; padding: 0.22rem 0.6rem; white-space: nowrap; }
 button.copy.done { background: var(--ok); color: #fff; border-color: var(--ok); }
+button.primary.saved { background: var(--ok); border-color: var(--ok); }
+button:disabled { opacity: 0.65; cursor: wait; }
+
+.setup-save {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  margin: 1.2rem 0 2.5rem; padding: 1rem 1.1rem;
+  border: 1px solid var(--teal-strong); background: var(--accent-soft);
+}
+.setup-save div { display: grid; gap: 0.2rem; }
+.setup-save strong { font-size: 0.94rem; }
+.setup-save span { color: var(--ink-soft); font-size: 0.82rem; }
+.setup-save button { flex: none; }
+@media (max-width: 560px) {
+  .setup-save { align-items: stretch; flex-direction: column; }
+  .setup-save button { width: 100%; }
+}
 
 .btn-link {
   display: inline-block; text-decoration: none; font-weight: 650;

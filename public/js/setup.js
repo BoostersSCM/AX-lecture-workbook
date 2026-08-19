@@ -1,7 +1,8 @@
 // js/setup.js — 연결 준비 체크리스트
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { loadEntries, progressOf, mountStatus } from './store.js';
+import { loadEntries, progressOf, mountStatus, saveValue } from './store.js';
+import { toast } from './supabase.js';
 import { SETUP, PROMPTS, requiredKeys } from './content.js';
 import { el, progressBar, renderField, renderPrompt } from './render.js';
 
@@ -44,6 +45,51 @@ const app = document.getElementById('app');
           body: SETUP.verifyPrompt,
         }));
       }
+    }
+
+    if (g.name === '4. 연결할 대상 정하기') {
+      const saveBox = el(`
+        <div class="setup-save">
+          <div>
+            <strong>연결 준비를 마쳤나요?</strong>
+            <span>입력한 Asana·Notion·Slack 대상을 한 번에 저장합니다.</span>
+          </div>
+          <button class="primary" type="button">연결 준비 저장</button>
+        </div>`);
+      const button = saveBox.querySelector('button');
+      button.addEventListener('click', async () => {
+        const values = g.fields.map(f => ({
+          key: f.key,
+          value: document.getElementById('f_' + f.key.replace(/[^\w]/g, '_'))?.value.trim() || '',
+          required: f.required,
+        }));
+        const missing = values.filter(item => item.required && !item.value);
+        if (missing.length) {
+          toast('필수 연결 정보를 먼저 입력해주세요.', 'error');
+          document.getElementById('f_' + missing[0].key.replace(/[^\w]/g, '_'))?.focus();
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = '저장 중…';
+        try {
+          const results = await Promise.all(values.map(item => saveValue(item.key, item.value, { immediate: true })));
+          if (results.some(result => result !== true)) throw new Error('save failed');
+          button.textContent = '저장 완료 ✓';
+          button.classList.add('saved');
+          toast('연결 준비 정보가 저장되었습니다.');
+          setTimeout(() => {
+            button.textContent = '연결 준비 저장';
+            button.classList.remove('saved');
+            button.disabled = false;
+          }, 1800);
+        } catch {
+          button.textContent = '다시 저장';
+          button.disabled = false;
+          toast('저장에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
+        }
+      });
+      app.appendChild(saveBox);
     }
   }
 

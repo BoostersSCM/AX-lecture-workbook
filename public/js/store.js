@@ -84,7 +84,7 @@ export function saveValue(key, value, { immediate = false } = {}) {
   const run = async () => {
     if (!userId) {
       const me = await getMe();
-      if (!me) { markPending(key, value); return; }
+      if (!me) { markPending(key, value); return false; }
       userId = me.id;
     }
     setStatus('saving');
@@ -97,14 +97,17 @@ export function saveValue(key, value, { immediate = false } = {}) {
       setStatus('error');
       console.error('[store] save failed', key, error);
       await warnIfSessionExpired();
+      return false;
     } else {
       clearPending(key);
       setStatus('saved');
+      return true;
     }
   };
 
-  if (immediate) run();
-  else timers[key] = setTimeout(run, DEBOUNCE);
+  if (immediate) return run();
+  timers[key] = setTimeout(run, DEBOUNCE);
+  return undefined;
 }
 
 // 저장이 실패했을 때 세션이 끊긴 것인지 확인하고 한 번만 안내합니다
