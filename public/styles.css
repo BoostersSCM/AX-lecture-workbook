@@ -223,6 +223,8 @@ input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visib
 .prompt-help-summary { margin: 1.1rem 0; padding: 0.8rem 0.9rem; background: var(--accent-soft); color: var(--ink-soft); line-height: 1.65; }
 .prompt-help-section { margin-top: 1.2rem; }
 .prompt-help-section h3 { margin: 0 0 0.55rem; color: var(--teal-strong); font-size: 0.82rem; letter-spacing: 0.04em; }
+.prompt-help-setup ul { margin: 0; padding: 0.7rem 0.9rem 0.7rem 2rem; background: #fff9ed; color: var(--ink-soft); line-height: 1.65; }
+.prompt-help-setup li + li { margin-top: 0.35rem; }
 .prompt-help-terms dl { display: grid; grid-template-columns: minmax(6rem, 0.32fr) 1fr; gap: 0.5rem 0.8rem; margin: 0; }
 .prompt-help-terms dt { font-weight: 750; color: var(--ink); }
 .prompt-help-terms dd { margin: 0; color: var(--ink-soft); line-height: 1.6; }

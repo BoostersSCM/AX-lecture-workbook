@@ -55,12 +55,16 @@ function openPromptHelp(help, title) {
           <button class="prompt-help-close" type="button" aria-label="도움말 닫기">×</button>
         </div>
         <p class="prompt-help-summary"></p>
+        <div class="prompt-help-section prompt-help-setup"><h3>먼저 설정할 것</h3><ul></ul></div>
         <div class="prompt-help-section prompt-help-terms"><h3>용어를 풀어보면</h3><dl></dl></div>
         <div class="prompt-help-section prompt-help-steps"><h3>실제로 하는 순서</h3><ol></ol></div>
       </section>
     </div>`);
   modal.querySelector('#prompt-help-title').textContent = title || '프롬프트 도움말';
   modal.querySelector('.prompt-help-summary').textContent = help.summary || '';
+  const setup = modal.querySelector('.prompt-help-setup ul');
+  setup.innerHTML = (help.setup || []).map(item => `<li>${esc(item)}</li>`).join('');
+  modal.querySelector('.prompt-help-setup').hidden = !help.setup?.length;
   const terms = modal.querySelector('.prompt-help-terms dl');
   terms.innerHTML = (help.terms || []).map(([term, description]) => `<dt>${esc(term)}</dt><dd>${esc(description)}</dd>`).join('');
   modal.querySelector('.prompt-help-terms').hidden = !help.terms?.length;
@@ -85,6 +89,7 @@ export function renderPrompt(p, help = null) {
   const guide = promptGuide(p);
   const helpInfo = help || {
     summary: '이 프롬프트는 원본에서 필요한 정보를 읽고, 정해진 형식으로 결과를 만드는 요청입니다.',
+    setup: ['대괄호 안의 값을 내 업무에 맞게 준비합니다.'],
     terms: [['원본', 'AI가 읽을 실제 자료입니다.'], ['범위', '어디까지 읽을지 정하는 조건입니다.']],
     steps: ['대괄호 안의 값을 내 업무에 맞게 바꿉니다.', '프롬프트를 복사해 Claude 대화창에 붙여넣습니다.', '결과를 확인하고 워크북 입력란에 기록합니다.'],
   };

@@ -651,13 +651,15 @@ item_key와 value가 어떤 모습일지 예시 한 행으로 보여줘.
 - NOTION_TOKEN
 - SLACK_BOT_TOKEN
 - SLACK_SIGNING_SECRET
+- SUPABASE_SERVICE_ROLE_KEY
 
 토큰의 실제 값은 절대 보여주지 말고, 각 연결이 준비되었는지 확인하는 체크리스트만 만들어줘.
 수강생이 직접 준비할 값은 다음 네 가지로 구분해줘:
 - Asana Project GID
 - Notion Page ID
 - Slack Channel ID
-- Slack Events API Request URL`
+- Slack User ID (개인 DM을 보낼 때)
+Slack Events API Request URL은 운영자가 제공하고, 수강생은 입력하지 않아도 된다고 안내해줘.`
   },
 
   s3asana: {
@@ -854,28 +856,33 @@ export const PROMPT_HELP = {
   },
   s3asana: {
     summary: 'Asana 봇을 특정 프로젝트에 초대한 뒤, 그 프로젝트의 태스크를 읽는 실습입니다.',
+    setup: ['운영자: Vercel Production에 ASANA_TOKEN_BOT이 설정되어 있어야 합니다. 토큰 값은 수강생에게 공유하지 않습니다.', '수강생: 사용할 Asana 프로젝트를 정하고 프로젝트 멤버에 기존 봇을 초대합니다.', '수강생: 프로젝트 URL 또는 Project GID만 워크북에 입력합니다. 이 카드는 읽기 전용으로 실행합니다.'],
     terms: [['Project GID', 'Asana 프로젝트를 API에서 식별하는 고유 숫자 ID입니다.'], ['읽기 전용', '가져오기만 하고 원본을 수정하지 않는 방식입니다.']],
-    steps: ['Asana 프로젝트에 봇을 멤버로 초대합니다.', '프로젝트 URL 또는 GID를 입력합니다.', '태스크를 최대 3개 읽고 담당자·마감일을 확인합니다.'],
+    steps: ['Asana 프로젝트의 멤버 메뉴에서 봇을 초대합니다.', '프로젝트 URL 또는 GID를 입력합니다.', '연결 확인 버튼으로 프로젝트 이름과 태스크를 읽습니다.', '태스크의 담당자·마감일이 비어 있으면 미확인으로 기록합니다.', '403·project not found가 나오면 봇 초대와 프로젝트 접근 범위를 다시 확인합니다.'],
   },
   s3config: {
     summary: '토큰의 실제 값은 보지 않고, 운영자 서버에 연결이 준비됐는지만 확인하는 단계입니다.',
+    setup: ['운영자: Vercel Production에 ASANA_TOKEN_BOT·NOTION_TOKEN·SLACK_BOT_TOKEN·SLACK_SIGNING_SECRET을 설정합니다.', '운영자: Slack 이벤트를 워크북 수신함과 Supabase에 저장하려면 SUPABASE_SERVICE_ROLE_KEY도 서버에만 설정합니다.', '수강생: Project GID·Page ID·Channel ID·필요하면 Slack User ID만 입력합니다. 토큰과 Request URL은 입력하지 않습니다.', 'Slack Request URL은 운영자가 제공하는 https://ax-lecture-workbook.vercel.app/api/slack/events 를 Slack 앱 설정에 등록합니다.'],
     terms: [['토큰', '서비스에 접근할 수 있게 해주는 비밀 열쇠입니다. 화면이나 프롬프트에 적지 않습니다.'], ['환경변수', '토큰을 서버 설정에 보관하는 이름입니다.']],
-    steps: ['운영자가 Vercel 환경변수 이름을 확인합니다.', '수강생은 대상 URL·ID만 준비합니다.', '토큰 값이 화면에 노출되지 않는지 확인합니다.'],
+    steps: ['운영자가 Vercel 환경변수를 Production에 저장합니다.', '환경변수를 새로 넣거나 바꿨다면 다시 배포합니다.', '수강생은 연결할 대상 ID만 워크북에 저장합니다.', '토큰 값이 화면·프롬프트·워크북 답변에 노출되지 않는지 확인합니다.'],
   },
   s3notion: {
     summary: 'Notion 앱을 특정 페이지에 연결한 뒤, 페이지의 블록이나 DB 행을 읽는 실습입니다.',
+    setup: ['운영자: Vercel Production에 NOTION_TOKEN이 설정되어 있어야 합니다.', '수강생: 읽을 페이지에서 오른쪽 위 ··· → 연결 추가를 열고 운영자가 만든 기존 앱을 선택합니다.', '수강생: 연결한 페이지 URL 또는 Page ID만 입력합니다. 앱을 연결하지 않은 하위 페이지는 읽히지 않을 수 있습니다.'],
     terms: [['Page ID', 'Notion 페이지를 API에서 식별하는 ID입니다. URL 안에 들어 있거나 URL에서 확인할 수 있습니다.'], ['연결 추가', '페이지의 권한 메뉴에서 기존 앱이 이 페이지를 읽도록 허용하는 절차입니다.']],
-    steps: ['Notion 페이지 오른쪽 위 ···를 엽니다.', '연결 추가에서 기존 앱을 선택합니다.', '페이지 URL 또는 ID를 입력하고 읽기 결과를 확인합니다.'],
+    steps: ['Notion 페이지 오른쪽 위 ··· → 연결 추가를 엽니다.', '운영자가 만든 기존 앱을 선택하고 접근을 허용합니다.', '페이지 URL 또는 ID를 입력합니다.', '연결 확인 버튼으로 페이지 제목과 본문 블록을 읽습니다.', 'object_not_found·unauthorized가 나오면 페이지 연결과 상위 페이지 권한을 다시 확인합니다.'],
   },
   s3slack_send: {
     summary: '봇이 지정한 Slack 채널에 메시지를 보내되, 전송 전에 사람이 미리 확인하는 실습입니다.',
+    setup: ['운영자: Slack 앱 OAuth & Permissions의 Bot Token Scopes에 chat:write를 추가합니다.', '개인 DM 실습까지 하려면 conversations.open을 위한 im:write도 추가하고, 권한을 바꾼 뒤 Slack 앱을 Workspace에 다시 설치합니다.', '수강생: 공개·비공개 채널에 봇을 초대하고 C로 시작하는 Channel ID를 준비합니다. 개인 DM은 U로 시작하는 Slack User ID를 사용합니다.'],
     terms: [['Channel ID', 'Slack 채널을 API에서 식별하는 C로 시작하는 ID입니다.'], ['chat.postMessage', 'Slack 채널이나 DM에 메시지를 보내는 API 동작입니다.']],
-    steps: ['봇을 채널에 초대합니다.', 'C로 시작하는 Channel ID를 확인합니다.', '메시지를 미리 본 뒤 확인하고 전송합니다.'],
+    steps: ['Slack 앱 권한을 추가했다면 Workspace에 다시 설치합니다.', '봇을 대상 채널에 초대하거나 DM 대상 User ID를 확인합니다.', '메시지를 미리 본 뒤 확인하고 전송합니다.', '성공 응답의 channel과 ts를 워크북에 기록합니다.', 'not_in_channel·missing_scope가 나오면 초대와 권한을 다시 확인합니다.'],
   },
   s3slack_event: {
     summary: 'Slack에서 작성한 메시지가 Vercel 웹훅을 거쳐 Supabase 수신함에 들어오는 흐름을 확인합니다.',
-    terms: [['웹훅', '어떤 일이 발생했을 때 다른 시스템의 URL로 자동 알림을 보내는 방식입니다.'], ['Request URL', 'Slack이 이벤트를 POST로 보내는 공개 서버 주소입니다.'], ['challenge', 'Slack이 URL의 소유권을 확인할 때 보내는 테스트 문자열입니다.']],
-    steps: ['Slack Event Subscriptions에 Vercel URL을 등록합니다.', 'Verified가 된 뒤 테스트 채널에 메시지를 씁니다.', '워크북 Slack 수신함에서 channel_id·text·event_ts를 확인합니다.'],
+    setup: ['운영자: Vercel Production에 SLACK_SIGNING_SECRET을 설정합니다. 이벤트를 Supabase에 저장하려면 SUPABASE_SERVICE_ROLE_KEY도 필요합니다.', 'Slack 앱: Event Subscriptions를 On으로 켜고 Request URL에 https://ax-lecture-workbook.vercel.app/api/slack/events 를 입력합니다.', 'Slack 앱: Verified가 되면 대상에 맞는 Bot Event만 추가합니다 — 공개 채널은 message.channels, 비공개 채널은 message.groups, 앱과의 DM은 message.im입니다.', 'Slack 앱: 이벤트 종류에 맞는 history 권한을 추가하고 권한을 바꿨다면 앱을 Workspace에 다시 설치합니다.', '수강생: 연결 준비에 적은 Channel ID와 같은 채널에서 테스트합니다. Request URL은 수강생별로 적는 값이 아닙니다.'],
+    terms: [['웹훅', '어떤 일이 발생했을 때 다른 시스템의 URL로 자동 알림을 보내는 방식입니다.'], ['Request URL', 'Slack이 이벤트를 POST로 보내는 공개 서버 주소입니다.'], ['challenge', 'Slack이 URL의 소유권을 확인할 때 보내는 테스트 문자열입니다.'], ['event_callback', '실제 메시지 이벤트가 도착했을 때 사용하는 Slack 이벤트 포장 형식입니다.'], ['서명 검증', '요청 헤더와 서버의 Signing Secret으로 진짜 Slack 요청인지 확인하는 절차입니다.']],
+    steps: ['Event Subscriptions를 켜고 Request URL을 등록합니다.', 'Verified 표시를 확인한 뒤 대상 Bot Event와 권한을 맞춥니다.', '봇을 대상 채널에 초대하고 AX-WEBHOOK-TEST를 입력합니다.', '워크북 3회차 Slack 수신함에서 channel_id·text·event_ts·작성자 ID를 확인합니다.', '봇이 보낸 메시지나 subtype 메시지가 무시되었다면 정상적인 중복 방지인지 확인합니다.'],
   },
   s3recipe: {
     summary: '한 번 성공한 연결을 다음 사람도 반복할 수 있도록 원본·권한·목적지·검수 절차로 정리합니다.',
