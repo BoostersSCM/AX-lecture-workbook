@@ -1,6 +1,6 @@
 // js/render.js — 문항을 화면으로 그리고 입력을 저장에 연결
 import { getValue, saveValue } from './store.js';
-import { PROMPTS } from './content.js';
+import { PROMPTS, VISUALS } from './content.js';
 import { esc, mini } from './shell.js';
 import { toast } from './supabase.js';
 
@@ -9,11 +9,21 @@ export function renderBlock(b) {
   switch (b.type) {
     case 'head':   return el(`<h2>${mini(b.text)}</h2>`);
     case 'note':   return el(`<div class="note">${mini(b.text)}</div>`);
+    case 'visual': return renderVisual(VISUALS[b.id]);
     case 'link':   return el(`<p style="margin:1.2rem 0"><a class="btn-link" href="${b.href}">${esc(b.text)}</a></p>`);
     case 'prompt': return renderPrompt(PROMPTS[b.id]);
     case 'field':  return renderField(b);
     default:       return document.createComment('unknown block');
   }
+}
+
+function renderVisual(v) {
+  if (!v) return document.createComment('missing visual');
+  return el(`
+    <figure class="lesson-visual">
+      <div class="lesson-visual-art"><img src="${esc(v.src)}" alt="${esc(v.alt)}" loading="lazy"></div>
+      <figcaption><span>${esc(v.label)}</span><strong>${esc(v.caption)}</strong></figcaption>
+    </figure>`);
 }
 
 // 프롬프트 카드 (읽기 전용 + 복사)

@@ -7,8 +7,57 @@
 //   text | textarea | number | check | checks | radio | grid
 
 export const COURSE = {
-  title: '연결해서 일하기',
-  subtitle: '노션·슬랙·드라이브를 AI로 잇는 4주',
+  title: '업무를 연결하는 AI',
+  subtitle: '사내 도구와 데이터를 연결해 반복 업무를 줄이는 4주',
+  promise: '흩어진 도구와 데이터를 연결해, 일의 흐름을 다시 설계합니다.',
+  intro: '도구 하나를 잘 쓰는 법이 아니라, 원본 데이터가 사람이 보는 채널·페이지·태스크로 이어지는 구조를 설계합니다.',
+};
+
+export const AX_FLOW = [
+  { n: '01', verb: '긁기', en: 'COLLECT', title: '원본이 있는 곳을 연결합니다', text: '노션 페이지, 슬랙 채널·DM, 드라이브 파일을 복붙하지 않고 AI가 직접 읽게 합니다.', tool: 'Notion · Slack · Drive', tone: 'teal' },
+  { n: '02', verb: '정하기', en: 'STRUCTURE', title: '양식을 먼저 정합니다', text: '근거 문장, 담당자, 상태, 마감일처럼 결과가 들어갈 칸을 미리 정해 흔들림을 줄입니다.', tool: 'Database · Page · Task', tone: 'brass' },
+  { n: '03', verb: '만들기', en: 'GENERATE', title: '반복 가능한 봇을 만듭니다', text: '정리된 데이터에서 주간 리포트, 회의 후속조치, 콘텐츠를 같은 규칙으로 생성합니다.', tool: 'Bot · Recipe · Prompt', tone: 'coral' },
+  { n: '04', verb: '보내기', en: 'DELIVER', title: '사람이 보는 곳까지 보냅니다', text: '특정 페이지에 기록하고, Asana 프로젝트에 태스크를 만들고, Slack 채널에 초안을 배달합니다.', tool: 'Slack channel · Asana · Page', tone: 'ink' },
+];
+
+export const INTEGRATIONS = [
+  { name: 'Notion', eyebrow: '원본 / 기록', title: '특정 페이지를 읽고 쓰기', text: '회의록을 읽어 액션아이템 DB에 넣거나, 만들어진 결과를 팀 페이지에 쌓습니다.', icon: 'N', tone: 'notion' },
+  { name: 'Slack', eyebrow: '대화 / 전달', title: '채널과 DM을 목적지로 쓰기', text: '채널의 맥락을 읽고, 나에게 먼저 리허설한 뒤 #ax-실습 같은 채널에 초안을 보냅니다.', icon: '#', tone: 'slack' },
+  { name: 'Asana', eyebrow: '실행 / 추적', title: '프로젝트와 태스크로 넘기기', text: '회의의 결정사항을 프로젝트 안 태스크로 만들고, 담당자·기한·상태까지 연결합니다.', icon: 'A', tone: 'asana' },
+  { name: 'Drive', eyebrow: '파일 / 자료', title: '파일에서 필요한 것만 꺼내기', text: '여러 문서와 폴더를 읽어 요약·비교하고, 다음 행동이 보이도록 다시 정리합니다.', icon: '↗', tone: 'drive' },
+];
+
+export const DATA_MODEL = [
+  { name: 'profiles', label: '누구의 데이터인가', text: '로그인한 사람을 한 줄로 표현합니다. 이름·이메일·팀·역할을 담고, auth.users와 1:1로 연결됩니다.', tone: 'identity' },
+  { name: 'entries', label: '무엇을 저장하는가', text: '워크북 입력 하나를 한 행으로 저장합니다. user_id + item_key가 주소이고, value가 실제 답입니다.', tone: 'record' },
+  { name: 'RLS', label: '누가 볼 수 있는가', text: '본인은 자기 답을 읽고 쓰고, 강사는 읽기만 합니다. 연결할수록 권한 규칙이 먼저입니다.', tone: 'guard' },
+];
+
+export const VISUALS = {
+  connector: {
+    src: '/assets/analogy-connector-keys.png',
+    label: '비유 01 · 커넥터는 열쇠 꾸러미',
+    caption: 'AI에게 회사 전체 열쇠를 주는 것이 아닙니다. 내가 가진 열쇠로 열 수 있는 방만 함께 봅니다.',
+    alt: '열쇠를 든 사람이 문이 있는 사무실에서 일부 방만 밝히고 있는 일러스트',
+  },
+  schema: {
+    src: '/assets/analogy-db-drawers.png',
+    label: '비유 02 · DB는 라벨이 붙은 서랍장',
+    caption: '칸을 먼저 정하면 회의록도 매번 같은 모양으로 쌓이고, 다음 업무에서 다시 꺼내 쓸 수 있습니다.',
+    alt: '흩어진 메모를 라벨이 붙은 서랍과 정돈된 기록으로 바꾸는 일러스트',
+  },
+  delivery: {
+    src: '/assets/analogy-delivery-hub.png',
+    label: '비유 03 · 봇은 사내 우편 분류소',
+    caption: '같은 원본도 Slack에는 짧은 메시지, Notion에는 기록, Asana에는 실행 태스크로 모양을 바꿔 도착합니다.',
+    alt: '하나의 문서가 세 가지 목적지로 분류되어 전달되는 사내 우편 분류소 일러스트',
+  },
+  recipe: {
+    src: '/assets/analogy-automation-recipe.png',
+    label: '비유 04 · 자동화는 다시 쓰는 레시피',
+    caption: '재료·순서·검수·도착지를 적어두면, 다음 주에도 같은 결과를 다시 만들 수 있습니다.',
+    alt: '자료와 규칙을 레시피처럼 조합해 반복 가능한 결과를 만드는 일러스트',
+  },
 };
 
 // ── 사전 세팅 체크리스트 ──────────────────────────────────────
@@ -27,6 +76,7 @@ export const SETUP = {
       fields: [
         { key: 'setup.notion', kind: 'check', label: '노션 연결 — 접근 범위에 내가 보는 팀 페이지를 포함' },
         { key: 'setup.slack',  kind: 'check', label: '슬랙 연결' },
+        { key: 'setup.asana',  kind: 'check', label: '아사나 연결 — 실습 프로젝트 또는 태스크 접근 권한 포함' },
         { key: 'setup.drive',  kind: 'check', label: '구글 드라이브 연결' },
         { key: 'setup.verify', kind: 'check', label: '연결 확인 프롬프트가 통과했다', hint: '아래 프롬프트를 복사해서 물어보고, 페이지 제목이 나오면 성공입니다.' },
       ]
@@ -38,6 +88,8 @@ export const SETUP = {
         { key: 'setup.db',         kind: 'check', label: '그 안의 「내 업무(연습용)」 DB가 보인다' },
         { key: 'setup.minutes',    kind: 'check', label: '샘플 회의록 3건이 보인다', hint: '부스팅데이 준비 · 팝업스토어 킥오프 · 계정 권한 정비' },
         { key: 'setup.channel',    kind: 'check', label: '슬랙 실습 채널에 들어와 있다' },
+        { key: 'setup.asana_project', kind: 'check', label: '아사나 실습 프로젝트 또는 샘플 태스크가 열린다', hint: '연동이 막힌 경우 3회차는 노션 페이지에 초안을 만드는 방식으로 진행할 수 있습니다.' },
+        { key: 'setup.persisted', kind: 'check', label: '워크북에 짧은 답을 적고 새로고침해도 다시 보인다', hint: '내 입력이 Supabase entries에 저장되고 다시 읽히는지 확인합니다.' },
       ]
     },
     {
@@ -66,11 +118,13 @@ export const SETUP = {
 export const SESSIONS = [
   {
     n: 1,
-    title: '복붙을 그만두는 날',
-    tag: '긁기',
-    goal: 'AI가 우리 노션을 읽었다는 경험을 한 번 한다. 오늘은 읽기만 합니다.',
+    title: 'AI에게 우리 팀을 소개하는 날',
+    tag: '연결',
+    goal: '내 권한 안에서 AI가 우리 팀의 원본을 읽게 합니다. 첫날은 쓰지 않고, 연결의 감각만 익힙니다.',
     blocks: [
       { type: 'note', text: '오늘 소재는 업무가 아니라 행사 콘텐츠입니다. 부담 0, 실패해도 손해 0. 첫 성공 경험을 만드는 게 목표입니다.' },
+      { type: 'visual', id: 'connector' },
+      { type: 'note', text: '**비유를 기억하세요.** 커넥터는 AI에게 회사 전체 열쇠를 주는 일이 아니라, 내 계정으로 열 수 있는 방만 함께 둘러보는 일입니다.' },
 
       { type: 'field', key: 's1.checkin', kind: 'textarea', rows: 2, required: true,
         label: '체크인 — 내가 매주 반복하는 업무 중 없어졌으면 하는 것',
@@ -107,11 +161,25 @@ export const SESSIONS = [
 
   {
     n: 2,
-    title: '흩어진 기록을 표로',
-    tag: '정하기',
-    goal: '지어낸 항목을 눈으로 잡아낸다. 오늘부터 AI가 노션에 씁니다.',
+    title: '흩어진 기록에 구조를 더하는 날',
+    tag: '구조',
+    goal: '근거·담당자·기한을 먼저 정하고, 회의록을 다시 꺼내 쓸 수 있는 업무 데이터로 바꿉니다.',
     blocks: [
       { type: 'note', text: '실습은 각자 복제한 「내 업무(연습용)」 DB에서만 합니다. 실제 팀 DB에는 쓰지 않습니다.' },
+      { type: 'visual', id: 'schema' },
+      { type: 'note', text: '**비유를 기억하세요.** DB는 메모를 쌓아두는 창고가 아니라, 다음 사람이 다시 찾을 수 있도록 칸과 라벨을 정해둔 서랍장입니다.' },
+
+      { type: 'head', text: '실습 0 — 이 워크북도 DB에 저장됩니다' },
+      { type: 'note', text: '여러분이 여기에 적는 답변은 화면에만 남지 않습니다. Supabase의 **entries** 테이블에 `user_id / item_key / value` 한 행으로 저장되고, 로그인 정보는 **profiles**, 접근 권한은 **RLS**가 지킵니다.' },
+      { type: 'prompt', id: 's2db' },
+      { type: 'field', key: 's2.db_map', kind: 'grid',
+        label: '내 입력 하나를 DB 한 행으로 번역해보기',
+        hint: '예: “없어졌으면 하는 반복 업무” → item_key: s1.checkin → value: 내가 적은 문장',
+        columns: ['내가 한 입력', 'item_key', 'value가 담는 것'], rows: 3,
+        placeholders: ['예: 1회차 체크인', '예: s1.checkin', '내가 적은 문장'] },
+      { type: 'field', key: 's2.db_reflection', kind: 'textarea', rows: 3, required: true,
+        label: '내 업무에서 entries와 같은 역할을 할 데이터는?',
+        hint: '예: 상담 기록 한 건, 고객 요청 한 건, 프로젝트 태스크 한 건. 반복해서 쌓이고 다시 꺼내 쓸 수 있는 단위를 적어보세요.' },
 
       { type: 'head', text: '실습 1 — 규칙 없이 vs 규칙 넣고' },
       { type: 'prompt', id: 's2raw' },
@@ -156,11 +224,20 @@ export const SESSIONS = [
 
   {
     n: 3,
-    title: '보고를 자동으로',
-    tag: '만들기 + 보내기',
-    goal: '결과물이 남에게 도착하게 한다. 그리고 다음 주에 다시 쓸 수 있게 남긴다.',
+    title: '한 번의 입력으로 여러 곳에 보내는 날',
+    tag: '발행',
+    goal: '하나의 DB를 Slack 메시지·Notion 기록·Asana 태스크로 바꿔, 사람이 보는 곳까지 보냅니다.',
     blocks: [
       { type: 'note', text: '오늘 소재는 2회차에 각자 채운 「내 업무(연습용)」 DB입니다. 2회차를 못 끝내셨으면 실습장의 완성본을 복제해서 쓰세요.' },
+      { type: 'visual', id: 'delivery' },
+      { type: 'note', text: '**비유를 기억하세요.** 자동화는 한 번에 같은 메시지를 뿌리는 일이 아니라, 같은 원본을 목적지에 맞는 형태로 포장해 보내는 분류소입니다.' },
+
+      { type: 'head', text: '실습 0 — DB가 워크플로우의 중간 허브가 된다' },
+      { type: 'note', text: 'DB는 최종 목적지가 아니라 중간 허브입니다. `entries`에서 읽은 데이터를 사람이 보는 Slack 메시지로 만들고, 특정 Notion 페이지에 기록하거나 Asana 태스크로 넘길 수 있습니다.' },
+      { type: 'prompt', id: 's3db' },
+      { type: 'field', key: 's3.db_flow', kind: 'checks',
+        label: 'DB에서 꺼낸 데이터를 어디까지 연결해봤나요?',
+        options: ['Supabase entries에서 읽기', 'Slack DM 또는 채널 초안 만들기', '특정 Notion 페이지에 기록하기', 'Asana 프로젝트 태스크로 넘기기'] },
 
       { type: 'head', text: '실습 1 — 주간 요약' },
       { type: 'prompt', id: 's3collect' },
@@ -175,11 +252,15 @@ export const SESSIONS = [
       { type: 'field', key: 's3.delay_text', kind: 'textarea', rows: 3,
         label: '내가 채운 지연 사유 (하나만 예시로)' },
 
-      { type: 'head', text: '실습 3 — 슬랙 문체 + 리허설 발송' },
+      { type: 'head', text: '실습 3 — 같은 결과, 세 가지 목적지' },
+      { type: 'note', text: '같은 리포트라도 목적지에 따라 모양이 달라집니다. 나에게는 DM으로 리허설하고, 팀에는 슬랙 채널 초안으로, 실행할 일은 특정 노션 페이지나 아사나 프로젝트의 태스크로 보냅니다.' },
       { type: 'prompt', id: 's3slack' },
       { type: 'field', key: 's3.dm_sent', kind: 'check',
         label: '나 자신에게 DM으로 리허설 발송했다',
         hint: '채널 게시는 슬랙에서 직접 하세요. 자동 채널 발송은 이 강의 범위 밖입니다.' },
+      { type: 'field', key: 's3.destinations', kind: 'checks',
+        label: '내 봇의 목적지로 연결해본 것',
+        options: ['내 Slack DM — 리허설', 'Slack #ax-실습 채널 — 최종 확인 후', '특정 Notion 페이지', 'Asana 프로젝트의 태스크'] },
 
       { type: 'head', text: '실습 4 — 레시피로 저장 ★' },
       { type: 'prompt', id: 's3recipe' },
@@ -201,12 +282,14 @@ export const SESSIONS = [
 
   {
     n: 4,
-    title: '내 것으로 만들기',
-    tag: '개인 루틴 + 케이스 클리닉',
-    goal: '강사가 준 과제에서 벗어나, 내 업무로 옮긴다.',
+    title: '내 업무 옆에 AI 동료를 두는 날',
+    tag: '정착',
+    goal: '내 반복 업무와 파일 정리까지 연결해, 다음 주에도 다시 쓸 수 있는 자동화 설계서를 완성합니다.',
     blocks: [
       { type: 'head', text: '파트 1 — 개인 루틴' },
       { type: 'note', text: '지금까지는 회사 데이터라 승인이 필요했습니다. 이 세 개는 내 폴더, 내 기록입니다. 오늘 퇴근하고 바로 켤 수 있습니다.' },
+      { type: 'visual', id: 'recipe' },
+      { type: 'note', text: '**비유를 기억하세요.** 자동화 설계서는 요리 레시피와 같습니다. 재료·순서·검수·도착지를 적어야 다음 주에도 다시 만들 수 있습니다.' },
       { type: 'field', key: 's4.routines', kind: 'checks',
         label: '오늘 따라해본 것',
         options: ['수신함 정리 (주 20분)', '일일 로그 (매일 10분)', '주간 회고 (주 30분)'] },
@@ -218,6 +301,16 @@ export const SESSIONS = [
       { type: 'head', text: '파트 2 — 케이스 클리닉' },
       { type: 'note', text: '설계서는 별도 페이지에서 작성합니다. 아래 버튼을 눌러 이동하세요.' },
       { type: 'link', href: '/clinic', text: '내 업무 자동화 설계서 작성하기 →' },
+
+      { type: 'head', text: '파트 3 — 파일 정리까지 자동화해보기' },
+      { type: 'note', text: '마지막 확장은 화면 밖의 파일입니다. 데스크톱 앱이 다운로드 폴더·카카오톡 받은 파일·프로젝트 폴더를 살펴보고, 규칙에 맞는 파일만 안전하게 정리하도록 설계합니다.' },
+      { type: 'prompt', id: 's4desktop' },
+      { type: 'field', key: 's4.desktop_plan', kind: 'textarea', rows: 5, required: true,
+        label: '내 데스크톱 자동정리의 첫 규칙',
+        hint: '예: 파일명에 “견적”이 들어간 PDF는 Downloads/_정리함/견적/YYYY-MM으로 이동 제안. 애매한 파일은 그대로 둔다.' },
+      { type: 'field', key: 's4.desktop_safety', kind: 'checks',
+        label: '자동화 전에 지킬 안전장치',
+        options: ['Dry Run 결과를 먼저 본다', '최근 파일과 폴더는 건드리지 않는다', '애매한 파일은 보류한다', '삭제하지 않고 이동만 한다', '이동 기록과 undo 방법을 남긴다'] },
 
       { type: 'head', text: '마무리' },
       { type: 'field', key: 's4.takeaway', kind: 'textarea', rows: 3, required: true,
@@ -261,9 +354,12 @@ export const CLINIC = {
           ] },
       ]
     },
-    {
-      name: '2. 정하기 — 어떤 형식으로 담는가',
-      fields: [
+      {
+        name: '2. 정하기 — 어떤 형식으로 담는가',
+        fields: [
+        { key: 'clinic.store', kind: 'radio', label: '결과를 어디에 쌓을까?',
+          hint: '지금 선택한 도구가 영원한 정답은 아닙니다. 반복해서 꺼내 쓸 필요가 있는지부터 봅니다.',
+          options: ['Notion DB / 페이지', 'Asana 프로젝트 / 태스크', 'Supabase 테이블', '파일 / 문서', '아직 결정하지 않음'] },
         { key: 'clinic.cols', kind: 'grid', required: true,
           label: '결과물의 칸 (최소 3개, 많아도 8개)',
           hint: '"원본에 없으면?" 칸이 제일 중요합니다. 여기를 안 정해두면 AI가 지어냅니다.',
@@ -335,7 +431,13 @@ export const PROMPTS = {
     body: `[어디서]  노션 「내 업무(연습용)」 DB에서
 [무엇을]  이번 주 마감인 항목만
 [어떤 형식으로]  작업 이름 / 담당자 / 상태 / 마감일 4개 열의 표로
-[어디로]  화면에 보여줘 (아직 아무데도 쓰지 마)`
+[어디로]  화면에 먼저 보여줘 (아직 아무데도 쓰지 마)
+
+목적지가 정해지면 이 형식으로 바꿔서 보낸다:
+- Slack: 채널 또는 DM용 메시지
+- Notion: 특정 페이지 또는 DB의 한 항목
+- Asana: 프로젝트의 태스크
+- Supabase: 테이블의 한 행 (필드와 권한을 먼저 확인)`
   },
 
   setup: {
@@ -391,6 +493,22 @@ export const PROMPTS = {
     body: `「AX 실습장」의 샘플 회의록 3건 읽고 액션아이템 뽑아줘`
   },
 
+  s2db: {
+    session: 2, title: '0 — 이 워크북의 DB 구조 읽기',
+    note: '화면 뒤에 어떤 행이 생기는지 상상해보는 미니랩입니다.',
+    body: `이 워크북의 Supabase 구조를 비개발자도 이해할 수 있게 설명해줘.
+
+반드시 이 세 가지를 포함해:
+1. profiles — 로그인한 사람의 이름·팀·역할을 저장하는 테이블
+2. entries — user_id / item_key / value로 워크북 입력을 저장하는 테이블
+3. RLS — 본인은 자기 답을 읽고 쓰고, 강사는 읽기만 하도록 막는 규칙
+
+그리고 내가 적은 '1회차 체크인' 답변이 entries에 들어간다면
+item_key와 value가 어떤 모습일지 예시 한 행으로 보여줘.
+마지막으로 이 구조를 우리 팀의 반복 업무에 옮긴다면,
+'한 행'이 무엇이 될지 질문 하나를 던져줘.`
+  },
+
   s2rules: {
     session: 2, title: '2 — 규칙을 넣고 다시',
     body: `위 회의록 3건을 읽고, 액션아이템만 뽑아서 표로 만들어줘.
@@ -441,6 +559,21 @@ export const PROMPTS = {
 - 마감일이 지났는데 완료가 아닌 항목
 
 각각 작업 이름 / 담당자 / 마감일 / 상태로 표를 나눠서 보여줘.`
+  },
+
+  s3db: {
+    session: 3, title: '0 — DB에서 목적지까지',
+    body: `Supabase entries에서 반복해서 쌓이는 데이터를 업무 봇의 중간 재료로 쓴다고 가정해줘.
+
+다음 흐름을 표로 설계해줘:
+원본 행 → 필요한 필드만 추리기 → 목적지별 형식 변환 → 사람이 확인할 지점
+
+목적지는 세 가지로 나눠:
+- Slack DM 또는 채널 초안
+- 특정 Notion 페이지
+- Asana 프로젝트의 태스크
+
+각 목적지에 어떤 필드가 필요하고, 어디서 사람이 최종 확인해야 하는지도 적어줘.`
   },
 
   s3summary: {
@@ -499,6 +632,26 @@ export const PROMPTS = {
 
 형식은 [오늘 한 일 / 받은 자료 / 결정·메모 / 내일 할 일] 4단락으로.
 추측은 넣지 말고, 흔적으로 확인되는 것만.`
+  },
+
+  s4desktop: {
+    session: 4, title: '마지막 확장 — 데스크톱 파일 자동정리',
+    note: 'AI에게 바로 이동시키지 말고, 관찰 → 계획 → 승인 → 실행의 순서로 설계합니다.',
+    body: `내 데스크톱에 다운로드 파일이 쌓이는 문제를 안전하게 자동화하는 설계안을 만들어줘.
+
+대상은 다음과 같아:
+- Downloads 폴더
+- 카카오톡 받은 파일 폴더
+- 내가 지정한 프로젝트 폴더
+
+반드시 다음 순서로 답해줘:
+1. 먼저 파일명·확장자·수정일을 관찰하는 목록
+2. 반복 패턴을 찾아 카테고리와 이동 목적지 제안
+3. 최근 파일, 폴더, 임시 파일, 애매한 파일은 보호하거나 보류
+4. 실제 이동 전에 Dry Run 표를 보여주고 사람의 승인을 받기
+5. 삭제는 하지 않고 이동만 하며, 이동 기록과 undo 방법 남기기
+
+마지막에 '지금 바로 실행해도 되는 규칙'과 '사람 확인이 필요한 규칙'을 나눠줘.`
   },
 };
 
