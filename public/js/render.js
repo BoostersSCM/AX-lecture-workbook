@@ -47,6 +47,10 @@ function promptGuide(p) {
 export function renderPrompt(p) {
   if (!p) return document.createComment('missing prompt');
   const guide = promptGuide(p);
+  const personalizeBody = () => {
+    const pageName = String(getValue('s1.page_name') || '').trim();
+    return String(p.body || '').replaceAll('[페이지명]', pageName || '[여기에 Notion 페이지명 입력]');
+  };
   const wrap = el(`
     <div class="prompt">
       <div class="prompt-head">
@@ -60,12 +64,15 @@ export function renderPrompt(p) {
       </div>
       <pre></pre>
     </div>`);
-  wrap.querySelector('pre').textContent = p.body;
+  const pre = wrap.querySelector('pre');
+  const refreshPrompt = () => { pre.textContent = personalizeBody(); };
+  refreshPrompt();
+  document.getElementById('f_s1_page_name')?.addEventListener('input', refreshPrompt);
 
   wrap.querySelector('button.copy').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     try {
-      await navigator.clipboard.writeText(p.body);
+      await navigator.clipboard.writeText(personalizeBody());
       btn.textContent = '복사됨';
       btn.classList.add('done');
       setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('done'); }, 1600);

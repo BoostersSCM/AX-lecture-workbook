@@ -84,9 +84,9 @@ export const SETUP = {
     {
       name: '3. 실습 데이터 확인',
       fields: [
-        { key: 'setup.playground', kind: 'check', label: '노션 「AX 실습장」 페이지가 열린다' },
-        { key: 'setup.db',         kind: 'check', label: '그 안의 「내 업무(연습용)」 DB가 보인다' },
-        { key: 'setup.minutes',    kind: 'check', label: '샘플 회의록 3건이 보인다', hint: '부스팅데이 준비 · 팝업스토어 킥오프 · 계정 권한 정비' },
+        { key: 'setup.playground', kind: 'check', label: '연습용 Notion 페이지 또는 내가 읽을 페이지가 열린다', hint: '「AX 실습장」이 비어 있으면 연결 준비에서 지정한 실제 연습용 페이지를 사용합니다.' },
+        { key: 'setup.db',         kind: 'check', label: '페이지 안의 데이터베이스 또는 하위 콘텐츠 구조가 보인다', hint: 'DB가 없으면 페이지 본문을 읽는 실습으로 진행해도 됩니다.' },
+        { key: 'setup.minutes',    kind: 'check', label: '읽어볼 기록 1~3건을 찾았다', hint: '샘플 회의록이 없으면 실제 연습용 기록 1건으로 대체합니다.' },
         { key: 'setup.channel',    kind: 'check', label: '슬랙 실습 채널에 들어와 있다' },
         { key: 'setup.asana_project', kind: 'check', label: '아사나 봇을 초대한 프로젝트 또는 샘플 태스크가 열린다', hint: '연동이 막힌 경우 3회차는 샘플 태스크 CSV로 읽기 실습을 진행할 수 있습니다.' },
         { key: 'setup.persisted', kind: 'check', label: '워크북에 짧은 답을 적고 새로고침해도 다시 보인다', hint: '내 입력이 Supabase entries에 저장되고 다시 읽히는지 확인합니다.' },
@@ -127,7 +127,7 @@ export const SETUP = {
       ]
     },
   ],
-  verifyPrompt: '노션에서 「AX 실습장」을 찾아서, 그 안에 있는 샘플 회의록 3건의 제목과 날짜만 보여줘. 아직 본문 내용은 읽지 마.',
+  verifyPrompt: '노션에서 내가 접근할 수 있는 연습용 페이지와 데이터베이스의 이름만 보여줘. 「AX 실습장」이 없거나 비어 있으면 그렇게 표시하고, 아직 본문 내용은 읽지 마.',
   planB: '연결이 끝내 안 되어도 수업은 들을 수 있습니다. Asana는 프로젝트 URL과 화면 내보내기, Notion은 페이지 PDF/Markdown, Slack은 샘플 이벤트 JSON으로 같은 흐름을 연습합니다.',
 };
 
@@ -147,13 +147,17 @@ export const SESSIONS = [
         label: '체크인 — 내가 매주 반복하는 업무 중 없어졌으면 하는 것',
         hint: '4회차에 이 업무의 연결 흐름을 실제로 설계합니다.' },
 
-      { type: 'head', text: '실습 1 — 읽을 수 있는 원본 찾기' },
+      { type: 'head', text: '실습 1 — 내 접근 범위 안의 원본 찾기' },
+      { type: 'note', text: '「AX 실습장」은 고정된 필수 자료가 아닙니다. 페이지가 비어 있거나 보이지 않으면, 연결 준비에서 지정한 실제 연습용 페이지·데이터베이스를 선택해 진행하세요. 민감한 업무 원본은 사용하지 않습니다.' },
       { type: 'prompt', id: 's1a' },
       { type: 'field', key: 's1.source_list', kind: 'textarea', rows: 5, required: true,
-        label: '읽을 수 있는 원본과 범위',
-        hint: '페이지·채널·폴더 이름과, 이번 실습에서 읽지 않을 범위를 함께 적습니다.' },
+        label: '내가 실제로 접근 가능한 원본과 범위',
+        hint: '페이지·데이터베이스 이름과 위치, 이번 실습에서 읽지 않을 범위를 함께 적습니다.' },
 
-      { type: 'head', text: '실습 2 — 원본을 업무 맥락으로 요약하기' },
+      { type: 'head', text: '실습 2 — 페이지 하나를 읽고 업무 맥락으로 바꾸기' },
+      { type: 'field', key: 's1.page_name', kind: 'text', required: true,
+        label: '이번에 읽을 Notion 페이지명',
+        hint: 'Notion에서 페이지 제목을 그대로 복사해 붙여넣으세요. 페이지 URL 또는 ID를 함께 적으면 더 정확하게 찾을 수 있습니다.' },
       { type: 'prompt', id: 's1b' },
       { type: 'field', key: 's1.context', kind: 'textarea', rows: 7, required: true,
         label: '업무 맥락 요약',
@@ -168,9 +172,22 @@ export const SESSIONS = [
       { type: 'head', text: '정리' },
       { type: 'field', key: 's1.stuck', kind: 'textarea', rows: 2,
         label: '오늘 막혔던 지점이 있다면' },
+      { type: 'note', text: '**숙제는 원본 하나를 골라 작은 읽기 실험을 설계하는 시간입니다.** 아래 네 가지를 구체적으로 적어두면 다음 회차에 바로 연결할 수 있습니다.' },
       { type: 'field', key: 's1.homework', kind: 'textarea', rows: 3,
-        label: '숙제 — AI에게 읽히면 도움이 될 업무 원본 1개',
-        hint: '원본의 위치와, 읽히면 어떤 반복 업무가 줄어드는지 한 줄로 적습니다.' },
+        label: '숙제 요약 — 어떤 원본을 읽힐 것인가',
+        hint: '원본 위치·페이지명과 선택 이유를 한 문장으로 적습니다.' },
+      { type: 'field', key: 's1.homework_source', kind: 'text', required: true,
+        label: '1) 원본 위치와 범위',
+        hint: '예: Notion 「주간 캠페인 회고」 페이지의 7월 이후 블록만 / Slack #팀-운영 채널의 이번 주 메시지만' },
+      { type: 'field', key: 's1.homework_goal', kind: 'textarea', rows: 2, required: true,
+        label: '2) 줄이고 싶은 반복 업무',
+        hint: '예: 매주 회의 후 결정사항과 담당자·기한을 다시 정리하는 데 걸리는 30분' },
+      { type: 'field', key: 's1.homework_output', kind: 'textarea', rows: 2, required: true,
+        label: '3) AI에게 받고 싶은 결과',
+        hint: '예: 작업명 / 담당자 / 기한 / 근거 문장 4개 열의 표. 모르는 값은 미확인으로 표시' },
+      { type: 'field', key: 's1.homework_safety', kind: 'checks',
+        label: '4) 실험 전에 확인할 것',
+        options: ['내가 실제로 접근할 수 있는 원본이다', '민감 정보·개인정보를 제외했다', '읽을 범위와 기간을 정했다', '근거 문장을 함께 남기도록 했다', '결과를 바로 외부에 보내지 않고 먼저 검토한다'] },
     ],
   },
 
@@ -484,14 +501,17 @@ export const PROMPTS = {
 
   setup: {
     session: 0, title: '연결 확인',
-    body: `노션에서 「AX 실습장」을 찾아서, 그 안에 있는 샘플 회의록 3건의 제목과 날짜만 보여줘.
+    body: `노션에서 내가 접근할 수 있는 연습용 페이지와 데이터베이스의 이름만 보여줘.
+「AX 실습장」이 없거나 비어 있으면 그렇게 표시해줘.
 아직 본문 내용은 읽지 마.`
   },
 
   s1a: {
     session: 1, title: '1 — 읽을 수 있는 원본 찾기',
-    note: '첫날은 목록만 확인합니다. 본문을 넓게 읽기 전에 접근 범위와 제외 범위를 정합니다.',
-    body: `노션 「AX 실습장」 안에서 현재 내가 접근할 수 있는 페이지와 데이터베이스를 찾아줘.
+    note: '첫날은 목록만 확인합니다. 「AX 실습장」이 비어 있거나 없다면 연결 준비에서 지정한 실제 연습용 페이지를 기준으로 진행합니다.',
+    body: `노션에서 내가 현재 접근할 수 있는 페이지와 데이터베이스를 찾아줘.
+
+먼저 「AX 실습장」이 있는지 확인하고, 없거나 비어 있으면 연결 준비에서 지정한 연습용 페이지와 그 하위 항목을 기준으로 찾아줘.
 
 본문 내용은 아직 읽지 말고 아래 표로만 보여줘:
 - 원본 이름
@@ -500,7 +520,7 @@ export const PROMPTS = {
 - 마지막 수정일 (확인할 수 있을 때)
 - 다음 단계에서 읽어볼 이유
 
-내 권한 밖의 자료는 추측해서 채우지 말고 '접근 불가'라고 표시해줘.
+내 권한 밖의 자료는 추측해서 채우지 말고 '접근 불가'라고 표시해줘. 페이지가 비어 있으면 '내용 없음'이라고 표시해줘.
 이번 실습에서 읽지 않을 자료도 마지막에 따로 적어줘.`
   },
 
