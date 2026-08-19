@@ -98,6 +98,20 @@ entries(user_id, item_key, value)          -- 워크북의 모든 입력
 | 2 | `schema.sql` `handle_new_user()` | 다른 도메인은 `INVALID_DOMAIN` 예외로 **가입 차단** |
 | 3 | `auth-callback.html` + `requireAuth()` | 세션 이메일 재확인, 프로필 없으면 로그아웃 후 사유 안내 |
 
+#### 세션 정책
+
+Supabase → `Authentication` → `Sessions` 에서 **Time-box user sessions = 6시간**으로 두었습니다.
+
+- 로그인 시점부터 6시간 뒤 무조건 만료됩니다. 회차(90분)는 충분히 덮으면서 하루를 넘기지 않습니다
+- `Inactivity timeout`이 아니라 Time-box를 쓰는 이유: 유휴 타임아웃은 계속 쓰면 영원히 유지돼 보안 목적에 맞지 않습니다
+- 재로그인은 구글 계정 선택 한 번이라 실습 흐름을 거의 끊지 않습니다
+
+세션이 끊겼을 때 참가자가 쓰던 내용을 잃지 않도록 [`store.js`](public/js/store.js)가 이렇게 막습니다.
+
+1. 저장 실패한 값은 **localStorage에 보관**(`axwb.pending`)
+2. 세션이 끊긴 게 원인이면 *"로그인이 만료되어 저장하지 못했습니다"* 안내 + 재로그인 링크 표시
+3. 다시 로그인해 페이지를 열면 보관해둔 값을 **자동으로 다시 올리고** 복구 개수를 알려줍니다
+
 #### 증상별 해결
 
 | 증상 | 원인 |

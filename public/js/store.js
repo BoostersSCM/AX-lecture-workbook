@@ -21,6 +21,12 @@ export async function loadEntries({ fresh = false } = {}) {
 
   cache = {};
   for (const row of data) cache[row.item_key] = row.value;
+
+  // 지난번에 저장하지 못한 값이 있으면 그게 최신입니다 — 화면에 먼저 반영하고 다시 올립니다
+  const pending = readPending();
+  for (const k of Object.keys(pending)) cache[k] = pending[k];
+  flushPending();
+
   return cache;
 }
 
@@ -38,9 +44,29 @@ export function getValue(key) {
   return cache?.[key] ?? '';
 }
 
+// ── 미저장분 로컬 백업 ───────────────────────────────────────
+// 세션 만료(6시간 time-box)나 네트워크 끊김으로 저장이 실패하면
+// 참가자가 쓰던 내용이 그대로 날아갑니다. 실패분은 localStorage에 남겨두고
+// 다음 로드 때 자동으로 다시 올립니다.
+const PENDING = 'axwb.pending';
+
+function readPending() {
+  try { return JSON.parse(localStorage.getItem(PENDING) || '{}'); } catch { return {}; }
+}
+function writePending(obj) {
+  try { localStorage.setItem(PENDING, JSON.stringify(obj)); } catch { /* 용량 초과는 무시 */ }
+}
+function markPending(key, value) {
+  const p = readPending(); p[key] = value; writePending(p);
+}
+function clearPending(key) {
+  const p = readPending(); delete p[key]; writePending(p);
+}
+
 // 저장 — 같은 키를 연달아 치면 마지막 것만 나갑니다
 const timers = {};
 const DEBOUNCE = 700;
+let sessionWarned = false;
 
 export function saveValue(key, value, { immediate = false } = {}) {
   if (cache) cache[key] = value;
@@ -49,19 +75,56 @@ export function saveValue(key, value, { immediate = false } = {}) {
   const run = async () => {
     if (!userId) {
       const me = await getMe();
-      if (!me) return;
+      if (!me) { markPending(key, value); return; }
       userId = me.id;
     }
     setStatus('saving');
     const { error } = await supabase
       .from('entries')
       .upsert({ user_id: userId, item_key: key, value }, { onConflict: 'user_id,item_key' });
-    setStatus(error ? 'error' : 'saved');
-    if (error) console.error('[store] save failed', key, error);
+
+    if (error) {
+      markPending(key, value);
+      setStatus('error');
+      console.error('[store] save failed', key, error);
+      await warnIfSessionExpired();
+    } else {
+      clearPending(key);
+      setStatus('saved');
+    }
   };
 
   if (immediate) run();
   else timers[key] = setTimeout(run, DEBOUNCE);
+}
+
+// 저장이 실패했을 때 세션이 끊긴 것인지 확인하고 한 번만 안내합니다
+async function warnIfSessionExpired() {
+  if (sessionWarned) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) return; // 세션은 살아 있음 = 일시적 오류
+  sessionWarned = true;
+  toast('로그인이 만료되어 저장하지 못했습니다. 다시 로그인하면 이어서 저장됩니다.', 'error');
+  const bar = document.getElementById('savestate');
+  if (bar) {
+    bar.innerHTML = '로그인 만료 — <a href="/login" style="color:inherit;text-decoration:underline">다시 로그인</a>';
+    bar.className = 'savestate error';
+  }
+}
+
+// 로그인 후 남아 있는 미저장분을 다시 올립니다
+async function flushPending() {
+  const p = readPending();
+  const keys = Object.keys(p);
+  if (!keys.length || !userId) return;
+
+  const rows = keys.map(k => ({ user_id: userId, item_key: k, value: p[k] }));
+  const { error } = await supabase.from('entries').upsert(rows, { onConflict: 'user_id,item_key' });
+  if (!error) {
+    writePending({});
+    if (cache) for (const k of keys) cache[k] = p[k];
+    toast(`저장하지 못했던 ${keys.length}개 항목을 복구했습니다.`);
+  }
 }
 
 // ── 저장 상태 표시 ───────────────────────────────────────────
