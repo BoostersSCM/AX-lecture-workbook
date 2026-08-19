@@ -2,12 +2,12 @@ const {
   env,
   json,
   readJsonBody,
-  requireIntegrationSecret,
+  requireIntegrationAccess,
 } = require('../../_lib/integration');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'POST only' });
-  if (!requireIntegrationSecret(req, res)) return;
+  if (!await requireIntegrationAccess(req, res)) return;
 
   const token = env('SLACK_BOT_TOKEN');
   if (!token) return json(res, 503, { ok: false, error: 'SLACK_BOT_TOKEN 미설정' });

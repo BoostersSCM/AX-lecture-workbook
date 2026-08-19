@@ -23,7 +23,7 @@
 
 Vercel API:
 
-- `/api/integrations/asana/tasks` — 인증된 Asana 프로젝트 태스크 읽기
+- `/api/integrations/asana/tasks` — 인증된 Asana 프로젝트 태스크 읽기·1건 생성
 - `/api/integrations/notion/page` — 인증된 Notion 페이지·블록 읽기
 - `/api/integrations/slack/send` — 인증된 Slack 채널 발송
 - `/api/slack/events` — Slack Events API 수신·서명 검증 (채널 범위는 각 사용자의 워크북 설정으로 관리)

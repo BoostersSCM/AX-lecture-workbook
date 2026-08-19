@@ -4,6 +4,7 @@ import { mountShell, esc } from './shell.js';
 import { loadEntries, loadSlackEvents, progressOf, mountStatus } from './store.js';
 import { SESSIONS, requiredKeys } from './content.js';
 import { el, progressBar, renderBlock } from './render.js';
+import { renderPracticePanel } from './practice.js';
 
 const app = document.getElementById('app');
 
@@ -77,6 +78,7 @@ function renderSlackInbox() {
     </div>`));
 
   app.appendChild(progressBar(progressOf(requiredKeys(s.n), entries)));
+  app.appendChild(renderPracticePanel(s.n));
 
   for (const b of s.blocks) app.appendChild(renderBlock(b));
   if (n === 3) app.appendChild(renderSlackInbox());

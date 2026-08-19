@@ -30,6 +30,49 @@ function requireIntegrationSecret(req, res) {
   return true;
 }
 
+function providedSecret(req) {
+  return String(
+    req.headers['x-ax-integration-secret'] ||
+    req.headers['authorization'] || ''
+  ).replace(/^Bearer\s+/i, '').trim();
+}
+
+async function requireIntegrationAccess(req, res) {
+  const expected = env('AX_INTEGRATION_SECRET');
+  const provided = providedSecret(req);
+  if (expected && provided && provided.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
+    return true;
+  }
+
+  const authorization = String(req.headers.authorization || '');
+  if (authorization.startsWith('Bearer ')) {
+    const supabaseUrl = env('SUPABASE_URL');
+    const anonKey = env('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !anonKey) {
+      json(res, 503, { ok: false, error: 'Supabase 서버 인증 설정 미완료' });
+      return false;
+    }
+    try {
+      const response = await fetch(supabaseUrl.replace(/\/$/, '') + '/auth/v1/user', {
+        headers: {
+          apikey: anonKey,
+          Authorization: authorization,
+        },
+      });
+      if (response.ok) return true;
+    } catch (error) {
+      console.error('[integration-auth]', error);
+    }
+  }
+
+  json(res, expected ? 401 : 503, {
+    ok: false,
+    error: expected ? 'integration 인증 실패' : 'AX_INTEGRATION_SECRET 미설정',
+  });
+  return false;
+}
+
 function readJsonBody(req) {
   if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
     return Promise.resolve(req.body);
@@ -80,6 +123,7 @@ module.exports = {
   env,
   json,
   requireIntegrationSecret,
+  requireIntegrationAccess,
   readJsonBody,
   idFromInput,
   upstreamJson,

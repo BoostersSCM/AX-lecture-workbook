@@ -408,6 +408,25 @@ body { background: var(--cream); color: var(--navy); }
 .slack-event-meta code { color: #a34e70; }
 .slack-event-item p { margin: 0.5rem 0 0.35rem; color: var(--navy); font-size: 0.88rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .slack-event-item small { color: #8a9691; font-size: 0.67rem; }
+.practice-panel { margin: 1.7rem 0 2.4rem; padding: 1.2rem; border: 1px solid rgba(12,112,108,0.2); background: linear-gradient(135deg, #eef6f2, #fbf5ed); box-shadow: 0 12px 28px rgba(17,42,50,0.06); }
+.practice-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: 0.9rem; border-bottom: 1px solid rgba(12,112,108,0.15); }
+.practice-panel-head h2 { margin: 0.3rem 0 0; font-family: var(--display); color: var(--navy); }
+.practice-status { padding: 0.35rem 0.55rem; color: var(--teal-strong); background: #dcece7; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; white-space: nowrap; }
+.practice-intro { max-width: 48rem; color: #5e706a; font-size: 0.84rem; line-height: 1.65; }
+.practice-actions { display: grid; gap: 0.65rem; margin-top: 1rem; }
+.practice-action { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.8rem; padding: 0.9rem 1rem; background: rgba(255,253,248,0.82); border: 1px solid rgba(17,42,50,0.1); }
+.practice-action h3 { margin: 0; color: var(--navy); font-size: 0.9rem; }
+.practice-action p { margin: 0.28rem 0 0; color: #71807a; font-size: 0.75rem; line-height: 1.5; }
+.practice-button { border: 1px solid var(--teal-strong); background: var(--teal-strong); color: #fff; font-size: 0.76rem; font-weight: 750; padding: 0.52rem 0.75rem; white-space: nowrap; }
+.practice-button:hover { background: var(--navy); border-color: var(--navy); }
+.practice-button:disabled { opacity: 0.55; cursor: wait; }
+.practice-input { width: 100%; min-width: 0; padding: 0.6rem 0.7rem; border: 1px solid var(--line-soft); background: #fffdf8; color: var(--ink); font: inherit; font-size: 0.82rem; }
+.practice-create { grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.62fr) auto; }
+.practice-output { margin-top: 0.9rem; padding: 0.95rem 1rem; background: rgba(17,42,50,0.92); color: #f7f3e9; }
+.practice-output-title { color: #f0b36d; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
+.practice-output pre { margin: 0.55rem 0 0; color: #f7f3e9; font: 0.78rem/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.practice-output.error { background: #6f3e42; }
+.practice-empty { margin: 0; color: #a7bab3; font-size: 0.78rem; }
 .prompt-guide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; padding: 0.65rem 0.9rem; background: #f4f7f4; border-bottom: 1px solid var(--line-soft); }
 .prompt-guide div { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 .prompt-guide span { color: var(--teal-strong); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em; }

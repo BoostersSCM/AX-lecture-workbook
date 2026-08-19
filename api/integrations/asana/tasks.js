@@ -2,7 +2,8 @@ const {
   env,
   json,
   idFromInput,
-  requireIntegrationSecret,
+  requireIntegrationAccess,
+  readJsonBody,
   upstreamJson,
 } = require('../../_lib/integration');
 
@@ -21,8 +22,8 @@ function projectIdFromInput(value) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') return json(res, 405, { ok: false, error: 'GET only' });
-  if (!requireIntegrationSecret(req, res)) return;
+  if (!['GET', 'POST'].includes(req.method)) return json(res, 405, { ok: false, error: 'GET 또는 POST only' });
+  if (!await requireIntegrationAccess(req, res)) return;
 
   const token = env('ASANA_TOKEN_BOT');
   if (!token) return json(res, 503, { ok: false, error: 'ASANA_TOKEN_BOT 미설정' });
@@ -41,6 +42,25 @@ module.exports = async function handler(req, res) {
       '?opt_fields=gid,name,workspace.name,permalink_url',
       { headers }
     );
+    if (req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const name = String(body.name || '').trim();
+      if (!name) return json(res, 400, { ok: false, error: 'task name 필요' });
+      const created = await upstreamJson(ASANA_API + '/tasks', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: {
+            name,
+            projects: [projectGid],
+            notes: String(body.notes || 'AX 워크북 실습에서 생성'),
+            ...(body.dueOn ? { due_on: String(body.dueOn) } : {}),
+          },
+        }),
+      });
+      return json(res, 201, { ok: true, source: 'asana', project: project.data || null, task: created.data || null });
+    }
+
     const tasks = await upstreamJson(
       ASANA_API + '/projects/' + encodeURIComponent(projectGid) +
       '/tasks?limit=3&opt_fields=gid,name,assignee.name,due_on,completed,permalink_url',

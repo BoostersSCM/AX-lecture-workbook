@@ -2,7 +2,7 @@ const {
   env,
   json,
   idFromInput,
-  requireIntegrationSecret,
+  requireIntegrationAccess,
   upstreamJson,
 } = require('../../_lib/integration');
 
@@ -30,7 +30,7 @@ function blockText(block) {
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { ok: false, error: 'GET only' });
-  if (!requireIntegrationSecret(req, res)) return;
+  if (!await requireIntegrationAccess(req, res)) return;
 
   const token = env('NOTION_TOKEN');
   if (!token) return json(res, 503, { ok: false, error: 'NOTION_TOKEN 미설정' });
