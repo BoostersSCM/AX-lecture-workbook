@@ -30,18 +30,18 @@ function renderVisual(v) {
 function promptGuide(p) {
   const title = String(p.title || '');
   if (title.includes('웹훅으로 받기')) {
-    return { run: 'Slack 테스트 채널에 메시지 작성', result: 'Vercel 로그 확인 → 아래 결과 칸에 기록' };
+    return { run: 'Slack 테스트 채널에 메시지 작성', result: '3회차 수신함에서 확인 → 저장 상태 점검' };
   }
   if (title.includes('Asana')) {
-    return { run: 'Claude + 연결된 Asana 도구', result: 'Claude 대화창과 Asana 프로젝트에서 확인' };
+    return { run: '3회차 Asana 가져오기 패널', result: '미리보기 확인 → Asana 프로젝트에서 확인' };
   }
   if (title.includes('Notion')) {
-    return { run: 'Claude + 연결된 Notion 도구', result: 'Claude 대화창과 Notion 페이지에서 확인' };
+    return { run: '3회차 Notion 가져오기·추가 패널', result: '미리보기 확인 → Notion 페이지에서 확인' };
   }
   if (title.includes('Slack')) {
-    return { run: 'Claude + 연결된 Slack 도구/API', result: 'Claude 대화창과 Slack 채널에서 확인' };
+    return { run: '3회차 Slack 전송 패널', result: '미리보기 확인 → Slack 채널·DM에서 확인' };
   }
-  return { run: 'Claude 대화창', result: 'Claude 결과 확인 → 아래 워크북 칸에 기록' };
+  return { run: '해당 회차 연결 실습 패널 또는 선택한 AI', result: '결과 검토 → 워크북 저장·전송 버튼' };
 }
 
 function openPromptHelp(help, title) {
@@ -91,7 +91,7 @@ export function renderPrompt(p, help = null) {
     summary: '이 프롬프트는 원본에서 필요한 정보를 읽고, 정해진 형식으로 결과를 만드는 요청입니다.',
     setup: ['대괄호 안의 값을 내 업무에 맞게 준비합니다.'],
     terms: [['원본', 'AI가 읽을 실제 자료입니다.'], ['범위', '어디까지 읽을지 정하는 조건입니다.']],
-    steps: ['대괄호 안의 값을 내 업무에 맞게 바꿉니다.', '프롬프트를 복사해 Claude 대화창에 붙여넣습니다.', '결과를 확인하고 워크북 입력란에 기록합니다.'],
+    steps: ['대괄호 안의 값을 내 업무에 맞게 바꿉니다.', '회차 실습 패널에서 원본을 가져옵니다. 필요하면 이 문장을 선택한 AI에 사용합니다.', '결과를 검토한 뒤 회차의 저장·전송 버튼을 누르고 다시 읽어봅니다.'],
   };
   const personalizeBody = () => {
     const replacements = {

@@ -23,7 +23,7 @@ const GROUPS = [
     <div class="page-head">
       <div class="eyebrow">참고 자료</div>
       <h1>업무 연결 프롬프트 카드</h1>
-      <p class="lede">이 페이지에서 프롬프트를 복사해 Claude에서 실행하세요. 결과는 Claude 대화창·연결한 업무 도구에서 확인하고, 회차별 워크북 결과 칸에 기록합니다.</p>
+      <p class="lede">이 페이지는 연동 결과를 어떤 형식으로 만들지 참고하는 변환 레시피입니다. 실제 실습은 회차 페이지의 연결 버튼으로 원본을 가져오고, 필요할 때만 선택한 AI에 이 카드를 사용한 뒤, 워크북에서 검토·저장·전송합니다.</p>
     </div>`));
 
   for (const g of GROUPS) {
@@ -38,8 +38,8 @@ const GROUPS = [
     <div class="tablewrap"><table>
       <thead><tr><th>이렇게 하면 안 됨</th><th>이렇게 하면 됨</th><th>차이</th></tr></thead>
       <tbody>
-        <tr><td>회의록 정리해줘</td><td>「AX 실습장」의 샘플 회의록 3건을 읽고, 액션아이템만 표로</td><td>출처와 범위</td></tr>
-        <tr><td>우리 팀 현황 알려줘</td><td>「내 업무(연습용)」에서 상태가 '진행 중'인 항목 전부</td><td>DB 이름과 조건</td></tr>
+        <tr><td>회의록 정리해줘</td><td>지정한 회의록 원본만 읽고, 근거가 붙은 액션아이템 표로</td><td>출처와 범위</td></tr>
+        <tr><td>우리 팀 현황 알려줘</td><td>연동한 프로젝트·페이지에서 상태가 '진행 중'인 항목만</td><td>대상과 조건</td></tr>
         <tr><td>잘 정리해줘</td><td>작업 이름 / 담당자 / 마감일 3개 열로, 마감일 빠른 순</td><td>형식</td></tr>
         <tr><td>노션에 올려줘</td><td>표로 먼저 보여주고, 내가 확인하면 그때 등재해줘</td><td>확인 지점</td></tr>
       </tbody>

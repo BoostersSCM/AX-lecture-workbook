@@ -104,7 +104,7 @@ const app = document.getElementById('app');
       <p style="margin:0 0 0.7rem"><b>내가 올린 회사 자료가 외부 학습에 쓰이나요?</b><br>
       <span style="color:var(--ink-soft)">회사 계정(업무용 플랜)은 기본적으로 학습에 사용되지 않습니다. 다만 강의에서는 급여·평가·계약 단가 등 민감 정보를 아예 다루지 않습니다.</span></p>
       <p style="margin:0"><b>실습하다 노션을 망가뜨리면요?</b><br>
-      <span style="color:var(--ink-soft)">연습용 복제 DB에서만 실습하므로 실제 데이터에 영향이 없습니다.</span></p>
+      <span style="color:var(--ink-soft)">1·2회차는 워크북 Supabase에 저장하고, 3회차 외부 도구 전송은 미리보기와 확인 뒤 본인이 지정한 대상에만 실행합니다.</span></p>
     </div>`));
 
   app.appendChild(el(`<p style="margin-top:2rem"><a class="btn-link" href="/session?n=1">1회차 워크북으로 →</a></p>`));
