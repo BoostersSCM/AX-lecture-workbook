@@ -17,7 +17,7 @@ const app = document.getElementById('app');
 
   app.appendChild(el(`
     <div class="page-head">
-      <div class="eyebrow">4회차 · 케이스 클리닉</div>
+      <div class="eyebrow">4회차 · 업무 설계</div>
       <h1>${esc(CLINIC.title)}</h1>
       <p class="lede">${esc(CLINIC.intro)}</p>
     </div>`));
@@ -33,7 +33,7 @@ const app = document.getElementById('app');
   }
 
   app.appendChild(el(`
-    <h2>작성 예시</h2>
+      <h2>연결 설계 예시</h2>
     <div class="tablewrap"><table>
       <tbody>
         <tr><th style="width:7rem">업무</th><td>매주 금요일 우리 팀 주간 진행상황을 정리해 팀 채널에 공유</td></tr>

@@ -2,11 +2,11 @@
 
 부스터스 사내 AX 강의 **「업무를 연결하는 AI」**의 참가자용 워크북입니다.
 
-참가자는 회사 구글 계정으로 로그인해 회차별 실습을 기록하고, 마지막에 「내 업무 자동화 설계서」를 작성합니다.
+참가자는 회사 구글 계정으로 로그인해 회차별 실습을 기록하고, 마지막에 「내 업무 연결 설계서」를 작성합니다.
 입력은 타이핑하는 즉시 자동 저장되며, **본인과 강사만** 볼 수 있습니다.
 
 - 운영: Vercel + Supabase
-- 강의안 원본: [`docs/`](docs/) — 커리큘럼, 회차별 진행안, 프롬프트 카드, 샘플 회의록
+- 강의안 원본: [`docs/`](docs/) — 커리큘럼, 회차별 진행안, 프롬프트 카드, 사내봇 연결값, 샘플 회의록
 
 ---
 
@@ -15,11 +15,18 @@
 | 경로 | 내용 |
 |---|---|
 | `/` | 홈 — 전체 진행률, 회차 카드 |
-| `/setup` | 사전 세팅 체크리스트 (강의 전 배포) |
+| `/setup` | 연결 준비 체크리스트 (강의 전 배포) |
 | `/session?n=1..4` | 회차별 워크북 — 실습 기록·숙제 제출 |
-| `/clinic` | 내 업무 자동화 설계서 (4회차) |
+| `/clinic` | 내 업무 연결 설계서 (4회차) |
 | `/prompts` | 프롬프트 카드 — 읽기 전용 + 복사 버튼 |
 | `/admin` | 강사 전용 — 참가자 진행 현황·답변 열람 |
+
+Vercel API:
+
+- `/api/integrations/asana/tasks` — 인증된 Asana 프로젝트 태스크 읽기
+- `/api/integrations/notion/page` — 인증된 Notion 페이지·블록 읽기
+- `/api/integrations/slack/send` — 인증된 Slack 채널 발송
+- `/api/slack/events` — Slack Events API 수신·서명 검증
 
 ---
 
@@ -169,7 +176,7 @@ vercel deploy --prod
 
 문항을 바꾸려면 [`public/js/content.js`](public/js/content.js)만 고치면 됩니다. DB는 건드리지 않습니다.
 
-- `SETUP` — 사전 세팅 체크리스트
+- `SETUP` — 연결 준비 체크리스트
 - `SESSIONS` — 1~4회차 (블록 배열: `head` / `note` / `field` / `prompt` / `link`)
 - `CLINIC` — 케이스 클리닉 설계서
 - `PROMPTS` — 프롬프트 카드 (회차별 `session` 번호로 묶임)

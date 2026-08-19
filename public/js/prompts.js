@@ -8,9 +8,9 @@ const app = document.getElementById('app');
 
 const GROUPS = [
   { n: 0, name: '공통' },
-  { n: 1, name: '1회차 — 행사 퀴즈 콘텐츠' },
+  { n: 1, name: '1회차 — 업무 원본 읽기' },
   { n: 2, name: '2회차 — 회의록 → 업무 DB' },
-  { n: 3, name: '3회차 — 주간 리포트 → 슬랙' },
+  { n: 3, name: '3회차 — Asana·Notion·Slack 실제 연결' },
   { n: 4, name: '4회차 — 개인 루틴' },
 ];
 
@@ -22,8 +22,8 @@ const GROUPS = [
   app.appendChild(el(`
     <div class="page-head">
       <div class="eyebrow">참고 자료</div>
-      <h1>프롬프트 카드</h1>
-      <p class="lede">실습에서 그대로 복사해 쓰는 문장들입니다. 대괄호 부분만 각자 상황에 맞게 바꾸세요.</p>
+      <h1>업무 연결 프롬프트 카드</h1>
+      <p class="lede">어디서 읽고, 무엇을 만들고, 어디로 보낼지 분명하게 말하는 문장들입니다. 대괄호 부분만 각자 상황에 맞게 바꾸세요.</p>
     </div>`));
 
   for (const g of GROUPS) {

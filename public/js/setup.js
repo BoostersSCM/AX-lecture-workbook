@@ -1,4 +1,4 @@
-// js/setup.js — 사전 세팅 체크리스트
+// js/setup.js — 연결 준비 체크리스트
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus } from './store.js';
@@ -17,7 +17,7 @@ const app = document.getElementById('app');
 
   app.appendChild(el(`
     <div class="page-head">
-      <div class="eyebrow">준비</div>
+      <div class="eyebrow">START HERE · 연결 준비</div>
       <h1>${esc(SETUP.title)}</h1>
       <p class="lede">${esc(SETUP.intro)}</p>
     </div>`));

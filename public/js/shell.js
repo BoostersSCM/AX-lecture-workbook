@@ -3,13 +3,13 @@ import { getMe, signOut, isInstructor, watchSessionExpiry } from './auth.js';
 
 const NAV = [
   { href: '/',        label: '홈' },
-  { href: '/setup',   label: '사전 세팅' },
+  { href: '/setup',   label: '연결 준비' },
   { href: '/session?n=1', label: '1회차', match: 'n=1' },
   { href: '/session?n=2', label: '2회차', match: 'n=2' },
   { href: '/session?n=3', label: '3회차', match: 'n=3' },
   { href: '/session?n=4', label: '4회차', match: 'n=4' },
-  { href: '/clinic',  label: '설계서' },
-  { href: '/prompts', label: '프롬프트' },
+  { href: '/clinic',  label: '업무 설계서' },
+  { href: '/prompts', label: '프롬프트 카드' },
 ];
 
 export async function mountShell() {

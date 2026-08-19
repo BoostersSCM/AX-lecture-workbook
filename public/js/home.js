@@ -40,8 +40,8 @@ function sessionCard(session, progress) {
     <section class="home-hero">
       <div class="hero-copy">
         <div class="hero-kicker"><span class="signal-dot"></span> BOOSTERS AX LAB · 4 WEEKS</div>
-        <div class="hero-course-title">${esc(COURSE.title)}</div>
-        <h1>${esc(COURSE.promise)}</h1>
+        <h1>${esc(COURSE.title)}</h1>
+        <p class="hero-tagline">${esc(COURSE.promise)}</p>
         <p class="hero-lede">${esc(COURSE.intro)}</p>
         <div class="hero-actions">
           <a class="hero-cta" href="/session?n=1">첫 실습 시작하기 <span>→</span></a>
@@ -87,7 +87,7 @@ function sessionCard(session, progress) {
 
     <section class="data-model-section">
       <div class="section-heading"><div><span class="section-kicker">THE WORKBOOK UNDER THE HOOD</span><h2>이 워크북도 하나의 연결 사례입니다</h2></div><span class="section-side-note">Supabase · Auth · RLS</span></div>
-      <div class="data-model-intro"><p>여러분이 입력한 한 문장이 DB의 한 행이 되고, 그 데이터가 다시 진행률·강사 화면·다음 실습의 재료가 됩니다. 2회차와 3회차에서는 이 구조를 직접 읽고, 내 업무에 옮겨봅니다.</p><code>profiles → entries → report / Slack / Notion / Asana</code></div>
+      <div class="data-model-intro"><p>여러분이 입력한 한 문장이 DB의 한 행이 되고, 그 데이터가 다시 진행률·강사 화면·다음 실습의 재료가 됩니다. 2회차와 3회차에서는 이 구조를 직접 읽고, 내 업무 도구에 옮겨봅니다.</p><code>profiles → entries → Asana / Notion / Slack</code></div>
       <div class="data-model-grid">
         ${DATA_MODEL.map(item => `<article class="data-model-card data-${item.tone}"><div class="data-card-top"><span class="data-icon">${item.name === 'RLS' ? '↗' : item.name.slice(0, 1).toUpperCase()}</span><code>${esc(item.name)}</code></div><span>${esc(item.label)}</span><p>${esc(item.text)}</p></article>`).join('')}
       </div>
@@ -95,7 +95,7 @@ function sessionCard(session, progress) {
 
     <section class="progress-section">
       <div class="progress-main"><span class="section-kicker">YOUR WORKBOOK</span><h2>${esc(me.name)} 님의 연결 현황</h2><p>입력한 내용은 자동 저장됩니다. 지금의 기록이 4회차에 나만의 봇 설계서가 됩니다.</p><div class="big-progress"><span style="width:${all.pct}%"></span></div><div class="progress-meta"><strong>${all.pct}%</strong><span>${all.done} / ${all.total} 항목 완료</span></div></div>
-      <div class="quick-links"><a href="/setup"><span class="quick-index">00</span><div><b>사전 세팅</b><small>${setupP.done}/${setupP.total} 완료 · 연결 확인</small></div><span>→</span></a><a href="/clinic"><span class="quick-index">FIN</span><div><b>내 업무 자동화 설계서</b><small>${clinicP.done}/${clinicP.total} 완료 · 4회차 산출물</small></div><span>→</span></a></div>
+      <div class="quick-links"><a href="/setup"><span class="quick-index">00</span><div><b>연결 준비</b><small>${setupP.done}/${setupP.total} 완료 · 읽기 범위 확인</small></div><span>→</span></a><a href="/clinic"><span class="quick-index">FIN</span><div><b>내 업무 연결 설계서</b><small>${clinicP.done}/${clinicP.total} 완료 · 4회차 산출물</small></div><span>→</span></a></div>
     </section>
 
     <section class="sessions-section"><div class="section-heading"><div><span class="section-kicker">WORKBOOK PAGES</span><h2>회차별 실습</h2></div><a class="section-link" href="/prompts">프롬프트 카드 열기 ↗</a></div><div class="journey-grid">${SESSIONS.map(session => sessionCard(session, progressOf(requiredKeys(session.n), entries))).join('')}</div></section>`));

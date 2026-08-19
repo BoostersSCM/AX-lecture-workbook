@@ -321,11 +321,9 @@
       <article class="week">
         <div class="week-tag mono">1회차</div>
         <div class="week-body">
-          <div class="week-title">AI에게 우리 팀을 소개하는 날 <span>· 연결</span></div>
-          <p>커넥터로 노션을 직접 읽게 하고, 사내 행사 퀴즈 콘텐츠를 만듭니다. 업무 부담이 0이고 실패해도 손해가 없어 첫 성공 경험을 만들기에 최적입니다.
-            도입에서 강사가 지난 5월 같은 일을 하려고 만들었던 <b>크롬 확장 프로그램(651줄)</b>을 보여주고 시작합니다 —
-            “저는 2주 걸렸습니다. 오늘 여러분은 그거 없이 90분에 합니다.”</p>
-          <div class="deliver"><span class="label mono">완성물</span> 퀴즈 3종 — WHO AM I 15문항(힌트 3단 차등) · AI 예측 퀴즈 · 크로스 퀴즈</div>
+          <div class="week-title">AI에게 업무 원본을 읽히는 날 <span>· 연결</span></div>
+          <p>커넥터로 노션·슬랙·드라이브의 원본을 읽고, 접근 범위·업무 맥락·근거 문장을 확인합니다. 첫날은 실제 DB에 쓰거나 채널에 발행하지 않고 읽기와 검수에 집중합니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 읽을 수 있는 원본 목록 + 업무 맥락 요약 1개 + 근거 문장</div>
         </div>
       </article>
 
@@ -343,20 +341,20 @@
       <article class="week">
         <div class="week-tag mono">3회차</div>
         <div class="week-body">
-          <div class="week-title">한 번의 입력으로 여러 곳에 보내는 날 <span>· 발행</span></div>
-          <p>업무 DB를 완료·진행·지연 3분류로 요약해 슬랙 리포트로 발행합니다. 결과물이 내 화면에만 있으면 자동화가 아니라,
-            남에게 도착해야 끝납니다. 마지막엔 이 과정을 다음 주에 한 줄로 재실행할 ‘레시피’로 저장합니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 우리 팀 주간 리포트 템플릿 + 실제 발행 1회</div>
+          <div class="week-title">Asana·Notion·Slack을 실제로 연결하는 날 <span>· 연동</span></div>
+          <p>기존 봇·앱 토큰은 서버에 두고, 각자가 원하는 Asana 프로젝트·Notion 페이지·Slack 채널을 연결합니다.
+            읽기·보내기·웹훅 받기까지 확인한 뒤, 다음 사람이 다시 실행할 연결 레시피를 남깁니다.</p>
+          <div class="deliver"><span class="label mono">완성물</span> 세 도구 연결 결과 + 연결 레시피 1개</div>
         </div>
       </article>
 
       <article class="week">
         <div class="week-tag mono">4회차</div>
         <div class="week-body">
-          <div class="week-title">내 업무 옆에 AI 동료를 두는 날 <span>· 정착</span></div>
+          <div class="week-title">내 업무 흐름을 연결하는 날 <span>· 정착</span></div>
           <p>승인 절차 없이 오늘 바로 쓸 수 있는 개인 루틴 3종(수신함 정리·일일 로그·주간 회고)을 따라 만든 뒤,
             각자 자기 업무 하나를 가져와 설계서를 채우고 2인 1조로 상호 리뷰합니다. 정착률이 여기서 갈립니다.</p>
-          <div class="deliver"><span class="label mono">완성물</span> 내 업무 자동화 설계서 1장</div>
+          <div class="deliver"><span class="label mono">완성물</span> 내 업무 연결 설계서 1장</div>
         </div>
       </article>
 
@@ -372,9 +370,9 @@
           <tr><th>업무</th><th>SCM Portal에서 한 방식</th><th>이 강의에서 할 방식</th><th>회차</th></tr>
         </thead>
         <tbody>
-          <tr><td>행사 퀴즈 콘텐츠</td><td class="was">크롬 확장 프로그램 651줄 + Sheets API 연동</td><td class="now">노션 크루 DB → 퀴즈 3종, 코드 0줄</td><td class="mono">1</td></tr>
+          <tr><td>업무 원본 요약</td><td class="was">문서 수집 도구 + API 연동</td><td class="now">노션·슬랙 원본 → 근거 포함 업무 맥락 요약</td><td class="mono">1</td></tr>
           <tr><td>부자재 이력 관리</td><td class="was">Next.js + DB 테이블 + 노션 자동 생성 API</td><td class="now">노션 DB에 AI가 직접 등재</td><td class="mono">2</td></tr>
-          <tr><td>경영 대시보드</td><td class="was">집계 쿼리 + 캐시 DB + 차트 화면</td><td class="now">노션 DB → 주간 요약 → 슬랙 발행</td><td class="mono">3</td></tr>
+          <tr><td>사내봇 연결</td><td class="was">서버 API + 권한 확인 + 목적지별 변환</td><td class="now">Asana 프로젝트·Notion 페이지·Slack 채널 연결</td><td class="mono">3</td></tr>
           <tr><td>메일 첨부 처리</td><td class="was">Gmail 애드온 개발</td><td class="now">수신함 자동 분류 루틴</td><td class="mono">4</td></tr>
         </tbody>
       </table>
@@ -412,9 +410,9 @@
         <h3>가장 큰 리스크 — 커넥터가 안 붙는 것</h3>
         <ul>
           <li>노션 커넥터 관리자 승인은 <b>강의 1주 전</b>에 일괄 요청한다.</li>
-          <li>슬랙 앱 설치 권한이 없어도 3회차는 <b>DM 리허설까지로 완주</b> 가능하게 설계했다.</li>
-          <li>당일 연결 실패자에겐 <b>플랜 B</b> — 노션 페이지를 내려받아 파일 업로드로 동일 실습.</li>
-          <li>실습은 전부 <b>「AX 실습장」 복제 DB</b>에서. 실제 팀 DB는 건드리지 않는다.</li>
+          <li>슬랙 앱 설치 권한이 없어도 3회차는 <b>샘플 이벤트 JSON 검수</b>로 완주 가능하게 설계했다.</li>
+          <li>당일 연결 실패자에겐 <b>플랜 B</b> — Asana CSV·Notion 파일·Slack 샘플 JSON으로 동일 실습.</li>
+          <li>1·2회차는 <b>「AX 실습장」 복제 DB</b>에서, 3회차는 읽기·테스트 채널 중심으로 진행한다.</li>
         </ul>
       </div>
     </div>
@@ -450,7 +448,7 @@
           <li>「AX 실습장」 노션 페이지</li>
           <li><b>「내 업무(연습용)」 공용 DB</b> — 부서 무관 9개 필드, 각자 복제해서 사용</li>
           <li><b>공용 샘플 회의록 3건</b> — 부스팅데이 준비 · 팝업스토어 킥오프 · 계정 권한 정비</li>
-          <li>크루 소개 DB 실습용 사본 (연락처 열 제거)</li>
+          <li>1회차 읽기 실습용 공용 원본 사본 (민감정보 제거)</li>
           <li>슬랙 실습 채널 개설</li>
           <li>조교 1명 — 참가자 12명 이상이면 필수</li>
         </ul>
@@ -459,7 +457,7 @@
   </section>
 
   <footer>
-    <div>부속 문서 — 사전세팅 체크리스트 · 프롬프트 카드 · 케이스 클리닉 워크시트</div>
+    <div>부속 문서 — 연결 준비 체크리스트 · 업무 연결 프롬프트 카드 · 내 업무 연결 설계서</div>
     <div class="mono">v1 · 2026-08-18</div>
   </footer>
 

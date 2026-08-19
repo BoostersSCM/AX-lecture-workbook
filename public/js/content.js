@@ -9,7 +9,7 @@
 export const COURSE = {
   title: '업무를 연결하는 AI',
   subtitle: '사내 도구와 데이터를 연결해 반복 업무를 줄이는 4주',
-  promise: '흩어진 도구와 데이터를 연결해, 일의 흐름을 다시 설계합니다.',
+  promise: '흩어진 도구를 연결하고, 일의 흐름을 만듭니다.',
   intro: '도구 하나를 잘 쓰는 법이 아니라, 원본 데이터가 사람이 보는 채널·페이지·태스크로 이어지는 구조를 설계합니다.',
 };
 
@@ -60,102 +60,117 @@ export const VISUALS = {
   },
 };
 
-// ── 사전 세팅 체크리스트 ──────────────────────────────────────
+// ── 연결 준비 체크리스트 ──────────────────────────────────────
 export const SETUP = {
-  title: '사전 세팅',
-  intro: '첫 수업 전에 끝내주세요. 10분이면 됩니다. 이게 안 되어 있으면 1회차에 실습을 못 합니다.',
+  title: '연결 준비',
+  intro: '첫 수업 전에 끝내주세요. 15분이면 됩니다. 운영자는 기존 봇·앱 토큰을 Vercel에 넣고, 수강생은 각자 연결할 Asana 프로젝트·Notion 페이지·Slack 채널을 정합니다.',
   groups: [
     {
-      name: '1. AI 도구 로그인',
+      name: '1. 계정과 권한',
       fields: [
         { key: 'setup.login', kind: 'check', label: '사내에서 쓰는 AI 도구에 **회사 계정**으로 로그인했다', hint: '개인 계정에는 회사 노션·슬랙을 연결할 수 없습니다.' },
       ]
     },
     {
-      name: '2. 커넥터 연결',
+      name: '2. 업무 도구 연결',
       fields: [
         { key: 'setup.notion', kind: 'check', label: '노션 연결 — 접근 범위에 내가 보는 팀 페이지를 포함' },
         { key: 'setup.slack',  kind: 'check', label: '슬랙 연결' },
         { key: 'setup.asana',  kind: 'check', label: '아사나 연결 — 실습 프로젝트 또는 태스크 접근 권한 포함' },
         { key: 'setup.drive',  kind: 'check', label: '구글 드라이브 연결' },
-        { key: 'setup.verify', kind: 'check', label: '연결 확인 프롬프트가 통과했다', hint: '아래 프롬프트를 복사해서 물어보고, 페이지 제목이 나오면 성공입니다.' },
+        { key: 'setup.verify', kind: 'check', label: '읽기 범위 확인 프롬프트가 통과했다', hint: '아래 프롬프트로 페이지 목록만 확인합니다. 첫날은 아직 아무것도 쓰지 않습니다.' },
       ]
     },
     {
-      name: '3. 실습장 접근',
+      name: '3. 실습 데이터 확인',
       fields: [
         { key: 'setup.playground', kind: 'check', label: '노션 「AX 실습장」 페이지가 열린다' },
         { key: 'setup.db',         kind: 'check', label: '그 안의 「내 업무(연습용)」 DB가 보인다' },
         { key: 'setup.minutes',    kind: 'check', label: '샘플 회의록 3건이 보인다', hint: '부스팅데이 준비 · 팝업스토어 킥오프 · 계정 권한 정비' },
         { key: 'setup.channel',    kind: 'check', label: '슬랙 실습 채널에 들어와 있다' },
-        { key: 'setup.asana_project', kind: 'check', label: '아사나 실습 프로젝트 또는 샘플 태스크가 열린다', hint: '연동이 막힌 경우 3회차는 노션 페이지에 초안을 만드는 방식으로 진행할 수 있습니다.' },
+        { key: 'setup.asana_project', kind: 'check', label: '아사나 봇을 초대한 프로젝트 또는 샘플 태스크가 열린다', hint: '연동이 막힌 경우 3회차는 샘플 태스크 CSV로 읽기 실습을 진행할 수 있습니다.' },
         { key: 'setup.persisted', kind: 'check', label: '워크북에 짧은 답을 적고 새로고침해도 다시 보인다', hint: '내 입력이 Supabase entries에 저장되고 다시 읽히는지 확인합니다.' },
       ]
     },
     {
-      name: '4. 노트북',
+      name: '4. 연결할 대상 정하기',
+      fields: [
+        { key: 'setup.asana_target', kind: 'text', required: true,
+          label: 'Asana — 봇을 초대할 프로젝트 URL 또는 Project GID',
+          hint: '프로젝트 링크의 숫자 ID를 써도 됩니다. 토큰은 입력하지 않습니다.' },
+        { key: 'setup.notion_target', kind: 'text', required: true,
+          label: 'Notion — 앱을 연결할 페이지 URL 또는 Page ID',
+          hint: '페이지 우측 상단 ··· → 연결 추가에서 기존 앱을 먼저 초대합니다.' },
+        { key: 'setup.slack_target', kind: 'text', required: true,
+          label: 'Slack — 봇이 메시지를 보낼 채널과 읽을 채널',
+          hint: '채널명보다 C로 시작하는 Channel ID를 준비하면 정확합니다.' },
+        { key: 'setup.event_endpoint', kind: 'text',
+          label: 'Slack Events API — Vercel 수신 엔드포인트',
+          hint: '강사가 알려준 공개 URL을 적습니다. Slack의 Event Subscriptions Request URL에 등록합니다.' },
+      ]
+    },
+    {
+      name: '5. 실습 환경',
       fields: [
         { key: 'setup.laptop', kind: 'check', label: '노트북 + 충전기 지참, 사내 와이파이 확인' },
       ]
     },
     {
-      name: '5. 미리 생각해 오기',
+      name: '6. 첫 업무 후보',
       fields: [
         { key: 'setup.think', kind: 'textarea', rows: 3, required: true,
           label: '내가 매주 반복하는 업무 중, 없어졌으면 하는 것 하나는?',
-          hint: '1회차 체크인에서 물어봅니다. 4회차에 이걸 실제로 자동화합니다. 한 줄이면 충분합니다.' },
+          hint: '1회차 체크인에서 물어봅니다. 4회차에 이 업무의 연결 흐름을 실제로 설계합니다. 한 줄이면 충분합니다.' },
         { key: 'setup.trouble', kind: 'textarea', rows: 2,
           label: '연결이 안 되거나 막힌 것이 있다면 적어주세요',
           hint: '강사가 강의 전에 보고 미리 준비합니다.' },
       ]
     },
   ],
-  verifyPrompt: '노션에서 「부스터스 크루 소개」 페이지를 찾아서, 제목만 알려줘.',
-  planB: '커넥터 연결이 끝내 안 되어도 수업은 들을 수 있습니다. 노션 페이지를 PDF/Markdown으로 내보내서 가져오시면 파일을 직접 올려 같은 실습을 합니다.',
+  verifyPrompt: '노션에서 「AX 실습장」을 찾아서, 그 안에 있는 샘플 회의록 3건의 제목과 날짜만 보여줘. 아직 본문 내용은 읽지 마.',
+  planB: '연결이 끝내 안 되어도 수업은 들을 수 있습니다. Asana는 프로젝트 URL과 화면 내보내기, Notion은 페이지 PDF/Markdown, Slack은 샘플 이벤트 JSON으로 같은 흐름을 연습합니다.',
 };
 
 // ── 회차별 워크북 ────────────────────────────────────────────
 export const SESSIONS = [
   {
     n: 1,
-    title: 'AI에게 우리 팀을 소개하는 날',
+    title: 'AI에게 업무 원본을 읽히는 날',
     tag: '연결',
-    goal: '내 권한 안에서 AI가 우리 팀의 원본을 읽게 합니다. 첫날은 쓰지 않고, 연결의 감각만 익힙니다.',
+    goal: '내 권한 안에서 AI가 업무 원본을 읽고, 출처와 범위를 구분하게 합니다. 첫날은 쓰지 않고 읽기·근거·확인만 연습합니다.',
     blocks: [
-      { type: 'note', text: '오늘 소재는 업무가 아니라 행사 콘텐츠입니다. 부담 0, 실패해도 손해 0. 첫 성공 경험을 만드는 게 목표입니다.' },
+      { type: 'note', text: '오늘은 읽기만 합니다. 실제 DB에 쓰거나 채널에 발행하지 않고, 원본을 찾고 업무 맥락을 요약하며 근거와 빈칸을 확인합니다.' },
       { type: 'visual', id: 'connector' },
-      { type: 'note', text: '**비유를 기억하세요.** 커넥터는 AI에게 회사 전체 열쇠를 주는 일이 아니라, 내 계정으로 열 수 있는 방만 함께 둘러보는 일입니다.' },
+      { type: 'note', text: '**비유를 기억하세요.** 커넥터는 AI에게 회사 전체 열쇠를 주는 일이 아니라, 내가 열 수 있는 업무 자료실의 문만 함께 여는 일입니다.' },
 
       { type: 'field', key: 's1.checkin', kind: 'textarea', rows: 2, required: true,
         label: '체크인 — 내가 매주 반복하는 업무 중 없어졌으면 하는 것',
-        hint: '4회차에 이걸 실제로 설계합니다.' },
+        hint: '4회차에 이 업무의 연결 흐름을 실제로 설계합니다.' },
 
-      { type: 'head', text: '실습 A — WHO AM I 15문항' },
+      { type: 'head', text: '실습 1 — 읽을 수 있는 원본 찾기' },
       { type: 'prompt', id: 's1a' },
-      { type: 'field', key: 's1.a', kind: 'textarea', rows: 6, required: true,
-        label: '결과를 붙여넣으세요',
-        hint: '전부 붙일 필요 없습니다. 잘 나온 3문항 정도면 충분합니다.' },
+      { type: 'field', key: 's1.source_list', kind: 'textarea', rows: 5, required: true,
+        label: '읽을 수 있는 원본과 범위',
+        hint: '페이지·채널·폴더 이름과, 이번 실습에서 읽지 않을 범위를 함께 적습니다.' },
 
-      { type: 'head', text: '실습 B — AI 예측 퀴즈' },
-      { type: 'note', text: 'A는 "지어내면 안 되는" 과제였습니다. B는 반대로 **지어내는 게 목적**입니다.' },
+      { type: 'head', text: '실습 2 — 원본을 업무 맥락으로 요약하기' },
       { type: 'prompt', id: 's1b' },
-      { type: 'field', key: 's1.b', kind: 'textarea', rows: 5,
-        label: '결과를 붙여넣으세요' },
-      { type: 'field', key: 's1.b_insight', kind: 'textarea', rows: 3, required: true,
-        label: '★ AI가 지어낸 것 중 가장 그럴듯했던 것은?',
-        hint: '오늘은 이게 재미입니다. 그런데 다음 주에 회의록으로 같은 일이 벌어지면 어떻게 될까요? 그 답을 2회차에 봅니다.' },
+      { type: 'field', key: 's1.context', kind: 'textarea', rows: 7, required: true,
+        label: '업무 맥락 요약',
+        hint: '이 자료의 목적·핵심 내용·이미 정해진 일·아직 정해지지 않은 일을 나눠 적습니다.' },
 
-      { type: 'head', text: '실습 C — 크로스 퀴즈' },
+      { type: 'head', text: '실습 3 — 근거와 빈칸 확인하기' },
       { type: 'prompt', id: 's1c' },
-      { type: 'field', key: 's1.c', kind: 'textarea', rows: 5,
-        label: '결과를 붙여넣으세요 (시간이 없으면 비워두고 넘어가세요)' },
+      { type: 'field', key: 's1.evidence', kind: 'textarea', rows: 6, required: true,
+        label: '요약의 근거 문장과 비어 있는 정보',
+        hint: '각 핵심 내용이 어느 원문에서 나왔는지 적고, 원본에서 확인할 수 없는 값은 빈칸으로 남깁니다.' },
 
       { type: 'head', text: '정리' },
       { type: 'field', key: 's1.stuck', kind: 'textarea', rows: 2,
         label: '오늘 막혔던 지점이 있다면' },
       { type: 'field', key: 's1.homework', kind: 'textarea', rows: 3,
-        label: '숙제 — 내 팀 노션에서 "AI에게 읽히면 편할 것 같은 페이지" 3개',
-        hint: '페이지 이름만 적으면 됩니다.' },
+        label: '숙제 — AI에게 읽히면 도움이 될 업무 원본 1개',
+        hint: '원본의 위치와, 읽히면 어떤 반복 업무가 줄어드는지 한 줄로 적습니다.' },
     ],
   },
 
@@ -224,56 +239,83 @@ export const SESSIONS = [
 
   {
     n: 3,
-    title: '한 번의 입력으로 여러 곳에 보내는 날',
-    tag: '발행',
-    goal: '하나의 DB를 Slack 메시지·Notion 기록·Asana 태스크로 바꿔, 사람이 보는 곳까지 보냅니다.',
+    title: 'Asana·Notion·Slack을 실제로 연결하는 날',
+    tag: '연동',
+    goal: '운영자가 Vercel에 둔 봇 토큰을 그대로 노출하지 않고, 각자 권한을 부여한 프로젝트·페이지·채널에서 실제 읽기와 보내기·받기를 경험합니다.',
     blocks: [
-      { type: 'note', text: '오늘 소재는 2회차에 각자 채운 「내 업무(연습용)」 DB입니다. 2회차를 못 끝내셨으면 실습장의 완성본을 복제해서 쓰세요.' },
+      { type: 'note', text: '오늘은 세 도구를 직접 연결합니다. 토큰은 Vercel 서버에만 있고 화면에 나오지 않습니다. 수강생은 Asana 프로젝트에 봇 초대, Notion 페이지에 앱 연결, Slack 채널 ID와 이벤트 수신 URL만 준비합니다.' },
       { type: 'visual', id: 'delivery' },
-      { type: 'note', text: '**비유를 기억하세요.** 자동화는 한 번에 같은 메시지를 뿌리는 일이 아니라, 같은 원본을 목적지에 맞는 형태로 포장해 보내는 분류소입니다.' },
+      { type: 'note', text: '**비유를 기억하세요.** 봇은 마스터키가 아니라, 초대받은 방에서만 일하는 담당자입니다. 프로젝트·페이지·채널마다 초대와 권한을 따로 확인합니다.' },
 
-      { type: 'head', text: '실습 0 — DB가 워크플로우의 중간 허브가 된다' },
-      { type: 'note', text: 'DB는 최종 목적지가 아니라 중간 허브입니다. `entries`에서 읽은 데이터를 사람이 보는 Slack 메시지로 만들고, 특정 Notion 페이지에 기록하거나 Asana 태스크로 넘길 수 있습니다.' },
-      { type: 'prompt', id: 's3db' },
+      { type: 'head', text: '실습 0 — 서버 연결값은 운영자가, 대상은 수강생이' },
+      { type: 'prompt', id: 's3config' },
       { type: 'field', key: 's3.db_flow', kind: 'checks',
-        label: 'DB에서 꺼낸 데이터를 어디까지 연결해봤나요?',
-        options: ['Supabase entries에서 읽기', 'Slack DM 또는 채널 초안 만들기', '특정 Notion 페이지에 기록하기', 'Asana 프로젝트 태스크로 넘기기'] },
+        label: '오늘 확인한 연결',
+        options: ['Asana 봇 → 내 프로젝트 읽기', 'Notion 앱 → 내 페이지 읽기', 'Slack 봇 → 원하는 채널 보내기', 'Slack 메시지 → Vercel 웹훅 받기'] },
 
-      { type: 'head', text: '실습 1 — 주간 요약' },
-      { type: 'prompt', id: 's3collect' },
-      { type: 'prompt', id: 's3summary' },
-      { type: 'field', key: 's3.report', kind: 'textarea', rows: 8, required: true,
-        label: '나온 리포트 초안을 붙여넣으세요' },
+      { type: 'head', text: '실습 1 — Asana: 봇을 내 프로젝트에 초대하고 가져오기' },
+      { type: 'note', text: 'Asana에서는 운영자가 가진 봇 토큰으로 호출하지만, 봇이 프로젝트 멤버로 초대되지 않으면 읽을 수 없습니다. 먼저 초대하고, 프로젝트의 태스크를 읽기 전용으로 가져옵니다.' },
+      { type: 'prompt', id: 's3asana' },
+      { type: 'field', key: 's3.asana_project', kind: 'text', required: true,
+        label: '연결한 Asana 프로젝트 URL 또는 Project GID' },
+      { type: 'field', key: 's3.asana_tasks', kind: 'textarea', rows: 6, required: true,
+        label: 'Asana에서 실제로 가져온 태스크 3개',
+        hint: '태스크명·담당자·마감일·완료 여부를 적고, 읽지 못한 값은 미확인으로 둡니다.' },
+      { type: 'field', key: 's3.asana_ready', kind: 'check',
+        label: '봇을 프로젝트에 초대한 뒤 태스크 목록을 읽었다' },
 
-      { type: 'head', text: '실습 2 — 지연 사유는 사람이' },
-      { type: 'note', text: '지연 사유는 데이터에 없습니다. AI가 쓰면 지어냅니다. **빈칸으로 받아서 내가 채웁니다.**' },
-      { type: 'field', key: 's3.delay_by_me', kind: 'check',
-        label: '지연 사유를 내가 직접 채웠다' },
-      { type: 'field', key: 's3.delay_text', kind: 'textarea', rows: 3,
-        label: '내가 채운 지연 사유 (하나만 예시로)' },
+      { type: 'head', text: '실습 2 — Notion: 앱을 내 페이지에 연결하고 가져오기' },
+      { type: 'note', text: 'Notion은 앱을 페이지의 연결 목록에 직접 추가해야 합니다. 페이지를 연결한 뒤 페이지 제목·본문 블록 또는 데이터베이스의 행을 읽고, 쓰기는 마지막 확인 뒤에만 시도합니다.' },
+      { type: 'prompt', id: 's3notion' },
+      { type: 'field', key: 's3.notion_page', kind: 'text', required: true,
+        label: '연결한 Notion 페이지 URL 또는 Page ID' },
+      { type: 'field', key: 's3.report', kind: 'textarea', rows: 7, required: true,
+        label: 'Notion에서 실제로 가져온 내용',
+        hint: '페이지 제목·핵심 블록·DB라면 행 3개를 적습니다. 출처 페이지도 함께 남깁니다.' },
+      { type: 'field', key: 's3.notion_ready', kind: 'check',
+        label: 'Notion 페이지에 기존 앱을 연결한 뒤 내용을 읽었다' },
 
-      { type: 'head', text: '실습 3 — 같은 결과, 세 가지 목적지' },
-      { type: 'note', text: '같은 리포트라도 목적지에 따라 모양이 달라집니다. 나에게는 DM으로 리허설하고, 팀에는 슬랙 채널 초안으로, 실행할 일은 특정 노션 페이지나 아사나 프로젝트의 태스크로 보냅니다.' },
-      { type: 'prompt', id: 's3slack' },
+      { type: 'head', text: '실습 3 — Slack: 봇으로 원하는 채널에 보내기' },
+      { type: 'note', text: '보내기는 채널 ID를 명시하고, 최종 문구를 먼저 미리 본 다음 chat.postMessage로 전송합니다. 테스트 채널에서 성공한 뒤 업무 채널로 넓힙니다.' },
+      { type: 'prompt', id: 's3slack_send' },
+      { type: 'field', key: 's3.slack_channel', kind: 'text', required: true,
+        label: '메시지를 보낸 Slack Channel ID' },
+      { type: 'field', key: 's3.slack_message', kind: 'textarea', rows: 5, required: true,
+        label: '봇이 실제로 보낸 메시지' },
       { type: 'field', key: 's3.dm_sent', kind: 'check',
-        label: '나 자신에게 DM으로 리허설 발송했다',
-        hint: '채널 게시는 슬랙에서 직접 하세요. 자동 채널 발송은 이 강의 범위 밖입니다.' },
-      { type: 'field', key: 's3.destinations', kind: 'checks',
-        label: '내 봇의 목적지로 연결해본 것',
-        options: ['내 Slack DM — 리허설', 'Slack #ax-실습 채널 — 최종 확인 후', '특정 Notion 페이지', 'Asana 프로젝트의 태스크'] },
+        label: '봇이 지정한 채널에 메시지를 보냈다',
+        hint: '채널에 봇이 초대되어 있어야 합니다.' },
 
-      { type: 'head', text: '실습 4 — 레시피로 저장 ★' },
+      { type: 'head', text: '실습 4 — Slack: 채널에 쓴 내용을 Vercel 웹훅으로 받기' },
+      { type: 'note', text: 'Slack Events API가 공개 Vercel 엔드포인트로 이벤트를 보내는 흐름입니다. Request URL 검증 챌린지에 응답하고, 서명 검증 후 메시지 이벤트만 처리합니다. 봇이 자기 메시지를 다시 읽는 무한 루프는 막습니다.' },
+      { type: 'prompt', id: 's3slack_event' },
+      { type: 'field', key: 's3.slack_event', kind: 'textarea', rows: 6, required: true,
+        label: '웹훅으로 받은 이벤트와 처리 결과',
+        hint: 'channel_id·user·text·event_ts를 확인하고, 무시한 봇 메시지가 있다면 이유도 적습니다.' },
+      { type: 'field', key: 's3.event_ready', kind: 'check',
+        label: 'Slack에 쓴 테스트 메시지가 Vercel 웹훅에 도착했다' },
+
+      { type: 'head', text: '실습 5 — 같은 원본을 세 목적지에 맞게 바꾸기' },
+      { type: 'prompt', id: 's3flow' },
+      { type: 'field', key: 's3.destinations', kind: 'checks',
+        label: '목적지별 결과를 구분했다',
+        options: ['Asana — 실행할 태스크', 'Notion — 다시 찾아볼 기록', 'Slack — 지금 읽을 메시지', 'Supabase — 연결 결과와 로그'] },
+      { type: 'field', key: 's3.delay_text', kind: 'textarea', rows: 3,
+        label: '사람이 마지막으로 확인해야 할 값',
+        hint: '담당자·마감일·공개 범위처럼 AI가 확정하면 안 되는 값을 적습니다.' },
+
+      { type: 'head', text: '정리 — 내 연결 레시피 저장 ★' },
       { type: 'prompt', id: 's3recipe' },
       { type: 'field', key: 's3.recipe', kind: 'textarea', rows: 8, required: true,
-        label: '완성된 레시피를 붙여넣으세요',
-        hint: '다음 주에 이걸 붙여넣기만 하면 리포트가 나옵니다.' },
+        label: '완성된 연결 레시피를 붙여넣으세요',
+        hint: '원본·권한·목적지·확인 지점·실패 시 대체 경로까지 한 덩어리로 남깁니다.' },
       { type: 'field', key: 's3.recipe_where', kind: 'text', required: true,
         label: '이 레시피를 어디에 저장하셨나요?',
         hint: '개인 노션 페이지, 메모장, 어디든 좋습니다. 다음 주 월요일에 찾을 수 있는 곳이면 됩니다.' },
 
       { type: 'head', text: '정리' },
       { type: 'field', key: 's3.homework', kind: 'check',
-        label: '숙제 — 다음 주에 저장한 레시피로 리포트를 실제로 1회 발행한다' },
+        label: '숙제 — 다음 주에 같은 연결을 실제 업무 데이터로 1회 다시 실행한다' },
       { type: 'field', key: 's3.next_case', kind: 'textarea', rows: 2, required: true,
         label: '★ 4회차에 가져올 "내 업무" 하나를 지금 정해주세요',
         hint: '이게 없으면 4회차에 할 게 없습니다. 1회차 체크인에 적으신 것 그대로여도 됩니다.' },
@@ -282,14 +324,14 @@ export const SESSIONS = [
 
   {
     n: 4,
-    title: '내 업무 옆에 AI 동료를 두는 날',
+    title: '내 업무 흐름을 연결하는 날',
     tag: '정착',
-    goal: '내 반복 업무와 파일 정리까지 연결해, 다음 주에도 다시 쓸 수 있는 자동화 설계서를 완성합니다.',
+    goal: '내 반복 업무와 파일 정리까지 연결해, 다음 주에도 다시 쓸 수 있는 연결 설계서를 완성합니다.',
     blocks: [
       { type: 'head', text: '파트 1 — 개인 루틴' },
       { type: 'note', text: '지금까지는 회사 데이터라 승인이 필요했습니다. 이 세 개는 내 폴더, 내 기록입니다. 오늘 퇴근하고 바로 켤 수 있습니다.' },
       { type: 'visual', id: 'recipe' },
-      { type: 'note', text: '**비유를 기억하세요.** 자동화 설계서는 요리 레시피와 같습니다. 재료·순서·검수·도착지를 적어야 다음 주에도 다시 만들 수 있습니다.' },
+      { type: 'note', text: '**비유를 기억하세요.** 연결 설계서는 요리 레시피와 같습니다. 재료·순서·검수·도착지를 적어야 다음 주에도 다시 만들 수 있습니다.' },
       { type: 'field', key: 's4.routines', kind: 'checks',
         label: '오늘 따라해본 것',
         options: ['수신함 정리 (주 20분)', '일일 로그 (매일 10분)', '주간 회고 (주 30분)'] },
@@ -300,7 +342,7 @@ export const SESSIONS = [
 
       { type: 'head', text: '파트 2 — 케이스 클리닉' },
       { type: 'note', text: '설계서는 별도 페이지에서 작성합니다. 아래 버튼을 눌러 이동하세요.' },
-      { type: 'link', href: '/clinic', text: '내 업무 자동화 설계서 작성하기 →' },
+      { type: 'link', href: '/clinic', text: '내 업무 연결 설계서 작성하기 →' },
 
       { type: 'head', text: '파트 3 — 파일 정리까지 자동화해보기' },
       { type: 'note', text: '마지막 확장은 화면 밖의 파일입니다. 데스크톱 앱이 다운로드 폴더·카카오톡 받은 파일·프로젝트 폴더를 살펴보고, 규칙에 맞는 파일만 안전하게 정리하도록 설계합니다.' },
@@ -321,14 +363,14 @@ export const SESSIONS = [
 
 // ── 4회차 케이스 클리닉 설계서 ────────────────────────────────
 export const CLINIC = {
-  title: '내 업무 자동화 설계서',
-  intro: '작성 15분 → 2인 1조 상호 리뷰 10분. 짝은 다른 팀 사람으로 묶습니다.',
+  title: '내 업무 연결 설계서',
+  intro: '내 업무가 어디서 시작해 어떤 형태로 바뀌고 어디에 도착하는지 한 장으로 정리합니다. 작성 15분 → 상호 리뷰 10분.',
   groups: [
     {
-      name: '0. 어떤 업무인가',
+      name: '0. 연결할 업무 고르기',
       fields: [
         { key: 'clinic.task', kind: 'textarea', rows: 2, required: true,
-          label: '한 문장으로',
+          label: '연결할 업무를 한 문장으로',
           hint: '예: 매주 금요일 팀 주간 진행상황을 정리해 팀 채널에 공유한다' },
         { key: 'clinic.min_per', kind: 'number', label: '1회에 걸리는 시간 (분)' },
         { key: 'clinic.times',   kind: 'number', label: '주당 횟수' },
@@ -337,7 +379,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '1. 긁기 — 무엇을 어디서 읽는가',
+      name: '1. 원본 확인하기 — 무엇을 어디서 읽는가',
       fields: [
         { key: 'clinic.source', kind: 'textarea', rows: 2, required: true,
           label: '출처', hint: '노션 페이지명 / 시트 / 슬랙 채널 / 폴더' },
@@ -355,7 +397,7 @@ export const CLINIC = {
       ]
     },
       {
-        name: '2. 정하기 — 어떤 형식으로 담는가',
+      name: '2. 구조 정하기 — 어떤 형식으로 담는가',
         fields: [
         { key: 'clinic.store', kind: 'radio', label: '결과를 어디에 쌓을까?',
           hint: '지금 선택한 도구가 영원한 정답은 아닙니다. 반복해서 꺼내 쓸 필요가 있는지부터 봅니다.',
@@ -369,7 +411,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '3. 만들기 — 어떤 결과물인가',
+      name: '3. 결과 만들기 — 누가 무엇을 보는가',
       fields: [
         { key: 'clinic.output', kind: 'checks', label: '결과물 형태',
           options: ['표 / 목록', '요약 글', '노션 DB 항목', '슬랙 메시지', '기타'] },
@@ -378,7 +420,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '4. 보내기 — 어디로 도착하는가',
+      name: '4. 도착지 정하기 — 어디로 보내는가',
       fields: [
         { key: 'clinic.dest', kind: 'text', required: true, label: '도착지', hint: '노션 DB / 슬랙 채널 / 문서 / 내 폴더' },
         { key: 'clinic.cycle', kind: 'text', label: '주기', hint: '매일 / 매주 O요일 / 필요할 때' },
@@ -389,7 +431,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '5. 사람이 꼭 봐야 하는 지점',
+      name: '5. 사람의 확인 지점',
       fields: [
         { key: 'clinic.safety', kind: 'checks', label: 'AI를 믿으면 안 되는 곳',
           options: [
@@ -404,7 +446,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '6. 상호 리뷰 (2인 1조)',
+      name: '6. 연결 설계 리뷰',
       fields: [
         { key: 'clinic.review_note', kind: 'note',
           text: '짝에게 이 세 가지만 물어보세요. ① 이거 진짜 매주 하는 일 맞아요? ② 여기서 AI가 틀리면 누가 피해를 보나요? ③ 원본에 없는 값이 나오면 어떻게 되나요?' },
@@ -413,7 +455,7 @@ export const CLINIC = {
       ]
     },
     {
-      name: '7. 다음 주에 할 첫 한 걸음',
+      name: '7. 다음 주 첫 연결',
       fields: [
         { key: 'clinic.step1', kind: 'textarea', rows: 3, required: true,
           label: '전체를 다 만들려 하지 말고, 가장 작은 한 조각만',
@@ -442,49 +484,55 @@ export const PROMPTS = {
 
   setup: {
     session: 0, title: '연결 확인',
-    body: `노션에서 「부스터스 크루 소개」 페이지를 찾아서, 어떤 데이터베이스들이 들어 있는지
-목록만 알려줘. 내용은 아직 읽지 마.`
+    body: `노션에서 「AX 실습장」을 찾아서, 그 안에 있는 샘플 회의록 3건의 제목과 날짜만 보여줘.
+아직 본문 내용은 읽지 마.`
   },
 
   s1a: {
-    session: 1, title: 'A — WHO AM I 15문항',
-    body: `노션 「부스터스 크루 소개」의 크루 프로필 데이터를 읽어줘.
+    session: 1, title: '1 — 읽을 수 있는 원본 찾기',
+    note: '첫날은 목록만 확인합니다. 본문을 넓게 읽기 전에 접근 범위와 제외 범위를 정합니다.',
+    body: `노션 「AX 실습장」 안에서 현재 내가 접근할 수 있는 페이지와 데이터베이스를 찾아줘.
 
-그걸로 'WHO AM I' 퀴즈를 15문항 만들어줘. 규칙은 이렇게:
+본문 내용은 아직 읽지 말고 아래 표로만 보여줘:
+- 원본 이름
+- 도구와 위치
+- 자료 유형 (페이지 / 데이터베이스 / 회의록 / 기타)
+- 마지막 수정일 (확인할 수 있을 때)
+- 다음 단계에서 읽어볼 이유
 
-- 한 문항 = 힌트 3개 + 정답 1명
-- 힌트는 어려운 것 → 쉬운 것 순서로. 힌트①은 3점, 힌트②는 2점, 힌트③은 1점.
-- 힌트에 이름, 부서명 전체, 연락처는 절대 넣지 말 것
-- 소개글에 없는 내용은 지어내지 말 것. 힌트 3개를 못 채우면 그 사람은 건너뛰기
-- 정답은 이니셜로 표기 (예: 도OO)
-
-출력은 [번호 / 힌트①(3점) / 힌트②(2점) / 힌트③(1점) / 정답] 표로.`
+내 권한 밖의 자료는 추측해서 채우지 말고 '접근 불가'라고 표시해줘.
+이번 실습에서 읽지 않을 자료도 마지막에 따로 적어줘.`
   },
 
   s1b: {
-    session: 1, title: 'B — AI 예측 퀴즈 10인',
-    note: '이번엔 반대로, 지어내게 시키는 과제입니다.',
-    body: `같은 크루 소개 데이터를 보고, 이번엔 반대로 해줘.
+    session: 1, title: '2 — 원본을 업무 맥락으로 요약하기',
+    body: `노션 「[페이지명]」 한 페이지만 읽어줘.
 
-'AI가 예측하는 이 사람' 퀴즈를 10인분 만들어줘.
-자기소개에 적혀 있지 않은 것을, 적혀 있는 내용으로부터 추측해서 쓰는 거야.
+아래 순서로 업무 맥락을 요약해줘:
+1. 이 자료의 목적
+2. 핵심 내용 3~5개
+3. 이미 정해진 일
+4. 아직 정해지지 않은 일
+5. 다음 단계에서 확인할 질문
 
-- 한 사람당: 소속 + "이 사람은 이럴 것 같습니다" 예측 3~4줄 + 정답(이니셜) + 재미 포인트
-- 예측은 소개글의 단서에서 출발하되, 소개글에 없는 영역으로 확장할 것
-- 무례하거나 외모·나이·가족에 대한 추측은 금지
-
-출력은 [번호 / 소속 / AI의 예측 / 정답 / 재미 포인트] 표로.`
+원본에 직접 적힌 내용만 사용하고, 담당자·날짜·수량을 추측해서 채우지 마.
+각 항목 뒤에 근거가 된 원문 문장을 함께 붙여줘.
+확인할 수 없는 값은 '미확인'으로 표시해줘.`
   },
 
   s1c: {
-    session: 1, title: 'C — 크로스 퀴즈 10문항',
-    body: `크루 소개 데이터 전체를 보고, 두 사람 이상의 '숨은 공통점'을 찾아줘.
+    session: 1, title: '3 — 근거와 빈칸 확인하기',
+    body: `방금 만든 업무 맥락 요약을 원본과 대조해서 검수해줘.
 
-- 한 문항 = 질문 + 정답(공통점과 해당 인물들)
-- 억지로 만들지 말 것. 공통점마다 근거가 된 소개글 문장을 함께 붙여줘
-- 근거를 못 붙이는 항목은 아예 빼
+표의 열은 [요약 항목 / 근거 원문 / 확인 상태 / 사람이 확인할 질문]으로 해줘.
 
-출력은 [번호 / 질문 / 정답(공통점·인물) / 근거 문장] 표로.`
+반드시 확인해줘:
+- 원본에 없는 내용이 섞이지 않았는가?
+- 서로 다른 페이지의 내용이 합쳐지지 않았는가?
+- 담당자·날짜·수량이 실제 원문에 있는가?
+- 근거를 찾지 못한 항목은 빈칸 또는 '미확인'으로 남겼는가?
+
+근거가 없는 항목은 삭제하지 말고 '확인 필요'로 표시해줘.`
   },
 
   s2raw: {
@@ -550,66 +598,114 @@ item_key와 value가 어떤 모습일지 예시 한 행으로 보여줘.
 내가 "진행"이라고 하면 그때 실제로 등재해.`
   },
 
-  s3collect: {
-    session: 3, title: '1 — 이번 주 데이터 긁기',
-    body: `노션 「내 업무(연습용)」에서 다음을 가져와줘:
+  s3config: {
+    session: 3, title: '0 — 토큰은 서버에, 대상은 내가 정하기',
+    note: '토큰 값은 화면이나 프롬프트에 적지 않습니다. 설정 여부와 대상 ID만 확인합니다.',
+    body: `운영자가 Vercel 환경변수에 다음 값을 설정했다고 가정해줘:
+- ASANA_TOKEN_BOT
+- NOTION_TOKEN
+- SLACK_BOT_TOKEN
+- SLACK_SIGNING_SECRET
 
-- 이번 주에 완료된 항목
-- 현재 진행 중인 항목
-- 마감일이 지났는데 완료가 아닌 항목
-
-각각 작업 이름 / 담당자 / 마감일 / 상태로 표를 나눠서 보여줘.`
+토큰의 실제 값은 절대 보여주지 말고, 각 연결이 준비되었는지 확인하는 체크리스트만 만들어줘.
+수강생이 직접 준비할 값은 다음 네 가지로 구분해줘:
+- Asana Project GID
+- Notion Page ID
+- Slack Channel ID
+- Slack Events API Request URL`
   },
 
-  s3db: {
-    session: 3, title: '0 — DB에서 목적지까지',
-    body: `Supabase entries에서 반복해서 쌓이는 데이터를 업무 봇의 중간 재료로 쓴다고 가정해줘.
+  s3asana: {
+    session: 3, title: '1 — Asana 봇을 프로젝트에 초대하고 읽기',
+    note: '봇 토큰은 서버가 가지고 있습니다. 수강생은 프로젝트에 봇을 초대한 뒤 Project GID만 전달합니다.',
+    body: `Asana에서 다음 프로젝트를 읽기 전용으로 확인해줘.
+프로젝트 URL 또는 Project GID: [여기에 입력]
 
-다음 흐름을 표로 설계해줘:
-원본 행 → 필요한 필드만 추리기 → 목적지별 형식 변환 → 사람이 확인할 지점
+운영자 서버의 ASANA_TOKEN_BOT을 사용하되, 토큰 값은 절대 노출하지 마.
+1. 프로젝트 이름과 워크스페이스를 확인
+2. 이 프로젝트의 태스크를 최대 3개 가져오기
+3. 각 태스크를 [태스크명 / 담당자 / 마감일 / 완료 여부 / Asana URL]로 보여주기
+4. 읽지 못한 값은 추측하지 말고 '미확인'으로 표시
 
-목적지는 세 가지로 나눠:
-- Slack DM 또는 채널 초안
-- 특정 Notion 페이지
-- Asana 프로젝트의 태스크
-
-각 목적지에 어떤 필드가 필요하고, 어디서 사람이 최종 확인해야 하는지도 적어줘.`
+봇이 프로젝트 멤버로 초대되지 않았다면 필요한 권한과 다음 조치를 알려줘.
+오늘은 태스크를 만들거나 수정하지 마.`
   },
 
-  s3summary: {
-    session: 3, title: '2 — 주간 요약',
-    note: '지연 사유를 빈칸으로 받는 것이 핵심입니다.',
-    body: `위 데이터로 주간 업무 리포트 초안을 써줘. 구성은:
+  s3notion: {
+    session: 3, title: '2 — Notion 앱을 페이지에 연결하고 읽기',
+    note: 'Notion 페이지의 ··· → 연결 추가에서 기존 앱을 먼저 선택해야 합니다.',
+    body: `Notion에서 다음 페이지를 읽기 전용으로 확인해줘.
+페이지 URL 또는 Page ID: [여기에 입력]
 
-1. 이번 주 완료 (건수 + 목록, 한 줄씩)
-2. 진행 중 (건수 + 목록, 예상 완료 시점 있으면 같이)
-3. 지연 (건수 + 목록) — 각 건마다 '지연 사유'와 '다음 액션' 칸을 비워두고 만들어줘.
-   사유는 데이터에 없으니 내가 채운다.
+운영자 서버의 NOTION_TOKEN을 사용하되, 토큰 값은 절대 노출하지 마.
+1. 페이지 제목과 페이지 ID를 확인
+2. 본문 블록을 읽어 핵심 내용 3~5개로 요약
+3. 데이터베이스라면 행 3개를 [제목 / 상태 / 담당자 / 날짜]로 보여주기
+4. 페이지에 연결되지 않았거나 read content 권한이 없으면 원인과 해결 방법을 알려주기
 
-읽는 사람은 팀장이고, 30초 안에 상황 판단이 되어야 해.
-숫자 없는 형용사("많이", "잘")는 쓰지 마.`
+오늘은 페이지를 수정하거나 새 페이지를 만들지 마.`
   },
 
-  s3slack: {
-    session: 3, title: '3 — 슬랙 문체 변환 + 리허설 발송',
-    body: `이 리포트를 슬랙에 올릴 형태로 바꿔줘.
+  s3slack_send: {
+    session: 3, title: '3 — Slack 봇으로 원하는 채널에 보내기',
+    body: `Slack Channel ID [여기에 입력]에 다음 메시지를 보내는 작업을 설계해줘.
 
-- 첫 줄은 제목 한 줄 (주차 + 팀명)
-- 항목은 불릿으로, 각 줄 40자 이내
-- 완료/진행/지연에 각각 이모지 하나씩
-- 지연 항목의 담당자는 멘션 자리를 @이름 형태로 남겨줘
-- 전체 15줄 이내
+운영자 서버의 SLACK_BOT_TOKEN을 사용하되, 토큰 값은 절대 노출하지 마.
+1. 먼저 최종 메시지를 화면에 미리 보여주기
+2. 내가 확인하면 chat.postMessage로 지정한 Channel ID에 보내기
+3. 성공 응답에서 channel과 ts를 기록하기
+4. 봇이 채널에 들어와 있지 않거나 권한이 없으면 실제 전송하지 말고 해결 방법을 알려주기
 
-그리고 이 내용을 슬랙에서 나 자신에게 DM으로 보내줘.
-보내기 전에 최종 문구를 한 번 더 보여줘.`
+메시지는 제목 1줄 + 핵심 불릿 3~5개로 짧게 만들어줘.`
+  },
+
+  s3slack_event: {
+    session: 3, title: '4 — Slack 메시지를 Vercel 웹훅으로 받기',
+    note: 'Events API는 공개 Request URL로 POST를 보냅니다. 서명 검증과 봇 자기 메시지 제외가 필수입니다.',
+    body: `Slack Events API 실습용 서버 흐름을 설계해줘.
+
+Request URL: [Vercel의 /api/slack/events 엔드포인트]
+대상 Channel ID: [여기에 입력]
+
+운영자 서버의 SLACK_SIGNING_SECRET으로 요청 서명을 검증하고, SLACK_BOT_TOKEN은 필요한 경우에만 사용해줘.
+반드시 포함할 것:
+1. Slack의 url_verification challenge를 200으로 응답하는 처리
+2. 실제 event_callback에서 channel_id, user, text, event_ts 추출
+3. 대상 채널이 아니면 무시
+4. 봇이 보낸 메시지는 다시 처리하지 않기
+5. 처리한 이벤트의 event_id와 결과를 로그로 남기기
+6. Slack에 200 응답을 빠르게 반환하고 오래 걸리는 작업은 분리하기
+
+테스트 메시지 "AX-WEBHOOK-TEST"를 보낸 뒤, 받은 이벤트에서 어떤 값이 확인되어야 성공인지 알려줘.`
+  },
+
+  s3flow: {
+    session: 3, title: '5 — 같은 원본을 목적지별로 바꾸기',
+    body: `한 개의 업무 원본을 아래 세 목적지에 맞게 변환하는 표를 만들어줘.
+
+원본: [Asana에서 읽은 태스크 또는 Notion에서 읽은 페이지]
+
+열은 [원본 필드 / Asana에 남길 값 / Notion에 기록할 값 / Slack에 보낼 문장 / 사람이 확인할 지점]으로 해줘.
+규칙:
+- Asana는 실행할 태스크 중심
+- Notion은 나중에 다시 찾을 기록 중심
+- Slack은 지금 읽고 행동할 메시지 중심
+- 담당자·마감일·공개 범위가 원본에 없으면 추측하지 말고 '확인 필요'로 표시`
   },
 
   s3recipe: {
-    session: 3, title: '4 — 레시피로 저장',
-    body: `방금 우리가 한 1~3단계 전체를, 다음 주에 내가 한 번에 다시 쓸 수 있는
-프롬프트 한 덩어리로 정리해줘.
+    session: 3, title: '6 — 연결 레시피로 저장',
+    body: `방금 한 연결 실습을 다음 사람이 다시 실행할 수 있는 한 덩어리의 레시피로 정리해줘.
 
-날짜처럼 매주 바뀌는 부분은 [이번 주] 같은 대괄호 자리표시자로 남겨줘.`
+반드시 포함해:
+- 원본과 범위: 어떤 Asana 프로젝트 또는 Notion 페이지를 읽는가
+- 권한: 봇·앱이 어디에 초대되어 있어야 하는가
+- 목적지: 어떤 Slack Channel ID·Notion Page ID·Asana Project GID로 보내는가
+- Vercel 환경변수 이름: 실제 토큰 값은 쓰지 않기
+- 사람이 미리 확인할 항목
+- 실패했을 때 파일 업로드·샘플 JSON 등으로 전환하는 방법
+
+매번 바뀌는 값은 [Project GID], [Page ID], [Channel ID], [이번 주]처럼 대괄호 자리표시자로 남겨줘.`
   },
 
   s4inbox: {
