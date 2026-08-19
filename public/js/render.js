@@ -158,7 +158,7 @@ export function renderField(f) {
         </label>
       </div>`));
     box.querySelector('input').addEventListener('change', e => {
-      saveValue(f.key, e.target.checked ? 'true' : 'false', { immediate: true });
+      saveValue(f.key, e.target.checked ? 'true' : 'false');
     });
     return box;
   }
@@ -178,7 +178,7 @@ export function renderField(f) {
         </div>`);
       row.querySelector('input').addEventListener('change', e => {
         if (e.target.checked) chosen.add(opt); else chosen.delete(opt);
-        saveValue(f.key, [...chosen].join(''), { immediate: true });
+        saveValue(f.key, [...chosen].join(''));
       });
       box.appendChild(row);
     });
@@ -195,7 +195,7 @@ export function renderField(f) {
           <label for="${oid}">${mini(opt)}</label>
         </div>`);
       row.querySelector('input').addEventListener('change', e => {
-        if (e.target.checked) saveValue(f.key, opt, { immediate: true });
+        if (e.target.checked) saveValue(f.key, opt);
       });
       box.appendChild(row);
     });
@@ -249,7 +249,7 @@ export function renderField(f) {
   input.id = id;
   input.value = getValue(f.key);
   input.addEventListener('input', () => saveValue(f.key, input.value));
-  input.addEventListener('blur',  () => saveValue(f.key, input.value, { immediate: true }));
+  input.addEventListener('blur',  () => saveValue(f.key, input.value));
   box.appendChild(input);
   return box;
 }

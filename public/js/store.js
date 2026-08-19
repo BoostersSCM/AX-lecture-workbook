@@ -9,6 +9,17 @@ import { getMe } from './auth.js';
 let cache = null;       // { item_key: value }
 let userId = null;
 
+// ── 저장 모드 ────────────────────────────────────────────────
+// 회차·설계서 페이지는 타이핑마다 DB에 쓰지 않습니다(과부하 방지 + 명시적 저장 학습).
+// 수동 모드에서는 입력이 로컬 초안(axwb.pending)에만 쌓이고,
+// 하단 저장 바의 [모두 저장] 버튼이 한 번의 일괄 upsert로 보냅니다.
+// 연결 준비 페이지 등은 기존 자동 저장(디바운스)을 유지합니다.
+let manualMode = false;
+
+export function setManualSave(on = true) {
+  manualMode = Boolean(on);
+}
+
 export async function loadEntries({ fresh = false } = {}) {
   if (cache && !fresh) return cache;
   const me = await getMe();
@@ -22,10 +33,16 @@ export async function loadEntries({ fresh = false } = {}) {
   cache = {};
   for (const row of data) cache[row.item_key] = row.value;
 
-  // 지난번에 저장하지 못한 값이 있으면 그게 최신입니다 — 화면에 먼저 반영하고 다시 올립니다
+  // 지난번에 저장하지 못한 값(또는 수동 모드의 초안)이 있으면 그게 최신입니다 — 화면에 먼저 반영
   const pending = readPending();
   for (const k of Object.keys(pending)) cache[k] = pending[k];
-  flushPending();
+
+  if (manualMode) {
+    // 수동 모드: 자동 업로드하지 않고, 저장 바에 "저장 안 된 변경 N개"로 보여줍니다
+    updateSaveBar();
+  } else {
+    flushPending();
+  }
 
   return cache;
 }
@@ -81,6 +98,14 @@ export function saveValue(key, value, { immediate = false } = {}) {
   if (cache) cache[key] = value;
   clearTimeout(timers[key]);
 
+  // 수동 모드의 일반 입력: DB로 보내지 않고 로컬 초안으로만 둡니다.
+  // (immediate는 저장 버튼·연동 영수증 등 명시적 저장이므로 그대로 통과)
+  if (manualMode && !immediate) {
+    markPending(key, value);
+    updateSaveBar();
+    return undefined;
+  }
+
   const run = async () => {
     if (!userId) {
       const me = await getMe();
@@ -100,6 +125,7 @@ export function saveValue(key, value, { immediate = false } = {}) {
       return false;
     } else {
       clearPending(key);
+      updateSaveBar();
       setStatus('saved');
       return true;
     }
@@ -124,7 +150,78 @@ async function warnIfSessionExpired() {
   }
 }
 
-// 로그인 후 남아 있는 미저장분을 다시 올립니다
+// ── 수동 저장 바 ─────────────────────────────────────────────
+let saveBarEl = null;
+
+export function mountSaveBar() {
+  if (saveBarEl) return saveBarEl;
+  saveBarEl = document.createElement('div');
+  saveBarEl.className = 'savebar';
+  saveBarEl.hidden = true;
+  saveBarEl.innerHTML = `
+    <span class="savebar-text"></span>
+    <button class="primary savebar-button" type="button">모두 저장</button>`;
+  document.body.appendChild(saveBarEl);
+
+  saveBarEl.querySelector('button').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = '저장 중…';
+    const ok = await saveDirty();
+    btn.disabled = false;
+    btn.textContent = '모두 저장';
+    if (ok) toast('워크북 입력을 저장했습니다.');
+  });
+
+  // 저장 안 한 변경이 있는 채로 떠나려 하면 경고 (초안은 localStorage에 남아 복구됩니다)
+  window.addEventListener('beforeunload', (e) => {
+    if (!manualMode || !Object.keys(readPending()).length) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
+  updateSaveBar();
+  return saveBarEl;
+}
+
+function updateSaveBar() {
+  if (!saveBarEl) return;
+  const count = Object.keys(readPending()).length;
+  saveBarEl.hidden = count === 0;
+  const text = saveBarEl.querySelector('.savebar-text');
+  if (text) text.textContent = `저장 안 된 변경 ${count}개`;
+}
+
+// 수동 모드: 쌓인 초안 전체를 한 번의 요청으로 저장합니다
+export async function saveDirty() {
+  const p = readPending();
+  const keys = Object.keys(p);
+  if (!keys.length) return true;
+
+  if (!userId) {
+    const me = await getMe();
+    if (!me) { await warnIfSessionExpired(); return false; }
+    userId = me.id;
+  }
+
+  setStatus('saving');
+  const rows = keys.map(k => ({ user_id: userId, item_key: k, value: p[k] }));
+  const { error } = await supabase.from('entries').upsert(rows, { onConflict: 'user_id,item_key' });
+
+  if (error) {
+    setStatus('error');
+    console.error('[store] batch save failed', error);
+    await warnIfSessionExpired();
+    return false;
+  }
+  writePending({});
+  if (cache) for (const k of keys) cache[k] = p[k];
+  updateSaveBar();
+  setStatus('saved');
+  return true;
+}
+
+// 로그인 후 남아 있는 미저장분을 다시 올립니다 (자동 저장 모드의 복구 경로)
 async function flushPending() {
   const p = readPending();
   const keys = Object.keys(p);

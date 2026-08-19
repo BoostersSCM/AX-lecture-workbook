@@ -1,7 +1,7 @@
 // js/clinic.js — 4회차 케이스 클리닉 설계서
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { loadEntries, progressOf, mountStatus, getValue } from './store.js';
+import { loadEntries, progressOf, mountStatus, getValue, setManualSave, mountSaveBar } from './store.js';
 import { CLINIC, requiredKeys } from './content.js';
 import { el, progressBar, renderField } from './render.js';
 
@@ -12,6 +12,10 @@ const app = document.getElementById('app');
   if (!me) return;
   await mountShell();
   mountStatus(document.getElementById('savestate'));
+
+  // 이 페이지의 워크북 입력은 자동 저장하지 않습니다 — 하단 [모두 저장] 버튼으로 일괄 저장
+  setManualSave(true);
+  mountSaveBar();
 
   const entries = await loadEntries();
 

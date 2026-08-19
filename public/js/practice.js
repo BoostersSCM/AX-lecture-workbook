@@ -7,6 +7,7 @@ import { toast } from './supabase.js';
 import {
   CLASS_TARGET,
   classConfigReady,
+  classCallbackUrl,
   getClassProfile,
   getClassSession,
   signInToClass,
@@ -63,6 +64,33 @@ function notionTitle(page) {
   return title.map(item => item.plain_text || '').join('') || '제목을 확인할 수 없습니다.';
 }
 
+// Notion 블록을 사람이 읽는 줄로 — "[heading_2] 텍스트" 같은 API 용어를 노출하지 않습니다
+const BLOCK_LABELS = {
+  heading_1: '제목1', heading_2: '제목2', heading_3: '제목3',
+  paragraph: '본문', bulleted_list_item: '글머리 목록', numbered_list_item: '번호 목록',
+  to_do: '할 일', toggle: '토글', quote: '인용', callout: '콜아웃', code: '코드',
+};
+
+function blockLabel(type) {
+  return BLOCK_LABELS[type] || type;
+}
+
+function formatBlockLine(block) {
+  const text = block?.text || '(텍스트 없음)';
+  switch (block?.type) {
+    case 'heading_1': return `# ${text}`;
+    case 'heading_2': return `## ${text}`;
+    case 'heading_3': return `### ${text}`;
+    case 'bulleted_list_item':
+    case 'numbered_list_item': return `  • ${text}`;
+    case 'to_do': return `  ☐ ${text}`;
+    case 'quote':
+    case 'callout': return `  ❝ ${text}`;
+    case 'code': return `  [코드] ${text}`;
+    default: return text;
+  }
+}
+
 function setFieldValue(key, value) {
   const id = 'f_' + key.replace(/[^\w]/g, '_');
   const input = document.getElementById(id);
@@ -91,7 +119,7 @@ function addNotionReader(panel, { storeKey = '' } = {}) {
     try {
       card.querySelector('button').disabled = true;
       const result = await callIntegration('/api/integrations/notion/page?pageId=' + encodeURIComponent(page));
-      const lines = [`페이지: ${notionTitle(result.page)}`, `블록 수: ${result.blocks?.length || 0}`, '', ...(result.blocks || []).slice(0, 8).map(block => `• ${block.text || '(텍스트 없음)'}`)];
+      const lines = [`페이지: ${notionTitle(result.page)}`, `블록 수: ${result.blocks?.length || 0}`, '', ...(result.blocks || []).slice(0, 8).map(formatBlockLine)];
       const output = lines.join('\n');
       if (storeKey) {
         const saved = await saveValue(storeKey, output, { immediate: true });
@@ -259,7 +287,8 @@ function addClassPostWriter(panel) {
     if (!session) {
       authBox.innerHTML = `
         <p class="class-post-hint"><strong>1단계 · 클래스 계정 연결</strong><br>버튼을 누르면 클래스 플랫폼의 Google 로그인 화면으로 이동합니다. 로그인에 성공하면 별도 조작 없이 이 워크북의 2회차로 돌아옵니다.</p>
-        <button class="practice-button" type="button">클래스 계정 연결</button>`;
+        <button class="practice-button" type="button">클래스 계정 연결</button>
+        <p class="class-post-hint class-post-trouble">로그인했는데 이 화면으로 돌아오지 않고 <b>클래스 사이트로 이동해버린다면</b> — 클래스 플랫폼 쪽 설정 문제입니다. 클래스 관리자에게 Supabase Redirect URLs에 <code>${esc(classCallbackUrl())}</code> 등록을 요청해주세요.</p>`;
       authBox.querySelector('button').addEventListener('click', async (event) => {
         event.currentTarget.disabled = true;
         const { error } = await signInToClass('/session?n=2');
@@ -505,10 +534,10 @@ function addNotionBlockEditor(panel, {
       const result = await callIntegration('/api/integrations/notion/page?pageId=' + encodeURIComponent(page));
       blocks = (result.blocks || []).filter((block) => editableTypes.has(block.type) && String(block.text || '').trim());
       if (!blocks.length) throw new Error('이 페이지에서 수정할 텍스트 문단을 찾지 못했습니다. AX 실습장에 수정용 문단을 먼저 준비해주세요.');
-      select.innerHTML = blocks.map((block) => `<option value="${esc(block.id)}">${esc(`${block.type} · ${(block.text || '').slice(0, 70)}`)}</option>`).join('');
+      select.innerHTML = blocks.map((block) => `<option value="${esc(block.id)}">${esc(`${blockLabel(block.type)} · ${(block.text || '').slice(0, 70)}`)}</option>`).join('');
       editor.hidden = false;
       fillBlock();
-      const snapshot = [`페이지: ${notionTitle(result.page)}`, '', ...blocks.map(block => `• [${block.type}] ${block.text}`)].join('\n');
+      const snapshot = [`페이지: ${notionTitle(result.page)}`, '', ...blocks.map(formatBlockLine)].join('\n');
       await saveIntegrationReceipt(snapshotKey, snapshot);
       showOutput(panel, 'Notion 문단을 워크북으로 가져왔습니다', `${snapshot}\n\n아래 편집칸에서 문단을 고쳐 같은 Notion 블록에 다시 저장하세요.`);
     } catch (error) { showError(panel, error); }
@@ -534,9 +563,9 @@ function addNotionBlockEditor(panel, {
         body: { pageId: page, blockId: block.id, text },
       });
       block.text = result.block?.text || text;
-      const receipt = `Notion 수정 저장 완료\n페이지: ${page}\n블록 ID: ${result.block?.id || block.id}\n블록 유형: ${result.block?.type || block.type}\n수정 내용: ${block.text}`;
+      const receipt = `Notion 수정 저장 완료\n페이지: ${page}\n블록 ID: ${result.block?.id || block.id}\n블록 유형: ${blockLabel(result.block?.type || block.type)}\n수정 내용: ${block.text}`;
       await saveIntegrationReceipt(receiptKey, receipt);
-      select.options[select.selectedIndex].textContent = `${block.type} · ${block.text.slice(0, 70)}`;
+      select.options[select.selectedIndex].textContent = `${blockLabel(block.type)} · ${block.text.slice(0, 70)}`;
       showOutput(panel, 'Notion에 수정 저장 완료', receipt);
       saveButton.dataset.confirm = '';
       saveButton.textContent = '수정 미리보기';
@@ -563,10 +592,12 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
         <span>입력한 메시지는 바로 전송되지 않습니다. 먼저 미리보기에서 채널과 내용을 확인합니다.</span>
         <button class="practice-button" data-slack-send type="button">전송 미리보기</button>
       </div>
+      <div class="slack-inline-preview" data-send-preview hidden></div>
       <div class="practice-message-edit" hidden>
         <div><strong>방금 보낸 메시지 다시 수정하기</strong><span>봇이 작성한 메시지만 같은 위치에서 수정할 수 있습니다.</span></div>
         <label class="workbench-field"><span>수정해서 다시 저장할 메시지</span><textarea class="practice-input" data-slack-edit rows="3"></textarea></label>
         <button class="practice-button" data-slack-edit-send type="button">수정 미리보기</button>
+        <div class="slack-inline-preview" data-edit-preview hidden></div>
       </div>
     </article>`);
   panel.querySelector('.practice-actions').appendChild(card);
@@ -575,10 +606,22 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
   const editZone = card.querySelector('.practice-message-edit');
   const editInput = editZone.querySelector('[data-slack-edit]');
   const editButton = editZone.querySelector('[data-slack-edit-send]');
+  const sendPreview = card.querySelector('[data-send-preview]');
+  const editPreview = card.querySelector('[data-edit-preview]');
   let sentMessage = null;
+
+  // 미리보기·결과는 버튼 바로 아래에 보여줍니다 — 패널 하단 공용 출력만 쓰면
+  // 어느 카드의 결과인지 헷갈립니다.
+  function showInline(target, title, text, tone = '') {
+    target.className = 'slack-inline-preview ' + tone;
+    target.innerHTML = `<div class="slack-inline-title">${esc(title)}</div><pre>${esc(text)}</pre>`;
+    target.hidden = false;
+  }
   if (draftKey) input.value = valueOf(draftKey);
   resetConfirmation(input, button, '전송 미리보기');
   resetConfirmation(editInput, editButton, '수정 미리보기');
+  input.addEventListener('input', () => { sendPreview.hidden = true; });
+  editInput.addEventListener('input', () => { editPreview.hidden = true; });
   if (draftKey) {
     input.addEventListener('input', () => {
       saveValue(draftKey, input.value);
@@ -590,7 +633,7 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
     if (!channel) return showOutput(panel, 'Slack 연결값 필요', title.includes('DM') ? '연결 준비 화면에서 Slack User ID를 먼저 입력하세요.' : '연결 준비 화면에서 Slack Channel ID를 먼저 입력하세요.', 'error');
     if (!text) return showOutput(panel, '메시지 필요', '먼저 보낼 메시지를 입력하세요.', 'error');
     if (button.dataset.confirm !== 'yes') {
-      showOutput(panel, '전송 전 미리보기', `채널: ${channel}\n메시지:\n${text}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 전송하세요.`);
+      showInline(sendPreview, '전송 전 미리보기', `채널: ${channel}\n메시지:\n${text}\n\n문제가 없으면 위 버튼을 한 번 더 눌러 전송하세요.`);
       button.dataset.confirm = 'yes';
       button.textContent = '확인하고 Slack에 전송';
       return;
@@ -602,7 +645,7 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
         await saveValue(storeKey, text, { immediate: true });
         setFieldValue(storeKey, text);
       }
-      showOutput(panel, 'Slack 전송 완료', `채널: ${result.channel}\nts: ${result.ts}`);
+      showInline(sendPreview, 'Slack 전송 완료', `채널: ${result.channel}\nts: ${result.ts}`, 'ok');
       sentMessage = { channel: result.channel, ts: result.ts };
       editInput.value = text;
       editZone.hidden = false;
@@ -619,7 +662,7 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
     if (!sentMessage) return showOutput(panel, '먼저 메시지를 보내주세요', 'Slack에 봇 메시지를 한 번 보낸 뒤 같은 메시지를 수정할 수 있습니다.', 'error');
     if (!text) return showOutput(panel, '수정할 메시지 필요', '수정할 메시지를 입력하세요.', 'error');
     if (editButton.dataset.confirm !== 'yes') {
-      showOutput(panel, 'Slack 수정 전 미리보기', `채널: ${sentMessage.channel}\nts: ${sentMessage.ts}\n\n수정 후 메시지:\n${text}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 같은 메시지를 수정하세요.`);
+      showInline(editPreview, 'Slack 수정 전 미리보기', `채널: ${sentMessage.channel}\nts: ${sentMessage.ts}\n\n수정 후 메시지:\n${text}\n\n문제가 없으면 위 버튼을 한 번 더 눌러 같은 메시지를 수정하세요.`);
       editButton.dataset.confirm = 'yes';
       editButton.textContent = '확인하고 Slack에 저장';
       return;
@@ -631,7 +674,7 @@ function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기
         body: { channel: sentMessage.channel, ts: sentMessage.ts, text },
       });
       if (storeKey) await saveIntegrationReceipt(storeKey, text);
-      showOutput(panel, 'Slack 메시지 수정 저장 완료', `채널: ${result.channel}\nts: ${result.ts}\n수정 내용:\n${result.text || text}`);
+      showInline(editPreview, 'Slack 메시지 수정 저장 완료', `채널: ${result.channel}\nts: ${result.ts}\n수정 내용:\n${result.text || text}`, 'ok');
       editButton.dataset.confirm = '';
       editButton.textContent = '수정 미리보기';
     } catch (error) { showError(panel, error); }

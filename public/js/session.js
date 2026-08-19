@@ -1,7 +1,7 @@
 // js/session.js — 회차별 워크북 (/session?n=1..4)
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { loadEntries, loadSlackEvents, progressOf, mountStatus } from './store.js';
+import { loadEntries, loadSlackEvents, progressOf, mountStatus, setManualSave, mountSaveBar } from './store.js';
 import { SESSIONS, requiredKeys } from './content.js';
 import { el, progressBar, renderBlock } from './render.js';
 import { renderPracticePanel, renderSlackSendLab } from './practice.js';
@@ -56,6 +56,10 @@ function renderSlackInbox() {
   if (!me) return;
   await mountShell();
   mountStatus(document.getElementById('savestate'));
+
+  // 이 페이지의 워크북 입력은 자동 저장하지 않습니다 — 하단 [모두 저장] 버튼으로 일괄 저장
+  setManualSave(true);
+  mountSaveBar();
 
   const n = Number(new URLSearchParams(location.search).get('n') || 1);
   const s = SESSIONS.find(x => x.n === n);

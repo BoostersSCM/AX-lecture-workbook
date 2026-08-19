@@ -43,7 +43,10 @@ export async function getClassProfile(session) {
 
 export async function signInToClass(returnTo = '/session?n=2') {
   if (!classSupabase) return { error: new Error('클래스 플랫폼 연결값이 아직 설정되지 않았습니다.') };
-  const callback = `${location.origin}/class-auth-callback.html?returnTo=${encodeURIComponent(returnTo)}`;
+  // 복귀 경로는 localStorage로 넘깁니다 — redirectTo에 쿼리스트링이 붙으면
+  // 클래스 플랫폼 Supabase의 Redirect URLs 허용 목록과 매칭이 깨질 수 있습니다.
+  try { localStorage.setItem('axwb.classReturnTo', returnTo); } catch {}
+  const callback = `${location.origin}/class-auth-callback.html`;
   const { error } = await classSupabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -52,6 +55,13 @@ export async function signInToClass(returnTo = '/session?n=2') {
     },
   });
   return { error };
+}
+
+// 클래스 플랫폼 Supabase(강사 소유 아님)의 Redirect URLs에 등록되어야 하는 주소.
+// 등록이 안 되어 있으면 로그인 후 이 워크북으로 돌아오지 못하고
+// 클래스 사이트(Site URL)로 이동해버립니다. UI 안내문에서 사용합니다.
+export function classCallbackUrl() {
+  return `${location.origin}/class-auth-callback.html`;
 }
 
 export async function listTargetSessionPosts() {

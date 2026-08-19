@@ -19,12 +19,16 @@
 
   const msg = document.getElementById('msg');
   const sub = document.getElementById('sub');
-  const returnTo = new URLSearchParams(location.search).get('returnTo') || '/session?n=2';
+  let returnTo = new URLSearchParams(location.search).get('returnTo') || '';
+  if (!returnTo) {
+    try { returnTo = localStorage.getItem('axwb.classReturnTo') || ''; } catch {}
+  }
   const safeReturnTo = returnTo.startsWith('/') ? returnTo : '/session?n=2';
+  try { localStorage.removeItem('axwb.classReturnTo'); } catch {}
 
   function fail(text) {
     msg.textContent = '클래스 계정을 연결하지 못했습니다';
-    sub.textContent = text;
+    sub.innerHTML = text + '<br><br><a class="btn-link" href="' + safeReturnTo + '">2회차로 돌아가기</a>';
   }
 
   if (!classSupabase) {
@@ -36,11 +40,13 @@
     let result;
     if (error) result = { error: new Error(decodeURIComponent(error)) };
     else if (code) result = await classSupabase.auth.exchangeCodeForSession(code);
-    else {
+    else if (params.get('access_token')) {
       result = await classSupabase.auth.setSession({
         access_token: params.get('access_token') || '',
         refresh_token: params.get('refresh_token') || '',
       });
+    } else {
+      result = { error: new Error('로그인 응답이 도착하지 않았습니다. 로그인 후 클래스 사이트(ax.boosters-labs.com)로 이동해버린다면, 클래스 플랫폼 Supabase의 Redirect URLs에 이 주소가 등록되어야 합니다: ' + location.origin + '/class-auth-callback.html — 클래스 관리자에게 전달해주세요.') };
     }
     if (result?.error) fail(result.error.message || '로그인 응답을 확인하지 못했습니다.');
     else location.replace(safeReturnTo);
