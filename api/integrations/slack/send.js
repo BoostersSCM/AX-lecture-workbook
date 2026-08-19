@@ -22,7 +22,27 @@ module.exports = async function handler(req, res) {
     return json(res, 400, { ok: false, error: 'channel과 text 필요' });
   }
 
-  const payload = { channel, text };
+  let destination = channel;
+  if (/^[UW][A-Z0-9]+$/i.test(channel)) {
+    const opened = await fetch('https://slack.com/api/conversations.open', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify({ users: channel }),
+    });
+    const openedResult = await opened.json();
+    if (!opened.ok || !openedResult.ok || !openedResult.channel?.id) {
+      return json(res, opened.ok ? 502 : opened.status, {
+        ok: false,
+        error: openedResult.error || 'Slack DM 대화 열기 실패',
+      });
+    }
+    destination = openedResult.channel.id;
+  }
+
+  const payload = { channel: destination, text };
   if (body.threadTs) payload.thread_ts = String(body.threadTs);
 
   try {
