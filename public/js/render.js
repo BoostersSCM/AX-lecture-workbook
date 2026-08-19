@@ -261,6 +261,14 @@ export function el(html) {
   return t.content.firstElementChild;
 }
 
+// 최상위 요소가 여러 개인 템플릿용 — el()은 첫 요소만 반환하므로
+// 형제 <section>들을 한 번에 붙일 때는 반드시 이걸 쓴다.
+export function frag(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content; // DocumentFragment — appendChild 시 자식 전부가 붙는다
+}
+
 // 진행률 바
 export function progressBar({ done, total, pct }) {
   return el(`

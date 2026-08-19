@@ -3,7 +3,7 @@ import { requireAuth, needsTeam, saveTeam } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus } from './store.js';
 import { COURSE, SESSIONS, SETUP, CLINIC, AX_FLOW, INTEGRATIONS, DATA_MODEL, requiredKeys } from './content.js';
-import { el } from './render.js';
+import { el, frag } from './render.js';
 
 const app = document.getElementById('app');
 
@@ -36,7 +36,8 @@ function sessionCard(session, progress) {
   const setupP = progressOf(requiredKeys('setup'), entries);
   const clinicP = progressOf(requiredKeys('clinic'), entries);
 
-  app.appendChild(el(`
+  // 형제 섹션이 여러 개라 el()이 아니라 frag()를 써야 전부 붙는다
+  app.appendChild(frag(`
     <section class="home-hero">
       <div class="hero-copy">
         <div class="hero-kicker"><span class="signal-dot"></span> BOOSTERS AX LAB · 4 WEEKS</div>
