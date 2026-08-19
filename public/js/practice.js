@@ -55,7 +55,7 @@ function notionTitle(page) {
 }
 
 function addNotionReader(panel) {
-  const page = valueOf('setup.notion', 's3.notion_page');
+  const page = valueOf('setup.notion_target', 's3.notion_page');
   const card = actionCard('Notion 원본 불러오기', page ? `연결 대상: ${page}` : '연결 준비에서 Notion 페이지 URL 또는 ID를 먼저 적습니다.', '읽어오기');
   panel.querySelector('.practice-actions').appendChild(card);
   card.querySelector('button').addEventListener('click', async () => {
@@ -85,7 +85,7 @@ function addEntriesReader(panel, n, title, prefix) {
 }
 
 function addAsanaReader(panel) {
-  const project = valueOf('setup.asana', 's3.asana_project');
+  const project = valueOf('setup.asana_target', 's3.asana_project');
   const card = actionCard('Asana 태스크 불러오기', project ? `연결 대상: ${project}` : '연결 준비에서 Asana 프로젝트 URL 또는 GID를 먼저 적습니다.', '태스크 3개 읽기');
   panel.querySelector('.practice-actions').appendChild(card);
   card.querySelector('button').addEventListener('click', async () => {
@@ -101,7 +101,7 @@ function addAsanaReader(panel) {
 }
 
 function addAsanaCreator(panel) {
-  const project = valueOf('setup.asana', 's3.asana_project');
+  const project = valueOf('setup.asana_target', 's3.asana_project');
   const card = el(`
     <article class="practice-action practice-create">
       <div><h3>Asana 태스크 1건 만들기</h3><p>먼저 이름을 입력하고 미리보기 후 확인하면 실제 프로젝트에 생성합니다.</p></div>
@@ -132,12 +132,12 @@ function addAsanaCreator(panel) {
   });
 }
 
-function addSlackSender(panel) {
-  const channel = valueOf('setup.slack_target', 's3.slack_channel');
+function addSlackSender(panel, { target = '', title = 'Slack 메시지 보내기', detail = '메시지를 미리 본 뒤 확인하면 지정 채널로 봇이 보냅니다.', placeholder = '예: AX 실습 연결 테스트입니다.' } = {}) {
+  const channel = target || valueOf('setup.slack_target', 's3.slack_channel');
   const card = el(`
     <article class="practice-action practice-create">
-      <div><h3>Slack 메시지 보내기</h3><p>메시지를 미리 본 뒤 확인하면 지정 채널로 봇이 보냅니다.</p></div>
-      <textarea class="practice-input" rows="3" placeholder="예: AX 실습 연결 테스트입니다." aria-label="Slack 메시지"></textarea>
+      <div><h3>${esc(title)}</h3><p>${esc(detail)}</p></div>
+      <textarea class="practice-input" rows="3" placeholder="${esc(placeholder)}" aria-label="Slack 메시지"></textarea>
       <button class="practice-button" type="button">미리보기</button>
     </article>`);
   panel.querySelector('.practice-actions').appendChild(card);
@@ -145,7 +145,7 @@ function addSlackSender(panel) {
   const button = card.querySelector('button');
   button.addEventListener('click', async () => {
     const text = input.value.trim();
-    if (!channel) return showOutput(panel, 'Slack 연결값 필요', '연결 준비 화면에서 Slack Channel ID를 먼저 입력하세요.', 'error');
+    if (!channel) return showOutput(panel, 'Slack 연결값 필요', title.includes('DM') ? '연결 준비 화면에서 Slack User ID를 먼저 입력하세요.' : '연결 준비 화면에서 Slack Channel ID를 먼저 입력하세요.', 'error');
     if (!text) return showOutput(panel, '메시지 필요', '먼저 보낼 메시지를 입력하세요.', 'error');
     if (button.dataset.confirm !== 'yes') {
       showOutput(panel, '전송 전 미리보기', `채널: ${channel}\n메시지:\n${text}\n\n문제가 없으면 아래 버튼을 한 번 더 눌러 전송하세요.`);
@@ -181,6 +181,12 @@ export function renderPracticePanel(n) {
     addAsanaCreator(panel);
     addNotionReader(panel);
     addSlackSender(panel);
+    addSlackSender(panel, {
+      target: valueOf('setup.slack_user_id'),
+      title: 'Slack 개인 DM 보내기',
+      detail: '내 Slack User ID(U...)로 봇이 직접 메시지를 보냅니다. 먼저 미리보기 후 확인합니다.',
+      placeholder: '예: 내 개인 DM으로 도착할 AX 알림 테스트입니다.',
+    });
     return panel;
   }
   const panel = panelShell(n, '내 루틴 결과를 다시 꺼내보기', '마지막 회차에서 적은 자동화 계획과 연결 레시피가 DB에 저장되었는지 확인합니다.');
