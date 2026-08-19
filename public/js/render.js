@@ -1,8 +1,18 @@
 // js/render.js — 문항을 화면으로 그리고 입력을 저장에 연결
 import { getValue, saveValue } from './store.js';
-import { PROMPTS, PROMPT_HELP, VISUALS } from './content.js';
+import { PROMPTS, PROMPT_HELP, VISUALS, SESSIONS, SETUP, CLINIC } from './content.js';
 import { esc, mini } from './shell.js';
 import { toast } from './supabase.js';
+import { callIntegration } from './integrations.js';
+
+// item_key → 라벨 (AI 실행 재료의 섹션 제목용)
+const FIELD_LABELS = (() => {
+  const m = {};
+  for (const g of SETUP.groups) for (const f of g.fields) if (f.key) m[f.key] = f.label || f.key;
+  for (const s of SESSIONS) for (const b of s.blocks) if (b.type === 'field') m[b.key] = b.label;
+  for (const g of CLINIC.groups) for (const f of g.fields) if (f.key) m[f.key] = f.label || f.key;
+  return m;
+})();
 
 // 블록 하나를 그려서 반환
 export function renderBlock(b) {
@@ -100,43 +110,125 @@ export function renderPrompt(p, help = null) {
     };
     return Object.entries(replacements).reduce((body, [token, value]) => body.replaceAll(token, value), String(p.body || ''));
   };
+  // 재료(원문) — 작업대가 가져와 저장해둔 값들을 프롬프트 뒤에 동봉
+  const buildMaterials = () => {
+    const parts = [];
+    for (const key of p.context || []) {
+      const v = String(getValue(key) || '').trim();
+      if (v && v !== 'false') parts.push(`【${FIELD_LABELS[key] || key}】\n${v}`);
+    }
+    return parts.join('\n\n');
+  };
+
+  // context/output이 있으면 "워크북에서 AI 실행" 카드 — 복붙 셔틀 없이 루프가 닫힙니다
+  const runnable = Boolean(p.context?.length || p.output);
+
   const wrap = el(`
-    <div class="prompt">
+    <div class="prompt${runnable ? ' prompt-runnable' : ''}">
       <div class="prompt-head">
         <span class="prompt-title">${esc(p.title)}</span>
-        <button class="copy" type="button">복사</button>
+        ${runnable ? '<button class="prompt-run" type="button">워크북에서 AI 실행</button>' : '<button class="copy" type="button">복사</button>'}
         <button class="prompt-help-button" type="button" aria-label="${esc(p.title)} 초보자 도움말">?</button>
       </div>
       ${p.note ? `<div class="prompt-note">${mini(p.note)}</div>` : ''}
       <div class="prompt-guide" aria-label="프롬프트 실행 안내">
-        <div><span>실행 위치</span><strong>${esc(guide.run)}</strong></div>
-        <div><span>결과 확인</span><strong>${esc(guide.result)}</strong></div>
+        <div><span>실행 위치</span><strong>${runnable ? '이 카드 — 버튼 한 번' : esc(guide.run)}</strong></div>
+        <div><span>결과 확인</span><strong>${runnable ? '아래 결과를 사람이 검토 → 기록 칸에 넣기' : esc(guide.result)}</strong></div>
       </div>
       <div class="prompt-beginner"><span>초보자 메모</span><p></p></div>
-      <pre></pre>
+      <div class="ai-result" hidden>
+        <div class="ai-result-head"><span>AI 결과 — 그대로 믿지 말고 검토하세요</span></div>
+        <pre></pre>
+        <div class="ai-result-actions">
+          ${p.output ? '<button class="ai-insert" type="button">결과를 아래 기록 칸에 넣기</button>' : ''}
+          <button class="ai-copy copy" type="button">결과 복사</button>
+        </div>
+      </div>
+      ${runnable ? `
+      <details class="prompt-source">
+        <summary>버튼 뒤 요청문 보기 — 직접 복사해 다른 AI에서 실행할 수도 있습니다</summary>
+        <pre></pre>
+        <button class="copy" type="button">요청문 복사</button>
+      </details>` : '<pre></pre>'}
     </div>`);
   wrap.querySelector('.prompt-beginner p').textContent = helpInfo.summary || '';
-  const pre = wrap.querySelector('pre');
+  const pre = wrap.querySelector(runnable ? '.prompt-source pre' : ':scope > pre');
   const refreshPrompt = () => { pre.textContent = personalizeBody(); };
   refreshPrompt();
   document.getElementById('f_s1_page_name')?.addEventListener('input', refreshPrompt);
   document.getElementById('f_s2_source_urls')?.addEventListener('input', refreshPrompt);
 
-  wrap.querySelector('button.copy').addEventListener('click', async (e) => {
+  // 복사 버튼(요청문) — 러너블이면 재료까지 동봉해 복사 (다른 AI 폴백용)
+  wrap.querySelector('button.copy:not(.ai-copy)')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
+    const materials = buildMaterials();
+    const text = personalizeBody() + (materials ? `\n\n──── 아래는 워크북에서 가져온 재료(원문) ────\n${materials}` : '');
     try {
-      await navigator.clipboard.writeText(personalizeBody());
+      await navigator.clipboard.writeText(text);
       btn.textContent = '복사됨';
       btn.classList.add('done');
-      setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('done'); }, 1600);
+      setTimeout(() => { btn.textContent = runnable ? '요청문 복사' : '복사'; btn.classList.remove('done'); }, 1600);
     } catch {
-      // 클립보드 권한이 없으면 선택만 해줍니다
       const range = document.createRange();
-      range.selectNodeContents(wrap.querySelector('pre'));
+      range.selectNodeContents(pre);
       const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
       toast('직접 복사해주세요 (Ctrl+C)');
     }
   });
+
+  // 워크북 안에서 AI 실행
+  if (runnable) {
+    const runBtn = wrap.querySelector('.prompt-run');
+    const resultBox = wrap.querySelector('.ai-result');
+    const resultPre = resultBox.querySelector('pre');
+
+    runBtn.addEventListener('click', async () => {
+      const materials = buildMaterials();
+      if (p.context?.length && !materials) {
+        toast('재료가 비어 있습니다 — 먼저 작업대에서 원본을 가져오거나 위 칸을 채워주세요.', 'error');
+        return;
+      }
+      runBtn.disabled = true;
+      runBtn.textContent = 'AI 실행 중…';
+      try {
+        const res = await callIntegration('/api/ai/transform', {
+          method: 'POST',
+          body: { prompt: personalizeBody(), materials },
+        });
+        resultPre.textContent = res.text;
+        resultBox.hidden = false;
+      } catch (error) {
+        if (/AI_NOT_CONFIGURED/.test(error.message || '')) {
+          toast('워크북 AI가 아직 설정되지 않았습니다(운영자: ANTHROPIC_API_KEY). 아래 요청문 복사로 각자 AI에서 실행하세요.', 'error');
+          wrap.querySelector('.prompt-source')?.setAttribute('open', '');
+        } else {
+          toast(error.message || 'AI 실행에 실패했습니다.', 'error');
+        }
+      } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = '워크북에서 AI 실행';
+      }
+    });
+
+    resultBox.querySelector('.ai-insert')?.addEventListener('click', (e) => {
+      const text = resultPre.textContent.trim();
+      if (!text) return;
+      saveValue(p.output, text); // 수동 저장 모드 — 초안으로 들어가고 [모두 저장]으로 확정
+      const field = document.getElementById('f_' + p.output.replace(/[^\w]/g, '_'));
+      if (field) { field.value = text; field.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      e.currentTarget.textContent = '넣었습니다 — 검토 후 [모두 저장]';
+      toast('기록 칸에 넣었습니다. 사람이 다듬은 뒤 하단 [모두 저장]으로 확정하세요.');
+    });
+
+    resultBox.querySelector('.ai-copy').addEventListener('click', async (e) => {
+      try {
+        await navigator.clipboard.writeText(resultPre.textContent);
+        e.currentTarget.textContent = '복사됨';
+        setTimeout(() => { e.currentTarget && (e.currentTarget.textContent = '결과 복사'); }, 1500);
+      } catch { toast('직접 복사해주세요 (Ctrl+C)'); }
+    });
+  }
+
   wrap.querySelector('.prompt-help-button').addEventListener('click', () => openPromptHelp(helpInfo, p.title));
   return wrap;
 }

@@ -4,7 +4,91 @@ import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus } from './store.js';
 import { SETUP, SESSIONS, CLINIC, requiredKeys } from './content.js';
 import { el, progressBar } from './render.js';
-import { toast } from './supabase.js';
+import { toast, supabase } from './supabase.js';
+
+// ── 내 Claude 연결 (MCP) — 개인 키 발급·관리 ────────────────
+// 내 워크북 기록을 각자의 Claude에서 불러오고 되돌려 놓을 수 있게 하는 다리입니다.
+// 같은 구글 계정이라도 자동으로 연동되지 않으므로, 이 키가 "누구의 기록인지"를 증명합니다.
+async function renderMcpSection(me) {
+  const box = document.createElement('div');
+  box.className = 'field mcp-box';
+
+  async function currentKey() {
+    const { data, error } = await supabase.from('mcp_keys').select('key').eq('user_id', me.id).maybeSingle();
+    if (error) return { error };
+    return { key: data?.key || null };
+  }
+
+  function newKey() {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    return 'axk_' + [...bytes].map(b => b.toString(36).padStart(2, '0')).join('').slice(0, 40);
+  }
+
+  async function issue() {
+    await supabase.from('mcp_keys').delete().eq('user_id', me.id); // 재발급 = 기존 키 폐기
+    const key = newKey();
+    const { error } = await supabase.from('mcp_keys').insert({ key, user_id: me.id });
+    if (error) { toast('키 발급에 실패했습니다: ' + error.message, 'error'); return null; }
+    return key;
+  }
+
+  async function paint() {
+    const { key, error } = await currentKey();
+    if (error) {
+      box.innerHTML = '<p class="fhint">⚠️ MCP 키 저장소가 아직 준비되지 않았습니다. 운영자가 <code>supabase/003_mcp_keys.sql</code>을 실행하면 이 기능이 열립니다.</p>';
+      return;
+    }
+
+    const url = key ? `${location.origin}/api/mcp?key=${key}` : '';
+    box.innerHTML = `
+      <p class="fhint" style="margin-top:0">4주간 쌓은 내 기록(레시피·액션아이템·설계서)을 <b>내 Claude</b>에서 불러오고, 다듬은 결과를 워크북에 되돌려 놓을 수 있습니다.
+      아래 개인 키는 <b>내 기록에만</b> 접근합니다 — 다른 사람 것은 보이지 않습니다.</p>
+      ${key ? `
+        <label class="ob-field"><span>내 커넥터 주소 (Claude에 등록)</span>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <input type="text" readonly value="${url}" style="flex:1;min-width:16rem" onclick="this.select()">
+            <button class="primary" data-copy-url type="button">주소 복사</button>
+          </div>
+        </label>
+        <div class="my-actions" style="margin:0.7rem 0 0.4rem">
+          <button data-rotate type="button">키 재발급 (기존 연결 끊김)</button>
+          <button data-revoke type="button">연결 해제 (키 삭제)</button>
+        </div>` : `
+        <div class="my-actions" style="margin:0.4rem 0">
+          <button class="primary" data-issue type="button">연결 키 발급하기</button>
+        </div>`}
+      <details class="prompt-source" style="margin-top:0.6rem">
+        <summary>Claude에 등록하는 법</summary>
+        <ol style="margin:0.6rem 0 0.3rem;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.35rem;font-size:0.9rem">
+          <li>Claude(claude.ai 또는 데스크톱) → <b>설정 → 커넥터 → 커스텀 커넥터 추가</b></li>
+          <li>위 <b>내 커넥터 주소</b>를 붙여넣고 저장 (인증 없음/None 선택)</li>
+          <li>새 대화에서 커넥터를 켜고 이렇게 물어보세요 — <i>"내 워크북에서 연결 레시피 가져와서, 이번 주 회의록에 맞게 다듬어줘"</i></li>
+          <li>다듬은 결과를 되돌려 놓기 — <i>"이걸 my.weekly_recipe로 워크북에 저장해줘"</i></li>
+        </ol>
+        <p class="fhint">키가 든 주소는 비밀번호처럼 다루세요. 유출이 의심되면 재발급하면 기존 주소는 즉시 무효화됩니다.</p>
+      </details>`;
+
+    box.querySelector('[data-copy-url]')?.addEventListener('click', async (e) => {
+      try { await navigator.clipboard.writeText(url); e.currentTarget.textContent = '복사됨 ✓'; setTimeout(() => paint(), 1200); }
+      catch { toast('직접 복사해주세요.', 'error'); }
+    });
+    box.querySelector('[data-issue]')?.addEventListener('click', async () => {
+      if (await issue()) { toast('연결 키를 발급했습니다.'); paint(); }
+    });
+    box.querySelector('[data-rotate]')?.addEventListener('click', async () => {
+      if (await issue()) { toast('키를 재발급했습니다. 이전 주소는 무효화되었습니다.'); paint(); }
+    });
+    box.querySelector('[data-revoke]')?.addEventListener('click', async () => {
+      await supabase.from('mcp_keys').delete().eq('user_id', me.id);
+      toast('연결을 해제했습니다.');
+      paint();
+    });
+  }
+
+  await paint();
+  return box;
+}
 
 const app = document.getElementById('app');
 
@@ -117,6 +201,10 @@ function displayValue(key, value) {
     } catch { toast('복사하지 못했습니다. 3회차에서 직접 복사해주세요.', 'error'); }
   });
   app.appendChild(useBox);
+
+  // ── 내 Claude 연결 (MCP) ──────────────────────────────────
+  app.appendChild(el('<h2>내 Claude에 연결하기 (MCP)</h2>'));
+  app.appendChild(await renderMcpSection(me));
 
   // ── 내 기록 ────────────────────────────────────────────────
   app.appendChild(el('<h2>내 기록</h2>'));

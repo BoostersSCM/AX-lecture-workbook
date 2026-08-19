@@ -262,6 +262,9 @@ export const SESSIONS = [
       { type: 'field', key: 's2.source_scope', kind: 'text',
         label: '읽을 범위와 제외할 범위',
         hint: '예: 8월 1일 이후 결정사항만 읽고, 개인정보가 있는 부록은 제외' },
+      { type: 'field', key: 's2.source_text', kind: 'textarea', rows: 8,
+        label: '회의록 본문 붙여넣기 (AI 실행 재료)',
+        hint: '아래 [워크북에서 AI 실행]이 이 본문을 재료로 씁니다. 링크만으로는 AI가 내용을 읽을 수 없습니다. 개인정보·민감 정보는 빼고 붙여넣으세요.' },
       { type: 'prompt', id: 's2raw' },
       { type: 'field', key: 's2.count_before', kind: 'number', required: true,
         label: '규칙 없이 나온 후보 개수', hint: '실제 결과를 그대로 적습니다. 회의록 개수·길이에 따라 달라지며 정답 개수는 없습니다.' },
@@ -608,6 +611,9 @@ export const PROMPTS = {
 
   s1b: {
     session: 1, title: '2 — 원본을 업무 맥락으로 요약하기',
+    context: ['s1.source_snapshot'],
+    output: 's1.context',
+    note: '어느 AI에나 붙여넣어도 됩니다 — [재료와 함께 복사]가 작업대에서 가져온 원문을 프롬프트 뒤에 동봉하므로, 그 AI가 우리 노션에 접근하지 못해도 맥락이 통합니다.',
     body: `노션 「[페이지명]」 한 페이지만 읽어줘.
 
 아래 순서로 업무 맥락을 요약해줘:
@@ -624,6 +630,8 @@ export const PROMPTS = {
 
   s1c: {
     session: 1, title: '3 — 근거와 빈칸 확인하기',
+    context: ['s1.context', 's1.source_snapshot'],
+    output: 's1.evidence',
     body: `방금 만든 업무 맥락 요약을 원본과 대조해서 검수해줘.
 
 표의 열은 [요약 항목 / 근거 원문 / 확인 상태 / 사람이 확인할 질문]으로 해줘.
@@ -639,7 +647,9 @@ export const PROMPTS = {
 
   s2raw: {
     session: 2, title: '1 — 규칙 없이 후보를 넓게 뽑기',
-    note: '원본마다 결과 개수는 달라집니다. 먼저 넓게 뽑고, 다음 단계에서 근거와 실행 가능성을 기준으로 줄입니다.',
+    context: ['s2.source_text', 's2.source_scope', 's2.source_urls'],
+    output: 's2.raw_candidates',
+    note: '원본마다 결과 개수는 달라집니다. 먼저 넓게 뽑고, 다음 단계에서 줄입니다. 링크를 열지 못하는 AI라면 회의록 본문을 프롬프트 아래에 직접 붙여넣으세요.',
     body: `내가 입력한 회의록 원본 [회의록 원본]을 읽고 액션아이템 후보를 넓게 뽑아줘.
 
 아직 엄격하게 걸러내지 말고, 각 후보에 출처 회의록과 근거가 된 원문 문장을 붙여줘.
@@ -664,6 +674,8 @@ item_key와 value가 어떤 모습일지 예시 한 행으로 보여줘.
 
   s2rules: {
     session: 2, title: '2 — 근거와 실행 가능성으로 다시 고르기',
+    context: ['s2.source_text', 's2.raw_candidates'],
+    output: 's2.action_items',
     body: `내가 입력한 회의록 원본 [회의록 원본]만 읽고, 액션아이템으로 볼 수 있는 항목만 표로 만들어줘.
 
 표의 열은 액션아이템을 다시 꺼내 쓸 수 있는 업무 데이터 형식으로:
@@ -692,6 +704,8 @@ item_key와 value가 어떤 모습일지 예시 한 행으로 보여줘.
 
   s2verify: {
     session: 2, title: '3 — 근거문장 검증',
+    context: ['s2.action_items', 's2.source_text'],
+    output: 's2.fabricated',
     note: '오늘 배우는 유일한 기술입니다. 근거를 같이 내놓게 하고, 근거를 확인한다.',
     body: `방금 만든 표에서, 근거문장이 회의록에 실제로 있는지 다시 확인해줘.
 원문에서 못 찾은 행이 있으면 그 행만 따로 알려줘.`
@@ -800,6 +814,8 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
 
   s3flow: {
     session: 3, title: '4 — 같은 원본을 목적지별로 바꾸기',
+    context: ['s3.asana_tasks', 's3.report'],
+    note: '어디에 붙여넣나요? 아무 AI나 됩니다 — [재료와 함께 복사]가 오늘 가져온 Asana 태스크·Notion 문단을 동봉합니다.',
     body: `한 개의 업무 원본을 아래 세 목적지에 맞게 변환하는 표를 만들어줘.
 
 원본: [Asana에서 읽은 태스크 또는 Notion에서 읽은 페이지]
@@ -814,6 +830,9 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
 
   s3recipe: {
     session: 3, title: '5 — 연결 레시피로 저장',
+    context: ['setup.asana_target', 'setup.notion_target', 'setup.slack_target', 's3.asana_update', 's3.notion_update', 's3.slack_message', 's3.slack_event'],
+    output: 's3.recipe',
+    note: '각자의 AI는 오늘 실습을 모릅니다 — 그래서 [재료와 함께 복사]가 연결 대상과 성공 영수증을 전부 동봉합니다. 아무 AI에나 붙여넣고, 나온 레시피를 아래 칸에 저장하세요.',
     body: `방금 한 연결 실습을 다음 사람이 다시 실행할 수 있는 한 덩어리의 레시피로 정리해줘.
 
 반드시 포함해:

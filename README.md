@@ -35,6 +35,8 @@ Vercel API:
 - `/api/integrations/notion/page` — 인증된 Notion 페이지·블록 읽기·문단 추가·기존 블록 수정
 - `/api/integrations/slack/send` — 인증된 Slack 채널·DM 발송 및 봇 메시지 수정
 - `/api/slack/events` — Slack Events API 수신·서명 검증 (채널 범위는 각 사용자의 워크북 설정으로 관리)
+- `/api/ai/transform` — **워크북 안의 AI 실행**(다듬기 단계). 프롬프트 카드의 [워크북에서 AI 실행]이 호출하며, 작업대가 가져온 원문을 재료로 동봉해 서버가 Claude를 호출합니다. 수강생이 프롬프트를 복사해 각자의 AI로 나르지 않습니다
+- `/api/mcp` — **Remote MCP 서버**. 수강생이 마이페이지에서 발급한 개인 키(`?key=axk_…`)로 자기 Claude에 커스텀 커넥터로 등록하면, 그 Claude가 본인 워크북 기록을 읽고(get_my_workbook·get_entry) 되돌려 놓을(save_entry) 수 있습니다 — 4회차 '이어쓰기'의 완성
 
 실습의 기본 동작은 `SaaS에서 가져오기 → 워크북에서 수정 → 변경 전후 검토 → 같은 SaaS 항목에 저장 → 다시 읽기`입니다. 프롬프트 카드는 변환 규칙을 참고하는 자료이고, 수강생은 별도 MCP 설정 없이 워크북에서 기존 Asana 태스크·Notion 문단·Slack 봇 메시지를 수정합니다. 외부 도구에 쓰는 동작은 미리보기 후 한 번 더 확인해야 실행됩니다.
 
@@ -76,6 +78,7 @@ course_settings(key, value)                    -- 기수별 회차 개방: open_
 3. **이미 운영 중인 DB라면** [`supabase/002_course_settings.sql`](supabase/002_course_settings.sql)을 실행
    — `profiles.cohort` 컬럼과 `course_settings` 테이블을 추가합니다.
    ⚠️ **이 SQL 없이 새 코드를 배포하면 수강생이 가입(기수 선택)에서 막힙니다. 배포보다 먼저 실행하세요.**
+3-1. [`supabase/003_mcp_keys.sql`](supabase/003_mcp_keys.sql) 실행 — 마이페이지의 **내 Claude 연결(MCP)** 키 저장소
 4. Google OAuth 연결 — 아래 [Google OAuth 설정](#2-google-oauth-설정) 참고
 
 ### 기수·회차 개방 운영
@@ -211,7 +214,8 @@ Vercel 프로젝트에 환경변수를 등록하고 배포합니다.
 | `NOTION_TOKEN` (+ 선택 `NOTION_VERSION`) | Notion 페이지·블록 읽기·추가·수정 |
 | `SLACK_BOT_TOKEN` | Slack 발송·봇 메시지 수정 (`chat:write` 등) |
 | `SLACK_SIGNING_SECRET` | `/api/slack/events` 서명 검증 |
-| `SUPABASE_SERVICE_ROLE_KEY` | Slack 수신 이벤트를 `slack_events`에 기록 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Slack 수신 이벤트 기록 + `/api/mcp`의 키 검증·기록 접근 |
+| `ANTHROPIC_API_KEY` | `/api/ai/transform` — 워크북 안의 AI 실행(claude-sonnet-5). 미설정 시 해당 버튼만 비활성(복사 폴백 안내) |
 
 2회차의 `class_posts` 글 저장을 사용하려면 클래스 플랫폼 Supabase의 Authentication → URL Configuration → Redirect URLs에 아래 주소도 추가합니다.
 

@@ -664,3 +664,20 @@ body { background: var(--cream); color: var(--navy); }
 .gate-date input[type="date"] { font: inherit; font-size: 0.85rem; padding: 0.28rem 0.4rem; border: 1px solid var(--line-soft, #D3D6D0); background: var(--paper, #FCFCFA); max-width: 11rem; }
 .gate-date em { font-style: normal; font-size: 0.74rem; color: var(--ink-soft, #3C4A47); }
 .locked-notice .locked-schedule { font-size: 0.95rem; background: rgba(240,179,109,0.14); display: inline-block; padding: 0.5rem 0.9rem; }
+
+/* ── 워크북 내 AI 실행 카드 ───────────────────────────────── */
+.prompt-run { border: none; border-radius: 999px; padding: 0.42rem 0.95rem; font-size: 0.82rem; font-weight: 800; cursor: pointer; background: #112a32; color: #f0b36d; white-space: nowrap; }
+.prompt-run:hover { filter: brightness(1.12); }
+.prompt-run:disabled { opacity: 0.6; cursor: wait; }
+.ai-result { margin: 0.8rem 0.9rem 0.9rem; border: 1px solid #bfe0cc; background: #f2f9f4; }
+.ai-result-head { padding: 0.5rem 0.8rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; color: #2e7354; border-bottom: 1px dashed #bfe0cc; }
+.ai-result pre { margin: 0; padding: 0.8rem 0.9rem; font: 0.83rem/1.65 inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 22rem; overflow-y: auto; }
+.ai-result-actions { display: flex; gap: 0.5rem; padding: 0 0.8rem 0.75rem; flex-wrap: wrap; }
+.ai-insert { border: none; background: #2e7354; color: #fff; padding: 0.35rem 0.8rem; border-radius: 3px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.prompt-source { border-top: 1px dashed var(--line-soft, #D3D6D0); }
+.prompt-source summary { padding: 0.55rem 0.9rem; font-size: 0.8rem; color: var(--ink-soft, #3C4A47); cursor: pointer; }
+.prompt-source pre { margin: 0 0.9rem 0.6rem; }
+.prompt-source > button.copy { margin: 0 0.9rem 0.8rem; }
+
+/* 마이페이지 MCP */
+.mcp-box input[readonly] { font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem; }
