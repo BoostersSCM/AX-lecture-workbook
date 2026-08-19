@@ -40,6 +40,15 @@ export async function loadEntriesOf(uid) {
   return out;
 }
 
+export async function loadSlackEvents({ limit = 20 } = {}) {
+  const { data, error } = await supabase
+    .from('slack_events')
+    .select('event_id, channel_id, slack_user_id, text, event_ts, received_at')
+    .order('received_at', { ascending: false })
+    .limit(limit);
+  return { events: data || [], error };
+}
+
 export function getValue(key) {
   return cache?.[key] ?? '';
 }

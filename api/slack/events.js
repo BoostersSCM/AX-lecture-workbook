@@ -34,6 +34,31 @@ function verifySlackSignature(rawBody, req) {
   return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
 }
 
+async function persistSlackEvent(record) {
+  const supabaseUrl = env('SUPABASE_URL');
+  const serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceRoleKey) {
+    return { stored: false, reason: 'SUPABASE_SERVICE_ROLE_KEY 미설정' };
+  }
+
+  const response = await fetch(supabaseUrl.replace(/\/$/, '') + '/rest/v1/slack_events?on_conflict=event_id', {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: 'Bearer ' + serviceRoleKey,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify(record),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error('Supabase slack_events 저장 실패: ' + detail.slice(0, 300));
+  }
+  return { stored: true };
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'POST only' });
   if (!env('SLACK_SIGNING_SECRET')) {
@@ -71,11 +96,16 @@ module.exports = async function handler(req, res) {
     event_id: String(payload.event_id || ''),
     team_id: String(payload.team_id || ''),
     channel_id: channelId,
-    user: String(event.user || ''),
+    slack_user_id: String(event.user || ''),
     text: String(event.text || ''),
     event_ts: String(event.event_ts || event.ts || ''),
+    received_at: new Date().toISOString(),
   };
   console.log('[slack/events]', JSON.stringify(record));
 
-  return json(res, 200, { ok: true, received: record });
+  let storage = { stored: false, reason: 'not attempted' };
+  try { storage = await persistSlackEvent(record); }
+  catch (error) { console.error('[slack/events] Supabase 저장 실패', error); }
+
+  return json(res, 200, { ok: true, received: record, storage });
 };

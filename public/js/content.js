@@ -287,7 +287,7 @@ export const SESSIONS = [
         hint: '채널에 봇이 초대되어 있어야 합니다.' },
 
       { type: 'head', text: '실습 4 — Slack: 채널에 쓴 내용을 Vercel 웹훅으로 받기' },
-      { type: 'note', text: 'Slack Events API가 공개 Vercel 엔드포인트로 이벤트를 보내는 흐름입니다. Request URL 검증 챌린지에 응답하고, 서명 검증 후 메시지 이벤트만 처리합니다. 봇이 자기 메시지를 다시 읽는 무한 루프는 막습니다.' },
+      { type: 'note', text: 'Slack Events API가 공개 Vercel 엔드포인트로 이벤트를 보내는 흐름입니다. Request URL 검증 챌린지에 응답하고, 서명 검증 후 메시지 이벤트만 처리합니다. 수신된 이벤트는 아래 Slack 수신함과 Supabase에서 확인합니다.' },
       { type: 'prompt', id: 's3slack_event' },
       { type: 'field', key: 's3.slack_event', kind: 'textarea', rows: 6, required: true,
         label: '웹훅으로 받은 이벤트와 처리 결과',
@@ -671,7 +671,7 @@ Request URL: [Vercel의 /api/slack/events 엔드포인트]
 반드시 포함할 것:
 1. Slack의 url_verification challenge를 200으로 응답하는 처리
 2. 실제 event_callback에서 channel_id, user, text, event_ts 추출
-3. 대상 채널이 아니면 무시
+3. 받은 channel_id가 내가 연결 준비에 적은 Channel ID와 일치하는지 확인
 4. 봇이 보낸 메시지는 다시 처리하지 않기
 5. 처리한 이벤트의 event_id와 결과를 로그로 남기기
 6. Slack에 200 응답을 빠르게 반환하고 오래 걸리는 작업은 분리하기

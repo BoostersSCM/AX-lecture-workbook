@@ -28,6 +28,8 @@ Vercel API:
 - `/api/integrations/slack/send` — 인증된 Slack 채널 발송
 - `/api/slack/events` — Slack Events API 수신·서명 검증 (채널 범위는 각 사용자의 워크북 설정으로 관리)
 
+Slack Events API는 `SUPABASE_SERVICE_ROLE_KEY`가 설정되면 `slack_events`에 저장되고, 3회차 워크북의 Slack 수신함에서 RLS 범위에 맞게 표시됩니다. 이 키는 Vercel 서버에만 둡니다.
+
 ---
 
 ## 기술 스택
