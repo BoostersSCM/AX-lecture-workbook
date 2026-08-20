@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude 연결 승인 · AX 워크북</title>
+<link rel="stylesheet" href="/styles.css">
+<script src="/env.js"></script>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card onboarding-card">
+    <div class="eyebrow">CLAUDE 커넥터 연결</div>
+    <h1 id="title">연결 요청 확인 중…</h1>
+    <p class="lede" id="sub">잠시만 기다려주세요.</p>
+    <div id="panel"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase, isBoostersEmail, toast } from '/js/supabase.js';
+
+  const QKEY = 'axwb.mcpAuthQuery';
+  const title = document.getElementById('title');
+  const sub = document.getElementById('sub');
+  const panel = document.getElementById('panel');
+
+  // 구글 로그인 복귀 시 쿼리가 사라지므로 sessionStorage로 왕복 보존
+  if (!location.search || !new URLSearchParams(location.search).get('client_id')) {
+    const saved = sessionStorage.getItem(QKEY);
+    if (saved) history.replaceState(null, '', location.pathname + saved);
+  }
+  const q = new URLSearchParams(location.search);
+  const params = {
+    client_id: q.get('client_id') || '',
+    redirect_uri: q.get('redirect_uri') || '',
+    state: q.get('state') || '',
+    code_challenge: q.get('code_challenge') || '',
+    code_challenge_method: q.get('code_challenge_method') || 'S256',
+  };
+
+  function fail(text) {
+    title.textContent = '연결할 수 없습니다';
+    sub.textContent = text;
+  }
+
+  function deny() {
+    const sep = params.redirect_uri.includes('?') ? '&' : '?';
+    location.href = params.redirect_uri + sep + 'error=access_denied'
+      + (params.state ? '&state=' + encodeURIComponent(params.state) : '');
+  }
+
+  async function main() {
+    if (!params.client_id || !params.redirect_uri || !params.code_challenge) {
+      return fail('연결 요청 정보가 없습니다. Claude에서 커넥터 연결을 다시 시작해주세요.');
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      title.textContent = '먼저 본인 확인이 필요합니다';
+      sub.textContent = 'Claude를 내 워크북 기록에 연결하려면 부스터스 계정으로 로그인해주세요.';
+      panel.innerHTML = '<button class="primary gbtn" id="login">부스터스 계정으로 로그인</button>';
+      document.getElementById('login').addEventListener('click', async () => {
+        sessionStorage.setItem(QKEY, location.search);
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: location.origin + '/mcp-auth.html',
+            queryParams: { hd: 'boosters.kr', prompt: 'select_account' },
+          },
+        });
+      });
+      return;
+    }
+
+    if (!isBoostersEmail(session.user.email)) {
+      await supabase.auth.signOut();
+      return fail('부스터스 이메일(@boosters.kr) 계정만 연결할 수 있습니다.');
+    }
+
+    sessionStorage.removeItem(QKEY);
+    title.textContent = 'Claude를 내 워크북에 연결할까요?';
+    sub.textContent = session.user.email + ' 계정의 기록에 연결됩니다.';
+    panel.innerHTML = `
+      <div class="field" style="text-align:left;margin:1rem 0">
+        <b style="font-size:0.9rem">연결되면 내 Claude가 할 수 있는 것</b>
+        <ul style="margin:0.5rem 0 0;padding-left:1.15rem;font-size:0.9rem;color:var(--ink-soft,#3C4A47);display:flex;flex-direction:column;gap:0.3rem">
+          <li>내 실습 기록·연결 레시피 읽기 (본인 것만)</li>
+          <li>실습 지시와 재료 가져오기 (get_exercise)</li>
+          <li>다듬은 결과를 내 워크북에 저장 (save_entry)</li>
+        </ul>
+        <p class="fhint" style="margin-top:0.6rem">다른 사람의 기록에는 접근할 수 없습니다. 연결 해제는 Claude 커넥터 설정 또는 강사에게 요청.</p>
+      </div>
+      <button class="primary gbtn" id="approve">승인하고 연결</button>
+      <button class="gbtn" id="deny" style="margin-top:0.5rem">거절</button>
+      <p class="login-foot" id="status"></p>`;
+
+    document.getElementById('deny').addEventListener('click', deny);
+    document.getElementById('approve').addEventListener('click', async (e) => {
+      e.currentTarget.disabled = true;
+      e.currentTarget.textContent = '연결 중…';
+      const status = document.getElementById('status');
+      try {
+        const res = await fetch('/api/oauth/approve', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + session.access_token,
+          },
+          body: JSON.stringify(params),
+        });
+        const payload = await res.json();
+        if (!res.ok || !payload.ok) throw new Error(payload.error || ('승인 실패 (' + res.status + ')'));
+        status.textContent = '연결되었습니다 — Claude로 돌아갑니다…';
+        location.href = payload.redirect;
+      } catch (error) {
+        e.currentTarget.disabled = false;
+        e.currentTarget.textContent = '승인하고 연결';
+        status.textContent = '⚠️ ' + (error.message || error);
+        toast(error.message || '승인에 실패했습니다.', 'error');
+      }
+    });
+  }
+
+  main();
+</script>
+</body>
+</html>

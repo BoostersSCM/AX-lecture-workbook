@@ -40,6 +40,33 @@ Vercel API:
   도구: `list_exercises` / `get_exercise`(프롬프트+워크북 재료 통째 전달) / `get_my_workbook` / `get_entry` / `save_entry`(결과를 워크북에 저장) / `get_course_status`.
   **AI 비용은 각자의 Claude 구독에 포함 — 별도 API 크레딧이 들지 않습니다.** 실습 프롬프트 정의는 `public/js/content.js`를 서버가 동적 import해 화면과 단일 원본을 공유합니다(vercel.json includeFiles)
 
+### 팀 플랜 조직 커넥터 (OAuth) — 권장 경로
+
+팀 플랜에서는 멤버가 커스텀 커넥터를 직접 추가하지 못할 수 있어, **관리자가 조직 커넥터 하나를 등록**하는 방식을 지원합니다.
+URL은 하나지만 각 멤버가 켤 때 **부스터스 구글 로그인(승인 페이지)**을 거쳐 본인 전용 토큰이 발급되므로, 전원이 자기 기록에만 연결됩니다.
+
+**관리자에게 전달할 등록 정보**
+
+| 항목 | 값 |
+|---|---|
+| 커넥터 이름 | AX 워크북 |
+| 원격 MCP 서버 URL | `https://ax-lecture-workbook.vercel.app/api/mcp` |
+| 인증 | OAuth (자동 감지 — 등록 시 별도 입력 없음) |
+
+**동작 방식** (MCP OAuth 2.1 + PKCE + 동적 클라이언트 등록)
+
+1. 멤버가 커넥터를 켜면 Claude가 `/.well-known/oauth-authorization-server`를 읽고 `/api/oauth/register`로 자신을 등록
+2. 승인 페이지 `/mcp-auth`로 이동 → 부스터스 구글 로그인 → **[승인하고 연결]**
+3. `/api/oauth/token`이 PKCE 검증 후 본인 전용 토큰(90일) 발급 → 이후 그 멤버의 Claude는 자기 entries만 읽고 씀
+4. 인증 없는 호출은 401 + `WWW-Authenticate`로 응답해 Claude가 위 플로우를 자동 시작
+
+**운영 준비**
+
+- [`supabase/004_mcp_oauth.sql`](supabase/004_mcp_oauth.sql) 실행 — `mcp_clients`·`mcp_codes`·`mcp_tokens` (서버 전용, RLS 잠금)
+- Supabase → Authentication → URL Configuration → Redirect URLs에 **`https://ax-lecture-workbook.vercel.app/mcp-auth.html`** 추가 (승인 페이지의 구글 로그인 복귀 주소)
+- 특정 사용자의 연결을 끊으려면: `delete from mcp_tokens where user_id = …` (004 파일 하단 참고)
+- 개인 키(`?key=`, 003) 방식은 개인 플랜·폴백용으로 공존합니다
+
 실습의 기본 동작은 `SaaS에서 가져오기 → 워크북에서 수정 → 변경 전후 검토 → 같은 SaaS 항목에 저장 → 다시 읽기`입니다. 프롬프트 카드는 변환 규칙을 참고하는 자료이고, 수강생은 별도 MCP 설정 없이 워크북에서 기존 Asana 태스크·Notion 문단·Slack 봇 메시지를 수정합니다. 외부 도구에 쓰는 동작은 미리보기 후 한 번 더 확인해야 실행됩니다.
 
 「AX 실습장」은 강사가 사전에 만드는 Notion 템플릿입니다. 원본 회의록·수정 실습 문단·결과 기록 영역을 포함하고, 수강생은 각자 복제한 페이지에 기존 Notion 앱을 연결합니다. 앱에는 Read content와 Update content 권한이 필요합니다.

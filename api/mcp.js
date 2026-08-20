@@ -48,6 +48,18 @@ async function resolveUser(key) {
   return rows[0]?.user_id || null;
 }
 
+// 조직 커넥터(팀 플랜) 경로 — OAuth로 발급한 Bearer 토큰(axt_…) → user_id
+async function resolveBearer(req) {
+  const auth = String(req.headers.authorization || '');
+  if (!auth.startsWith('Bearer ')) return null;
+  const token = auth.slice(7).trim();
+  if (!/^axt_[A-Za-z0-9]{20,}$/.test(token)) return null;
+  const res = await sb(`mcp_tokens?token=eq.${encodeURIComponent(token)}&select=user_id`);
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows[0]?.user_id || null;
+}
+
 // ── MCP 도구 정의 ────────────────────────────────────────────
 const TOOLS = [
   {
@@ -247,6 +259,15 @@ module.exports = async function handler(req, res) {
     return res.end();
   }
 
+  // 인증 — 개인 키(?key=) 또는 OAuth Bearer 토큰(조직 커넥터).
+  // 둘 다 없으면 401 + WWW-Authenticate → Claude가 OAuth 플로우를 시작합니다.
+  const userId = (await resolveUser(urlKey)) || (await resolveBearer(req));
+  if (!userId) {
+    const base = 'https://' + String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+    res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+    return json(res, 401, rpcError(id, -32001, '인증이 필요합니다 — Claude 커넥터에서 로그인(승인)을 진행해주세요.'));
+  }
+
   if (method === 'initialize') {
     return json(res, 200, rpcResult(id, {
       protocolVersion: PROTOCOL,
@@ -263,13 +284,6 @@ module.exports = async function handler(req, res) {
   }
 
   if (method === 'tools/call') {
-    const userId = await resolveUser(urlKey);
-    if (!userId) {
-      return json(res, 200, rpcResult(id, {
-        content: [{ type: 'text', text: '연결 키가 없거나 만료되었습니다. 워크북 마이페이지에서 키를 발급해 커넥터 URL의 ?key= 값으로 넣어주세요.' }],
-        isError: true,
-      }));
-    }
     try {
       const text = await callTool(userId, params.name, params.arguments || {});
       return json(res, 200, rpcResult(id, { content: [{ type: 'text', text }] }));

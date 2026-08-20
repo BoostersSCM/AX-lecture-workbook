@@ -42,8 +42,14 @@ async function renderMcpSection(me) {
 
     const url = key ? `${location.origin}/api/mcp?key=${key}` : '';
     box.innerHTML = `
+      <div class="note" style="margin:0 0 0.9rem">
+        <b>회사 Claude(팀 플랜)를 쓰는 경우 — 키가 필요 없습니다.</b><br>
+        관리자가 등록한 조직 커넥터 <b>「AX 워크북」</b>을 Claude 설정 → 커넥터에서 켜기만 하면,
+        첫 사용 때 부스터스 구글 로그인으로 본인 확인을 거쳐 <b>내 기록에만</b> 연결됩니다.
+        아래 개인 키는 개인 플랜이거나 조직 커넥터가 아직 없을 때의 대안입니다.
+      </div>
       <p class="fhint" style="margin-top:0">4주간 쌓은 내 기록(레시피·액션아이템·설계서)을 <b>내 Claude</b>에서 불러오고, 다듬은 결과를 워크북에 되돌려 놓을 수 있습니다.
-      아래 개인 키는 <b>내 기록에만</b> 접근합니다 — 다른 사람 것은 보이지 않습니다.</p>
+      개인 키도 <b>내 기록에만</b> 접근합니다 — 다른 사람 것은 보이지 않습니다.</p>
       ${key ? `
         <label class="ob-field"><span>내 커넥터 주소 (Claude에 등록)</span>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
