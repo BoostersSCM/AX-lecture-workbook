@@ -24,6 +24,43 @@ export function sessionExpired() {
 
 let _me = null; // 페이지 수명 동안 캐시
 
+// ── 수강생 뷰 (강사 전용 프리뷰) ─────────────────────────────
+// DB의 role은 건드리지 않고, 이 브라우저에서만 역할·기수를 덮어씁니다.
+// 홈 잠금·네비 🔒·회차 게이트가 전부 수강생에게 보이는 그대로 동작합니다.
+const VIEW_AS = 'axwb.viewAs';
+const VIEW_COHORT = 'axwb.viewCohort';
+
+export function previewActive() {
+  try { return localStorage.getItem(VIEW_AS) === 'member'; } catch { return false; }
+}
+
+export function startMemberPreview(cohort = 1) {
+  try {
+    localStorage.setItem(VIEW_AS, 'member');
+    localStorage.setItem(VIEW_COHORT, String(Number(cohort) || 1));
+  } catch {}
+}
+
+export function stopMemberPreview() {
+  try {
+    localStorage.removeItem(VIEW_AS);
+    localStorage.removeItem(VIEW_COHORT);
+  } catch {}
+}
+
+// 실제 강사인가 (프리뷰로 role이 member로 보여도 true)
+export function isActualInstructor(me) {
+  return me?._actualRole === 'instructor' || me?.role === 'instructor';
+}
+
+function applyPreview(profile) {
+  if (!profile || profile.role !== 'instructor') return profile; // 수강생 계정의 플래그는 무시
+  if (!previewActive()) return profile;
+  let cohort = 1;
+  try { cohort = Number(localStorage.getItem(VIEW_COHORT)) || profile.cohort || 1; } catch {}
+  return { ...profile, role: 'member', cohort, _actualRole: 'instructor', _preview: true };
+}
+
 // 세션은 있는데 프로필이 없거나 도메인이 다른 경우를 구분해서 알려줍니다.
 // 반환: { profile } | { reason: 'no-session' | 'bad-domain' | 'no-profile' }
 export async function getSessionState() {
@@ -47,7 +84,7 @@ export async function getMe({ fresh = false } = {}) {
   if (_me && !fresh) return _me;
   const st = await getSessionState();
   if (!st.profile) return null;
-  _me = st.profile;
+  _me = applyPreview(st.profile);
   return _me;
 }
 
@@ -108,7 +145,7 @@ export async function saveProfileBits(bits) {
   const { data, error } = await supabase
     .from('profiles').update(bits).eq('id', me.id).select().single();
   if (error) { toast('저장에 실패했습니다: ' + error.message, 'error'); return null; }
-  _me = data;
+  _me = applyPreview(data);
   return data;
 }
 
@@ -117,12 +154,12 @@ export async function requireAuth() {
   const st = await getSessionState();
 
   if (st.profile) {
-    _me = st.profile;
+    _me = applyPreview(st.profile);
     if (needsOnboarding(_me) && !location.pathname.startsWith('/onboarding')) {
       location.replace('/onboarding');
       return null;
     }
-    return st.profile;
+    return _me; // 프리뷰(수강생 뷰)가 적용된 프로필을 반환해야 화면 전체가 따라옵니다
   }
 
   // 세션 만료·남의 도메인·프로필 없음은 세션을 끊고 이유를 알려줍니다.

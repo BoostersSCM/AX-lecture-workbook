@@ -1,5 +1,5 @@
 // js/my.js — 마이페이지: 내 정보 수정 + 내 기록 열람·활용
-import { requireAuth, isInstructor, saveProfileBits } from './auth.js';
+import { requireAuth, isInstructor, isActualInstructor, startMemberPreview, stopMemberPreview, saveProfileBits } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus } from './store.js';
 import { SETUP, SESSIONS, CLINIC, requiredKeys } from './content.js';
@@ -137,13 +137,15 @@ function displayValue(key, value) {
 
   // ── 내 정보 ────────────────────────────────────────────────
   app.appendChild(el('<h2>내 정보</h2>'));
+  const roleLabel = me._preview ? '강사 · 수강생 뷰' : (isInstructor(me) ? '강사' : '수강생');
   const info = el(`
     <div class="field my-profile">
       <div class="my-profile-grid">
         <div><span class="my-label">이름</span><b>${esc(me.name)}</b></div>
         <div><span class="my-label">이메일</span><b>${esc(me.email)}</b></div>
-        <div><span class="my-label">역할</span><b>${isInstructor(me) ? '강사' : '수강생'}</b></div>
+        <div><span class="my-label">역할</span><b>${roleLabel}</b></div>
       </div>
+      ${me._preview ? '<p class="fhint">수강생 뷰 사용 중에는 정보 수정을 잠급니다 — 상단 배너의 [강사로 돌아가기] 후 수정하세요.</p>' : `
       <div class="my-edit">
         <label class="ob-field"><span>소속 팀</span>
           <input type="text" id="my-team" maxlength="40" value="${esc(me.team === '미지정' ? '' : me.team)}" placeholder="예: SCM본부 / People">
@@ -154,9 +156,9 @@ function displayValue(key, value) {
         </label>`}
         <button class="primary" id="my-save" type="button">정보 저장</button>
       </div>
-      <p class="fhint">이름과 이메일은 구글 계정에서 옵니다. 기수를 바꾸면 열리는 회차도 그 기수 기준으로 바뀝니다.</p>
+      <p class="fhint">이름과 이메일은 구글 계정에서 옵니다. 기수를 바꾸면 열리는 회차도 그 기수 기준으로 바뀝니다.</p>`}
     </div>`);
-  info.querySelector('#my-save').addEventListener('click', async (e) => {
+  info.querySelector('#my-save')?.addEventListener('click', async (e) => {
     const team = info.querySelector('#my-team').value.trim();
     const cohortInput = info.querySelector('#my-cohort');
     const bits = {};
@@ -172,6 +174,45 @@ function displayValue(key, value) {
     if (saved) { toast('내 정보를 저장했습니다.'); setTimeout(() => location.reload(), 600); }
   });
   app.appendChild(info);
+
+  // ── 수강생 뷰 (실제 강사 전용) ─────────────────────────────
+  // DB의 role은 바꾸지 않습니다 — 이 브라우저에서만 수강생의 눈으로 봅니다.
+  if (isActualInstructor(me)) {
+    app.appendChild(el('<h2>수강생 뷰</h2>'));
+    const pv = el('<div class="field"></div>');
+
+    if (me._preview) {
+      pv.innerHTML = `
+        <p style="margin:0 0 0.7rem">지금 <b>${me.cohort}기 수강생의 눈</b>으로 보고 있습니다 —
+        홈 카드 🔒, 네비 자물쇠, 회차 잠금 화면이 수강생에게 보이는 그대로입니다.
+        강사 메뉴(/admin)는 이 상태에서 잠깁니다.</p>
+        <button class="primary" id="pv-stop" type="button">강사로 돌아가기</button>`;
+      pv.querySelector('#pv-stop').addEventListener('click', () => {
+        stopMemberPreview();
+        toast('강사 화면으로 돌아갑니다.');
+        setTimeout(() => location.reload(), 400);
+      });
+    } else {
+      pv.innerHTML = `
+        <p style="margin:0 0 0.7rem">수강생에게 화면이 어떻게 보이는지 확인합니다.
+        역할을 실제로 바꾸는 것이 아니라 <b>이 브라우저에서만</b> 수강생 시점으로 전환되며,
+        상단 배너의 버튼으로 언제든 돌아올 수 있습니다.</p>
+        <div style="display:flex;gap:0.6rem;align-items:flex-end;flex-wrap:wrap">
+          <label class="ob-field" style="max-width:9rem"><span>볼 기수</span>
+            <input type="number" id="pv-cohort" min="1" max="99" value="1">
+          </label>
+          <button class="primary" id="pv-start" type="button">수강생 뷰로 보기</button>
+        </div>
+        <p class="fhint" style="margin-top:0.6rem">그 기수에 열린 회차·강의일 예약까지 수강생 기준으로 적용됩니다.</p>`;
+      pv.querySelector('#pv-start').addEventListener('click', () => {
+        const c = Number(pv.querySelector('#pv-cohort').value) || 1;
+        startMemberPreview(c);
+        toast(`${c}기 수강생 뷰로 전환합니다.`);
+        setTimeout(() => location.href = '/', 400);
+      });
+    }
+    app.appendChild(pv);
+  }
 
   // ── 진행 요약 ──────────────────────────────────────────────
   app.appendChild(el('<h2>진행 요약</h2>'));

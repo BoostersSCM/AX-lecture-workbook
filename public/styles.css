@@ -686,3 +686,10 @@ body { background: var(--cream); color: var(--navy); }
 .claude-run-strip { margin: 0.8rem 0.9rem 0.9rem; padding: 0.7rem 0.85rem; background: rgba(17,42,50,0.05); border-left: 3px solid #112a32; display: flex; flex-direction: column; gap: 0.3rem; }
 .claude-run-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; color: var(--ink-soft, #3C4A47); }
 .claude-run-strip code { font-size: 0.8rem; line-height: 1.55; overflow-wrap: anywhere; }
+
+/* ── 수강생 뷰 프리뷰 배너 ────────────────────────────────── */
+.preview-banner { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 1rem; background: #f0b36d; color: #112a32; font-size: 0.85rem; }
+.preview-banner b { font-weight: 800; }
+.preview-banner button { border: none; border-radius: 999px; padding: 0.3rem 0.9rem; font-size: 0.8rem; font-weight: 800; cursor: pointer; background: #112a32; color: #f0b36d; white-space: nowrap; }
+.preview-banner button:hover { filter: brightness(1.15); }
+.tag-preview { background: #f0b36d !important; color: #112a32 !important; }

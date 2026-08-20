@@ -1,5 +1,5 @@
 // js/shell.js — 공통 헤더/네비
-import { getMe, signOut, isInstructor, watchSessionExpiry } from './auth.js';
+import { getMe, signOut, isInstructor, watchSessionExpiry, stopMemberPreview } from './auth.js';
 import { openSessionsFor } from './course.js';
 
 const NAV = [
@@ -43,7 +43,7 @@ export async function mountShell() {
     ? `<a href="/admin"${path === '/admin' ? ' class="on"' : ''}>강사</a>` : '';
 
   const who = me
-    ? `<span class="whoami"><b>${esc(me.name)}</b>${isInstructor(me) ? '<span class="tag-instructor">강사</span>' : ''}
+    ? `<span class="whoami"><b>${esc(me.name)}</b>${isInstructor(me) ? '<span class="tag-instructor">강사</span>' : ''}${me._preview ? '<span class="tag-instructor tag-preview">수강생 뷰</span>' : ''}
          &nbsp;<a href="#" id="signout" style="color:var(--muted)">로그아웃</a></span>`
     : '';
 
@@ -56,6 +56,20 @@ export async function mountShell() {
       ${who}
     </div>`;
   document.body.prepend(bar);
+
+  // 수강생 뷰 프리뷰 배너 — 강사가 지금 어떤 눈으로 보고 있는지 항상 표시
+  if (me?._preview) {
+    const banner = document.createElement('div');
+    banner.className = 'preview-banner';
+    banner.innerHTML = `
+      <span>👀 <b>수강생 뷰</b>로 보는 중 (${me.cohort}기 기준) — 잠금·네비가 수강생에게 보이는 그대로입니다</span>
+      <button type="button">강사로 돌아가기</button>`;
+    banner.querySelector('button').addEventListener('click', () => {
+      stopMemberPreview();
+      location.reload();
+    });
+    document.body.insertBefore(banner, bar);
+  }
 
   const out = document.getElementById('signout');
   if (out) out.addEventListener('click', e => { e.preventDefault(); signOut(); });
