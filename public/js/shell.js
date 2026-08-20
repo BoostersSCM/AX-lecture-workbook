@@ -1,46 +1,57 @@
-// js/shell.js — 공통 헤더/네비
+// js/shell.js — 공통 헤더/네비 (플랫폼/강의 컨텍스트 겸용)
+//
+// 강의 페이지(회차·설계서 등)는 initCourse() 후에 mountShell()을 부릅니다.
+// C.course가 채워져 있으면 그 강의의 네비(회차 수·문서 구성이 강의마다 다름)를,
+// 아니면 플랫폼 네비(강의 목록·마이)를 그립니다.
 import { getMe, signOut, isInstructor, watchSessionExpiry, stopMemberPreview } from './auth.js';
-import { openSessionsFor } from './course.js';
-
-const NAV = [
-  { href: '/',        label: '홈' },
-  { href: '/setup',   label: '연결 준비' },
-  { href: '/session?n=1', label: '1회차', match: 'n=1' },
-  { href: '/session?n=2', label: '2회차', match: 'n=2' },
-  { href: '/session?n=3', label: '3회차', match: 'n=3' },
-  { href: '/session?n=4', label: '4회차', match: 'n=4' },
-  { href: '/clinic',  label: '업무 설계서' },
-  { href: '/prompts', label: '프롬프트 카드' },
-  { href: '/my',      label: '마이' },
-];
+import { C, coursePath, openSessionsForMe } from './courseState.js';
 
 export async function mountShell() {
   const me = await getMe();
 
-  const path = location.pathname.replace(/\.html$/, '') || '/';
+  const path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
   const qs   = location.search;
+  const inCourse = Boolean(C.course);
+
+  const items = [];
+  if (inCourse) {
+    items.push({ href: coursePath(), label: '강의 홈', exact: true });
+    if (C.SETUP.groups?.length) items.push({ href: coursePath('setup'), label: '연결 준비' });
+    for (const s of C.SESSIONS) items.push({ href: `${coursePath('session')}?n=${s.n}`, label: `${s.n}회차`, match: `n=${s.n}`, n: s.n });
+    if (C.CLINIC.groups?.length) items.push({ href: coursePath('clinic'), label: '업무 설계서', lockWith: C.SESSIONS.at(-1)?.n });
+    if (Object.keys(C.PROMPTS).length) items.push({ href: coursePath('prompts'), label: '프롬프트 카드' });
+    if (C.course.id) items.push({ href: coursePath('qna'), label: 'Q&A' });
+    items.push({ href: '/', label: '강의 목록', exact: true });
+    items.push({ href: '/my', label: '마이' });
+  } else {
+    items.push({ href: '/', label: '강의 목록', exact: true });
+    items.push({ href: '/my', label: '마이' });
+  }
 
   // 잠긴 회차는 네비에도 자물쇠로 표시 (강사는 전부 열림)
-  const open = me ? await openSessionsFor(me) : null;
-  const isLockedNav = (item) => {
-    if (!item.match || open === null) return false;
-    const n = Number(item.match.replace('n=', ''));
-    return !open.includes(n);
+  const open = inCourse && me ? openSessionsForMe(me) : null;
+  const isLocked = (item) => {
+    if (open === null) return false;
+    const n = item.n ?? item.lockWith;
+    return Number.isInteger(n) ? !open.includes(n) : false;
   };
 
-  const links = NAV.map(item => {
-    const base = item.href.split('?')[0];
+  const links = items.map(item => {
+    const base = item.href.split('?')[0].replace(/\/$/, '') || '/';
     let on = false;
-    if (item.match) on = path.startsWith('/session') && qs.includes(item.match);
-    else if (base === '/') on = path === '/' || path === '/index';
+    if (item.match) on = path === base && qs.includes(item.match);
+    else if (item.exact) on = path === base;
     else on = path === base;
-    const locked = isLockedNav(item);
+    const locked = isLocked(item);
     const cls = [on ? 'on' : '', locked ? 'nav-locked' : ''].filter(Boolean).join(' ');
     return `<a href="${item.href}"${cls ? ` class="${cls}"` : ''}${locked ? ' title="강사가 아직 열지 않았습니다"' : ''}>${item.label}${locked ? ' 🔒' : ''}</a>`;
   }).join('');
 
-  const adminLink = me && isInstructor(me)
-    ? `<a href="/admin"${path === '/admin' ? ' class="on"' : ''}>강사</a>` : '';
+  // 강사 콘솔 — 강의 안에서는 그 강의 스튜디오로, 밖에서는 스튜디오 홈으로
+  const canStudio = me && (isInstructor(me) || (inCourse && C.instructor)) && !me._preview;
+  const studioHref = inCourse && C.course?.slug ? `/studio/${C.course.slug}` : '/studio';
+  const adminLink = canStudio
+    ? `<a href="${studioHref}"${path.startsWith('/studio') ? ' class="on"' : ''}>스튜디오</a>` : '';
 
   const who = me
     ? `<span class="whoami"><b>${esc(me.name)}</b>${isInstructor(me) ? '<span class="tag-instructor">강사</span>' : ''}${me._preview ? '<span class="tag-instructor tag-preview">수강생 뷰</span>' : ''}

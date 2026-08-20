@@ -1,26 +1,26 @@
 // js/render.js — 문항을 화면으로 그리고 입력을 저장에 연결
 import { getValue, saveValue } from './store.js';
-import { PROMPTS, PROMPT_HELP, VISUALS, SESSIONS, SETUP, CLINIC } from './content.js';
+import { C } from './courseState.js';
 import { esc, mini } from './shell.js';
 import { toast } from './supabase.js';
 
-// item_key → 라벨 (AI 실행 재료의 섹션 제목용)
-const FIELD_LABELS = (() => {
+// item_key → 라벨 (AI 실행 재료의 섹션 제목용) — 강의 데이터(C)에서 매번 계산
+function fieldLabels() {
   const m = {};
-  for (const g of SETUP.groups) for (const f of g.fields) if (f.key) m[f.key] = f.label || f.key;
-  for (const s of SESSIONS) for (const b of s.blocks) if (b.type === 'field') m[b.key] = b.label;
-  for (const g of CLINIC.groups) for (const f of g.fields) if (f.key) m[f.key] = f.label || f.key;
+  for (const g of C.SETUP.groups || []) for (const f of g.fields || []) if (f.key) m[f.key] = f.label || f.key;
+  for (const s of C.SESSIONS) for (const b of s.blocks) if (b.type === 'field') m[b.key] = b.label;
+  for (const g of C.CLINIC.groups || []) for (const f of g.fields || []) if (f.key) m[f.key] = f.label || f.key;
   return m;
-})();
+}
 
 // 블록 하나를 그려서 반환
 export function renderBlock(b) {
   switch (b.type) {
     case 'head':   return el(`<h2>${mini(b.text)}</h2>`);
     case 'note':   return el(`<div class="note">${mini(b.text)}</div>`);
-    case 'visual': return renderVisual(VISUALS[b.id]);
+    case 'visual': return renderVisual(C.VISUALS[b.id]);
     case 'link':   return el(`<p style="margin:1.2rem 0"><a class="btn-link" href="${b.href}">${esc(b.text)}</a></p>`);
-    case 'prompt': return renderPrompt(PROMPTS[b.id], PROMPT_HELP[b.id]);
+    case 'prompt': return renderPrompt(C.PROMPTS[b.id], C.PROMPT_HELP[b.id]);
     case 'field':  return renderField(b);
     default:       return document.createComment('unknown block');
   }
@@ -111,10 +111,11 @@ export function renderPrompt(p, help = null) {
   };
   // 재료(원문) — 작업대가 가져와 저장해둔 값들을 프롬프트 뒤에 동봉
   const buildMaterials = () => {
+    const labels = fieldLabels();
     const parts = [];
     for (const key of p.context || []) {
       const v = String(getValue(key) || '').trim();
-      if (v && v !== 'false') parts.push(`【${FIELD_LABELS[key] || key}】\n${v}`);
+      if (v && v !== 'false') parts.push(`【${labels[key] || key}】\n${v}`);
     }
     return parts.join('\n\n');
   };
@@ -122,7 +123,7 @@ export function renderPrompt(p, help = null) {
   // context/output이 있으면 "내 Claude에서 실행" 카드 — 각자의 Claude 구독이
   // 워크북 MCP 커넥터로 재료를 직접 읽고 결과를 되돌려 놓습니다 (API 크레딧 불필요)
   const runnable = Boolean(p.context?.length || p.output);
-  const promptId = Object.keys(PROMPTS).find(k => PROMPTS[k] === p) || '';
+  const promptId = Object.keys(C.PROMPTS).find(k => C.PROMPTS[k] === p) || '';
   const claudeLine = `워크북 커넥터에서 get_exercise("${promptId}")를 실행해서, 지시대로 수행하고 결과를 안내된 위치에 save_entry로 저장해줘.`;
 
   const wrap = el(`

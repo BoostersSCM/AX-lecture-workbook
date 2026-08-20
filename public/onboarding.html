@@ -12,22 +12,16 @@
   <div class="login-card onboarding-card">
     <div class="eyebrow">환영합니다 · 한 번만 입력하면 됩니다</div>
     <h1>가입 정보</h1>
-    <p class="lede">기수에 따라 열리는 회차가 다릅니다. 소속 팀은 강사가 참가자 명단을 정리할 때 씁니다.</p>
+    <p class="lede">소속 팀은 강사가 참가자 명단을 정리할 때 씁니다. 어떤 강의를 몇 기로 들을지는 각 강의 홈에서 [참여하기]로 고릅니다.</p>
 
     <div class="onboarding-form">
-      <label class="ob-field">
-        <span>몇 기(차수) 수강생인가요?</span>
-        <div class="ob-cohorts" role="radiogroup" aria-label="기수 선택"></div>
-        <input type="number" id="ob-cohort-custom" min="1" max="99" placeholder="목록에 없으면 숫자로 입력 (예: 5)" hidden>
-      </label>
-
       <label class="ob-field">
         <span>소속 팀</span>
         <input type="text" id="ob-team" placeholder="예: SCM본부 / People / Beauty Design" maxlength="40">
       </label>
 
       <button class="primary gbtn" id="ob-save" disabled>시작하기</button>
-      <p class="login-foot">기수를 잘못 골랐다면 강사에게 알려주세요. 강사 화면에서 확인할 수 있습니다.</p>
+      <p class="login-foot">저장하면 강의 목록으로 이동합니다. 팀 이름은 마이페이지에서 언제든 고칠 수 있습니다.</p>
     </div>
   </div>
 </div>
@@ -36,74 +30,35 @@
   import { getMe, needsOnboarding, saveProfileBits } from '/js/auth.js';
   import { toast } from '/js/supabase.js';
 
-  const COHORT_CHOICES = [1, 2, 3, 4];
-
-  const box = document.querySelector('.ob-cohorts');
-  const custom = document.getElementById('ob-cohort-custom');
   const teamInput = document.getElementById('ob-team');
   const saveBtn = document.getElementById('ob-save');
 
-  let cohort = null;
-
   function refresh() {
-    const team = teamInput.value.trim();
-    const c = cohort === 'custom' ? Number(custom.value) : cohort;
-    saveBtn.disabled = !(team && Number.isInteger(c) && c >= 1);
+    saveBtn.disabled = !teamInput.value.trim();
   }
-
-  function paintChoices() {
-    box.innerHTML = '';
-    for (const n of COHORT_CHOICES) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'ob-cohort' + (cohort === n ? ' on' : '');
-      b.textContent = `${n}기`;
-      b.addEventListener('click', () => { cohort = n; custom.hidden = true; paintChoices(); refresh(); });
-      box.appendChild(b);
-    }
-    const other = document.createElement('button');
-    other.type = 'button';
-    other.className = 'ob-cohort' + (cohort === 'custom' ? ' on' : '');
-    other.textContent = '그 외';
-    other.addEventListener('click', () => { cohort = 'custom'; custom.hidden = false; custom.focus(); paintChoices(); refresh(); });
-    box.appendChild(other);
-  }
-
-  paintChoices();
   teamInput.addEventListener('input', refresh);
-  custom.addEventListener('input', refresh);
 
   saveBtn.addEventListener('click', async () => {
     const team = teamInput.value.trim();
-    const c = cohort === 'custom' ? Number(custom.value) : cohort;
-    if (!team || !Number.isInteger(c) || c < 1) return;
+    if (!team) return;
     saveBtn.disabled = true;
     saveBtn.textContent = '저장 중…';
-    const saved = await saveProfileBits({ team, cohort: c });
+    const saved = await saveProfileBits({ team });
     if (!saved) {
       saveBtn.disabled = false;
       saveBtn.textContent = '시작하기';
-      // 운영자가 DB 마이그레이션(002_course_settings.sql)을 아직 실행하지 않은 경우
-      const foot = document.querySelector('.login-foot');
-      if (foot) foot.innerHTML = '⚠️ 저장이 계속 실패하면 강사에게 알려주세요 — 운영 DB에 기수 컬럼이 아직 없을 수 있습니다 (supabase/002 실행 필요).';
       return;
     }
-    toast(`${c}기 수강생으로 등록되었습니다.`);
+    toast('가입 정보가 저장되었습니다.');
     location.replace('/');
   });
 
-  // 이미 온보딩이 끝난 사람이 직접 들어온 경우 → 홈으로.
-  // 기존 값이 있으면 미리 채워줍니다(팀만 있고 기수가 없는 기존 테스터).
+  // 이미 온보딩이 끝난 사람이 직접 들어온 경우 → 강의 목록으로.
   (async () => {
     const me = await getMe();
     if (!me) { location.replace('/login'); return; }
     if (!needsOnboarding(me)) { location.replace('/'); return; }
     if (me.team && me.team !== '미지정') teamInput.value = me.team;
-    if (me.cohort) {
-      cohort = COHORT_CHOICES.includes(me.cohort) ? me.cohort : 'custom';
-      if (cohort === 'custom') { custom.hidden = false; custom.value = me.cohort; }
-      paintChoices();
-    }
     refresh();
   })();
 </script>

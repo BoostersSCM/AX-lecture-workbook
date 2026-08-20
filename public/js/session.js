@@ -1,11 +1,13 @@
-// js/session.js — 회차별 워크북 (/session?n=1..4)
+// js/session.js — 회차별 워크북 (/c/{slug}/session?n=1..N)
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, loadSlackEvents, progressOf, mountStatus, setManualSave, mountSaveBar, onSaved } from './store.js';
-import { SESSIONS, requiredKeys } from './content.js';
 import { el, progressBar, renderBlock } from './render.js';
 import { renderPanelById, renderSlackSendLab } from './practice.js';
-import { isSessionOpen, openSessionsFor, lockedNotice, scheduledDateFor } from './course.js';
+import {
+  C, initCourse, ensureCourseUrl, coursePath, requiredKeys,
+  isSessionOpen, openSessionsForMe, lockedNotice, scheduledDateFor, enrollNotice,
+} from './courseState.js';
 
 const app = document.getElementById('app');
 
@@ -60,8 +62,16 @@ function renderSlackInbox() {
 }
 
 (async function main() {
+  if (ensureCourseUrl()) return; // 구 URL(/session?n=1) → /c/connect-ai/session?n=1
   const me = await requireAuth();
   if (!me) return;
+
+  const course = await initCourse(me);
+  if (!course) {
+    await mountShell();
+    app.appendChild(el('<div class="empty-state">강의를 찾을 수 없습니다. <a href="/">강의 목록으로</a></div>'));
+    return;
+  }
   await mountShell();
   mountStatus(document.getElementById('savestate'));
 
@@ -70,18 +80,19 @@ function renderSlackInbox() {
   mountSaveBar();
 
   const n = Number(new URLSearchParams(location.search).get('n') || 1);
-  const s = SESSIONS.find(x => x.n === n);
+  const s = C.SESSIONS.find(x => x.n === n);
 
   if (!s) {
-    app.appendChild(el('<div class="empty-state">그런 회차가 없습니다. <a href="/">홈으로</a></div>'));
+    app.appendChild(el(`<div class="empty-state">그런 회차가 없습니다. <a href="${coursePath()}">강의 홈으로</a></div>`));
     return;
   }
 
-  document.title = `${s.n}회차 ${s.title} · AX 워크북`;
+  document.title = `${s.n}회차 ${s.title} · ${C.course.title || 'AX 워크북'}`;
 
   // 회차 개방 게이트 — 강사가 연 회차만 수강생에게 열립니다 (강사는 항상 통과)
-  if (!(await isSessionOpen(n, me))) {
-    app.appendChild(lockedNotice(n, await openSessionsFor(me), await scheduledDateFor(me, n)));
+  if (!isSessionOpen(n, me)) {
+    if (C.course.id && !C.myCohort) app.appendChild(enrollNotice());
+    else app.appendChild(lockedNotice(n, openSessionsForMe(me), scheduledDateFor(n)));
     return;
   }
 
@@ -89,9 +100,9 @@ function renderSlackInbox() {
 
   app.appendChild(el(`
     <div class="page-head">
-      <div class="eyebrow">${s.n}회차 · ${esc(s.tag)}</div>
+      <div class="eyebrow">${s.n}회차 · ${esc(s.tag || '')}</div>
       <h1>${esc(s.title)}</h1>
-      <p class="lede">${esc(s.goal)}</p>
+      <p class="lede">${esc(s.goal || '')}</p>
     </div>`));
 
   // 진행률 바 — 저장 성공 시마다 다시 계산해서 "채워지고 있다"가 보이게
@@ -103,7 +114,7 @@ function renderSlackInbox() {
     bar.querySelector('.prog-num').textContent = `${p.done}/${p.total}`;
   });
 
-  // 회차 골격은 content.js 블록 순서 그대로 — 작업대(panel)와 Slack lab도
+  // 회차 골격은 blocks 순서 그대로 — 작업대(panel)와 Slack lab도
   // 해당 실습 위치에 끼워 넣습니다. 버튼이 설명보다 먼저 나오지 않게 하기 위함입니다.
   for (const b of s.blocks) {
     if (b.type === 'panel') {
@@ -120,11 +131,11 @@ function renderSlackInbox() {
   }
 
   // 이전/다음 회차
-  const prev = SESSIONS.find(x => x.n === n - 1);
-  const next = SESSIONS.find(x => x.n === n + 1);
+  const prev = C.SESSIONS.find(x => x.n === n - 1);
+  const next = C.SESSIONS.find(x => x.n === n + 1);
   const nav = el('<p style="margin-top:2.5rem;display:flex;gap:0.6rem;flex-wrap:wrap"></p>');
-  if (prev) nav.appendChild(el(`<a class="btn-link" style="background:var(--surface-2);color:var(--ink)" href="/session?n=${prev.n}">← ${prev.n}회차</a>`));
-  if (next) nav.appendChild(el(`<a class="btn-link" href="/session?n=${next.n}">${next.n}회차 →</a>`));
-  if (!next) nav.appendChild(el(`<a class="btn-link" href="/clinic">설계서 쓰러 가기 →</a>`));
+  if (prev) nav.appendChild(el(`<a class="btn-link" style="background:var(--surface-2);color:var(--ink)" href="${coursePath('session')}?n=${prev.n}">← ${prev.n}회차</a>`));
+  if (next) nav.appendChild(el(`<a class="btn-link" href="${coursePath('session')}?n=${next.n}">${next.n}회차 →</a>`));
+  if (!next && C.CLINIC.groups?.length) nav.appendChild(el(`<a class="btn-link" href="${coursePath('clinic')}">설계서 쓰러 가기 →</a>`));
   app.appendChild(nav);
 })();

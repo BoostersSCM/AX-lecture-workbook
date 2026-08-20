@@ -1,10 +1,10 @@
-// js/setup.js — 연결 준비 체크리스트
+// js/setup.js — 연결 준비 체크리스트 (/c/{slug}/setup)
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus, saveValue } from './store.js';
 import { toast, supabase } from './supabase.js';
-import { SETUP, PROMPT_HELP, PROMPTS, requiredKeys } from './content.js';
 import { el, progressBar, renderField, renderPrompt } from './render.js';
+import { C, initCourse, ensureCourseUrl, coursePath, requiredKeys } from './courseState.js';
 
 const app = document.getElementById('app');
 
@@ -96,12 +96,27 @@ function renderMcpGuide() {
 }
 
 (async function main() {
+  if (ensureCourseUrl()) return;
   const me = await requireAuth();
   if (!me) return;
+
+  const course = await initCourse(me);
+  if (!course) {
+    await mountShell();
+    app.appendChild(el('<div class="empty-state">강의를 찾을 수 없습니다. <a href="/">강의 목록으로</a></div>'));
+    return;
+  }
   await mountShell();
   mountStatus(document.getElementById('savestate'));
+  document.title = `${C.SETUP.title || '연결 준비'} · ${C.course.title || 'AX 워크북'}`;
 
   const entries = await loadEntries();
+  const SETUP = C.SETUP;
+
+  if (!SETUP.groups?.length) {
+    app.appendChild(el(`<div class="empty-state">이 강의는 연결 준비 단계가 없습니다. <a href="${coursePath()}">강의 홈으로</a></div>`));
+    return;
+  }
 
   app.appendChild(el(`
     <div class="page-head">
@@ -134,12 +149,12 @@ function renderMcpGuide() {
       }
 
       // 연결 확인 항목 아래에 확인용 프롬프트를 바로 붙여줍니다
-      if (f.key === 'setup.verify') {
+      if (f.key === 'setup.verify' && SETUP.verifyPrompt) {
         app.appendChild(renderPrompt({
           title: '연결 확인 프롬프트 (선택)',
           note: '어디에 물어보나요? 사내 AI 도구(예: Claude)에 이 문장을 붙여넣으면 됩니다. AI 도구가 없다면 건너뛰고, 1회차 작업대의 「수정할 문단 불러오기」 버튼이 같은 확인을 대신합니다.',
           body: SETUP.verifyPrompt,
-        }, PROMPT_HELP.setup));
+        }, C.PROMPT_HELP.setup));
       }
     }
 
@@ -189,8 +204,10 @@ function renderMcpGuide() {
     }
   }
 
-  app.appendChild(el(`<h2>안 되면</h2>`));
-  app.appendChild(el(`<div class="note">${esc(SETUP.planB)}</div>`));
+  if (SETUP.planB) {
+    app.appendChild(el(`<h2>안 되면</h2>`));
+    app.appendChild(el(`<div class="note">${esc(SETUP.planB)}</div>`));
+  }
 
   app.appendChild(el(`
     <h2>알아두시면 좋은 것</h2>
@@ -203,5 +220,5 @@ function renderMcpGuide() {
       <span style="color:var(--ink-soft)">강사가 배포한 「AX 실습장」을 각자 복제해 사용합니다. 3회차 수정 저장은 변경 전후 미리보기와 확인 뒤 내 복제본·샘플 태스크·봇 메시지에만 실행합니다.</span></p>
     </div>`));
 
-  app.appendChild(el(`<p style="margin-top:2rem"><a class="btn-link" href="/session?n=1">1회차 워크북으로 →</a></p>`));
+  app.appendChild(el(`<p style="margin-top:2rem"><a class="btn-link" href="${coursePath('session')}?n=1">1회차 워크북으로 →</a></p>`));
 })();

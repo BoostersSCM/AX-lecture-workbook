@@ -1,26 +1,45 @@
-// js/clinic.js — 4회차 케이스 클리닉 설계서
+// js/clinic.js — 케이스 클리닉 설계서 (/c/{slug}/clinic) — 마지막 회차와 함께 열립니다
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus, getValue, setManualSave, mountSaveBar, onSaved } from './store.js';
-import { CLINIC, requiredKeys } from './content.js';
 import { el, progressBar, renderField } from './render.js';
-import { isSessionOpen, openSessionsFor, lockedNotice, scheduledDateFor } from './course.js';
+import {
+  C, initCourse, ensureCourseUrl, coursePath, requiredKeys,
+  isSessionOpen, openSessionsForMe, lockedNotice, scheduledDateFor, enrollNotice,
+} from './courseState.js';
 
 const app = document.getElementById('app');
 
 (async function main() {
+  if (ensureCourseUrl()) return;
   const me = await requireAuth();
   if (!me) return;
+
+  const course = await initCourse(me);
+  if (!course) {
+    await mountShell();
+    app.appendChild(el('<div class="empty-state">강의를 찾을 수 없습니다. <a href="/">강의 목록으로</a></div>'));
+    return;
+  }
   await mountShell();
   mountStatus(document.getElementById('savestate'));
+
+  const CLINIC = C.CLINIC;
+  if (!CLINIC.groups?.length) {
+    app.appendChild(el(`<div class="empty-state">이 강의는 설계서 단계가 없습니다. <a href="${coursePath()}">강의 홈으로</a></div>`));
+    return;
+  }
+  document.title = `${CLINIC.title || '업무 설계서'} · ${C.course.title || 'AX 워크북'}`;
 
   // 이 페이지의 워크북 입력은 자동 저장하지 않습니다 — 하단 [모두 저장] 버튼으로 일괄 저장
   setManualSave(true);
   mountSaveBar();
 
-  // 설계서는 4회차와 함께 열립니다
-  if (!(await isSessionOpen(4, me))) {
-    app.appendChild(lockedNotice(4, await openSessionsFor(me), await scheduledDateFor(me, 4)));
+  // 설계서는 마지막 회차와 함께 열립니다
+  const lastN = C.SESSIONS.at(-1)?.n ?? 4;
+  if (!isSessionOpen(lastN, me)) {
+    if (C.course.id && !C.myCohort) app.appendChild(enrollNotice());
+    else app.appendChild(lockedNotice(lastN, openSessionsForMe(me), scheduledDateFor(lastN)));
     return;
   }
 
@@ -28,7 +47,7 @@ const app = document.getElementById('app');
 
   app.appendChild(el(`
     <div class="page-head">
-      <div class="eyebrow">4회차 · 업무 설계</div>
+      <div class="eyebrow">${lastN}회차 · 업무 설계</div>
       <h1>${esc(CLINIC.title)}</h1>
       <p class="lede">${esc(CLINIC.intro)}</p>
     </div>`));

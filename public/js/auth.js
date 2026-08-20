@@ -127,11 +127,11 @@ export function needsTeam(me) {
   return !me?.team || me.team === '미지정';
 }
 
-// 첫 로그인 온보딩(팀 + 기수)이 끝났는가 — 강사는 기수 없이도 통과
+// 첫 로그인 온보딩(팀)이 끝났는가 — 기수 선택은 각 강의 홈에서 참여로 처리합니다
 export function needsOnboarding(me) {
   if (!me) return false;
-  if (isInstructor(me)) return false; // 강사는 기수 선택 없이 통과
-  return needsTeam(me) || !me.cohort;
+  if (isInstructor(me)) return false;
+  return needsTeam(me);
 }
 
 export async function saveTeam(team) {

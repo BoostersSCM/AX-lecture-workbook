@@ -338,7 +338,7 @@ function addClassPostWriter(panel) {
         <p class="class-post-hint class-post-trouble">로그인했는데 이 화면으로 돌아오지 않고 <b>클래스 사이트로 이동해버린다면</b> — 클래스 플랫폼 쪽 설정 문제입니다. 클래스 관리자에게 Supabase Redirect URLs에 <code>${esc(classCallbackUrl())}</code> 등록을 요청해주세요.</p>`;
       authBox.querySelector('button').addEventListener('click', async (event) => {
         event.currentTarget.disabled = true;
-        const { error } = await signInToClass('/session?n=2');
+        const { error } = await signInToClass(location.pathname + location.search);
         if (error) {
           event.currentTarget.disabled = false;
           toast(error.message || '클래스 계정 연결에 실패했습니다.', 'error');

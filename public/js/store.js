@@ -6,8 +6,27 @@
 import { supabase, toast } from './supabase.js';
 import { getMe } from './auth.js';
 
-let cache = null;       // { item_key: value }
+let cache = null;       // { item_key: value } — 현재 강의 스코프
 let userId = null;
+
+// ── 강의 컨텍스트 ────────────────────────────────────────────
+// entries는 (user, course, item_key)로 저장됩니다. 강의 페이지가 initCourse에서
+// setCourse를 호출하면 이후 모든 읽기/쓰기가 그 강의로 스코프됩니다.
+// null = 레거시 모드(006 마이그레이션 전) — course_id 없이 동작.
+let courseId = null;
+
+export function setCourse(id) {
+  if (courseId !== id) cache = null; // 강의가 바뀌면 캐시 무효화
+  courseId = id;
+}
+
+function pendingKey(key) {
+  return (courseId || 'legacy') + '|' + key;
+}
+function splitPendingKey(pkey) {
+  const i = pkey.indexOf('|');
+  return i < 0 ? { cid: 'legacy', key: pkey } : { cid: pkey.slice(0, i), key: pkey.slice(i + 1) };
+}
 
 // ── 저장 모드 ────────────────────────────────────────────────
 // 회차·설계서 페이지는 타이핑마다 DB에 쓰지 않습니다(과부하 방지 + 명시적 저장 학습).
@@ -33,8 +52,9 @@ export async function loadEntries({ fresh = false } = {}) {
   if (!me) return {};
   userId = me.id;
 
-  const { data, error } = await supabase
-    .from('entries').select('item_key, value').eq('user_id', me.id);
+  let q = supabase.from('entries').select('item_key, value').eq('user_id', me.id);
+  if (courseId) q = q.eq('course_id', courseId);
+  const { data, error } = await q;
   if (error) { toast('불러오기에 실패했습니다.', 'error'); return {}; }
 
   cache = {};
@@ -42,7 +62,10 @@ export async function loadEntries({ fresh = false } = {}) {
 
   // 지난번에 저장하지 못한 값(또는 수동 모드의 초안)이 있으면 그게 최신입니다 — 화면에 먼저 반영
   const pending = readPending();
-  for (const k of Object.keys(pending)) cache[k] = pending[k];
+  for (const pk of Object.keys(pending)) {
+    const { cid, key } = splitPendingKey(pk);
+    if (cid === (courseId || 'legacy')) cache[key] = pending[pk];
+  }
 
   if (manualMode) {
     // 수동 모드: 자동 업로드하지 않고, 저장 바에 "저장 안 된 변경 N개"로 보여줍니다
@@ -55,13 +78,23 @@ export async function loadEntries({ fresh = false } = {}) {
 }
 
 // 다른 사람(강사가 열람할 때)의 답변
-export async function loadEntriesOf(uid) {
-  const { data, error } = await supabase
-    .from('entries').select('item_key, value, updated_at').eq('user_id', uid);
+export async function loadEntriesOf(uid, cid = courseId) {
+  let q = supabase.from('entries').select('item_key, value, updated_at').eq('user_id', uid);
+  if (cid) q = q.eq('course_id', cid);
+  const { data, error } = await q;
   if (error) return {};
   const out = {};
   for (const row of data) out[row.item_key] = row.value;
   return out;
+}
+
+// 마이페이지용 — 강의 구분 포함 전체 기록
+export async function loadAllMyEntries() {
+  const me = await getMe();
+  if (!me) return [];
+  const { data, error } = await supabase
+    .from('entries').select('course_id, item_key, value, updated_at').eq('user_id', me.id);
+  return error ? [] : (data || []);
 }
 
 export async function loadSlackEvents({ limit = 20 } = {}) {
@@ -90,10 +123,10 @@ function writePending(obj) {
   try { localStorage.setItem(PENDING, JSON.stringify(obj)); } catch { /* 용량 초과는 무시 */ }
 }
 function markPending(key, value) {
-  const p = readPending(); p[key] = value; writePending(p);
+  const p = readPending(); p[pendingKey(key)] = value; writePending(p);
 }
 function clearPending(key) {
-  const p = readPending(); delete p[key]; writePending(p);
+  const p = readPending(); delete p[pendingKey(key)]; writePending(p);
 }
 
 // 저장 — 같은 키를 연달아 치면 마지막 것만 나갑니다
@@ -120,9 +153,11 @@ export function saveValue(key, value, { immediate = false } = {}) {
       userId = me.id;
     }
     setStatus('saving');
+    const row = { user_id: userId, item_key: key, value };
+    if (courseId) row.course_id = courseId;
     const { error } = await supabase
       .from('entries')
-      .upsert({ user_id: userId, item_key: key, value }, { onConflict: 'user_id,item_key' });
+      .upsert(row, { onConflict: courseId ? 'user_id,course_id,item_key' : 'user_id,item_key' });
 
     if (error) {
       markPending(key, value);
@@ -194,7 +229,7 @@ export function mountSaveBar() {
 
 function updateSaveBar() {
   if (!saveBarEl) return;
-  const count = Object.keys(readPending()).length;
+  const count = Object.keys(readPending()).filter(pk => splitPendingKey(pk).cid === (courseId || 'legacy')).length;
   saveBarEl.hidden = count === 0;
   const text = saveBarEl.querySelector('.savebar-text');
   if (text) text.textContent = `저장 안 된 변경 ${count}개`;
@@ -203,8 +238,8 @@ function updateSaveBar() {
 // 수동 모드: 쌓인 초안 전체를 한 번의 요청으로 저장합니다
 export async function saveDirty() {
   const p = readPending();
-  const keys = Object.keys(p);
-  if (!keys.length) return true;
+  const mine = Object.keys(p).filter(pk => splitPendingKey(pk).cid === (courseId || 'legacy'));
+  if (!mine.length) return true;
 
   if (!userId) {
     const me = await getMe();
@@ -213,8 +248,13 @@ export async function saveDirty() {
   }
 
   setStatus('saving');
-  const rows = keys.map(k => ({ user_id: userId, item_key: k, value: p[k] }));
-  const { error } = await supabase.from('entries').upsert(rows, { onConflict: 'user_id,item_key' });
+  const rows = mine.map(pk => {
+    const { key } = splitPendingKey(pk);
+    const row = { user_id: userId, item_key: key, value: p[pk] };
+    if (courseId) row.course_id = courseId;
+    return row;
+  });
+  const { error } = await supabase.from('entries').upsert(rows, { onConflict: courseId ? 'user_id,course_id,item_key' : 'user_id,item_key' });
 
   if (error) {
     setStatus('error');
@@ -222,8 +262,9 @@ export async function saveDirty() {
     await warnIfSessionExpired();
     return false;
   }
-  writePending({});
-  if (cache) for (const k of keys) cache[k] = p[k];
+  if (cache) for (const pk of mine) cache[splitPendingKey(pk).key] = p[pk];
+  for (const pk of mine) delete p[pk];
+  writePending(p);
   updateSaveBar();
   setStatus('saved');
   notifySaved();
@@ -233,16 +274,21 @@ export async function saveDirty() {
 // 로그인 후 남아 있는 미저장분을 다시 올립니다 (자동 저장 모드의 복구 경로)
 async function flushPending() {
   const p = readPending();
-  const keys = Object.keys(p);
-  if (!keys.length || !userId) return;
+  const mine = Object.keys(p).filter(pk => splitPendingKey(pk).cid === (courseId || 'legacy'));
+  if (!mine.length || !userId) return;
 
-  const rows = keys.map(k => ({ user_id: userId, item_key: k, value: p[k] }));
-  const { error } = await supabase.from('entries').upsert(rows, { onConflict: 'user_id,item_key' });
+  const rows = mine.map(pk => {
+    const { key } = splitPendingKey(pk);
+    const row = { user_id: userId, item_key: key, value: p[pk] };
+    if (courseId) row.course_id = courseId;
+    return row;
+  });
+  const { error } = await supabase.from('entries').upsert(rows, { onConflict: courseId ? 'user_id,course_id,item_key' : 'user_id,item_key' });
   if (!error) {
-    writePending({});
-    if (cache) for (const k of keys) cache[k] = p[k];
+    for (const pk of mine) { if (cache) cache[splitPendingKey(pk).key] = p[pk]; delete p[pk]; }
+    writePending(p);
     notifySaved();
-    toast(`저장하지 못했던 ${keys.length}개 항목을 복구했습니다.`);
+    toast(`저장하지 못했던 ${mine.length}개 항목을 복구했습니다.`);
   }
 }
 

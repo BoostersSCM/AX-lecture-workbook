@@ -1,10 +1,10 @@
-// js/my.js — 마이페이지: 내 정보 수정 + 내 기록 열람·활용
+// js/my.js — 마이페이지: 내 정보 수정 + 강의별 내 기록 열람·활용 + Claude 연결
 import { requireAuth, isInstructor, isActualInstructor, startMemberPreview, stopMemberPreview, saveProfileBits } from './auth.js';
 import { mountShell, esc } from './shell.js';
-import { loadEntries, progressOf, mountStatus } from './store.js';
-import { SETUP, SESSIONS, CLINIC, requiredKeys } from './content.js';
+import { loadEntries, loadAllMyEntries, progressOf, mountStatus } from './store.js';
 import { el, progressBar } from './render.js';
 import { toast, supabase } from './supabase.js';
+import { C, initCourse, labelMapOf, loadCourseShape, DEFAULT_SLUG } from './courseState.js';
 
 // ── 내 Claude 연결 (MCP) — 개인 키 발급·관리 ────────────────
 // 내 워크북 기록을 각자의 Claude에서 불러오고 되돌려 놓을 수 있게 하는 다리입니다.
@@ -48,7 +48,7 @@ async function renderMcpSection(me) {
         첫 사용 때 부스터스 구글 로그인으로 본인 확인을 거쳐 <b>내 기록에만</b> 연결됩니다.
         아래 개인 키는 개인 플랜이거나 조직 커넥터가 아직 없을 때의 대안입니다.
       </div>
-      <p class="fhint" style="margin-top:0">4주간 쌓은 내 기록(레시피·액션아이템·설계서)을 <b>내 Claude</b>에서 불러오고, 다듬은 결과를 워크북에 되돌려 놓을 수 있습니다.
+      <p class="fhint" style="margin-top:0">강의에서 쌓은 내 기록(레시피·액션아이템·설계서)을 <b>내 Claude</b>에서 불러오고, 다듬은 결과를 워크북에 되돌려 놓을 수 있습니다.
       개인 키도 <b>내 기록에만</b> 접근합니다 — 다른 사람 것은 보이지 않습니다.</p>
       ${key ? `
         <label class="ob-field"><span>내 커넥터 주소 (Claude에 등록)</span>
@@ -98,17 +98,6 @@ async function renderMcpSection(me) {
 
 const app = document.getElementById('app');
 
-// item_key → { label, group } 매핑 — 내 기록을 사람이 읽는 목록으로
-const META = (() => {
-  const m = {};
-  for (const g of SETUP.groups) for (const f of g.fields) if (f.key && f.kind !== 'note') m[f.key] = { label: f.label, group: '연결 준비', href: '/setup' };
-  for (const s of SESSIONS) for (const b of s.blocks) if (b.type === 'field') m[b.key] = { label: b.label, group: `${s.n}회차 · ${s.title}`, href: `/session?n=${s.n}` };
-  for (const g of CLINIC.groups) for (const f of g.fields) if (f.key && f.kind !== 'note') m[f.key] = { label: f.label, group: '내 업무 연결 설계서', href: '/clinic' };
-  return m;
-})();
-
-const GROUP_ORDER = ['연결 준비', ...SESSIONS.map(s => `${s.n}회차 · ${s.title}`), '내 업무 연결 설계서'];
-
 function displayValue(key, value) {
   if (value === 'true') return '✓ 체크함';
   if (key.endsWith('.cols') || key.endsWith('.db_map')) {
@@ -120,19 +109,26 @@ function displayValue(key, value) {
   return value;
 }
 
+// 문항 구조에서 필수 키 전체 (강의별 진행 요약용)
+function requiredOf(shape) {
+  const out = [];
+  for (const g of shape.SETUP?.groups || []) for (const f of g.fields || []) if (f.required) out.push(f.key);
+  for (const s of shape.SESSIONS || []) for (const b of s.blocks || []) if (b.type === 'field' && b.required) out.push(b.key);
+  for (const g of shape.CLINIC?.groups || []) for (const f of g.fields || []) if (f.required) out.push(f.key);
+  return out;
+}
+
 (async function main() {
   const me = await requireAuth();
   if (!me) return;
-  await mountShell();
+  await mountShell(); // 마이페이지는 플랫폼 네비
   mountStatus(document.getElementById('savestate'));
-
-  const entries = await loadEntries();
 
   app.appendChild(el(`
     <div class="page-head">
       <div class="eyebrow">MY PAGE</div>
       <h1>${esc(me.name)} 님</h1>
-      <p class="lede">내 정보를 수정하고, 지금까지 기록한 내용을 한 곳에서 봅니다. 기록 원문 수정은 각 회차 페이지에서 합니다.</p>
+      <p class="lede">내 정보를 수정하고, 강의별로 기록한 내용을 한 곳에서 봅니다. 기록 원문 수정은 각 강의 페이지에서 합니다.</p>
     </div>`));
 
   // ── 내 정보 ────────────────────────────────────────────────
@@ -150,26 +146,15 @@ function displayValue(key, value) {
         <label class="ob-field"><span>소속 팀</span>
           <input type="text" id="my-team" maxlength="40" value="${esc(me.team === '미지정' ? '' : me.team)}" placeholder="예: SCM본부 / People">
         </label>
-        ${isInstructor(me) ? '' : `
-        <label class="ob-field"><span>기수</span>
-          <input type="number" id="my-cohort" min="1" max="99" value="${Number.isInteger(me.cohort) ? me.cohort : ''}" placeholder="예: 1">
-        </label>`}
         <button class="primary" id="my-save" type="button">정보 저장</button>
       </div>
-      <p class="fhint">이름과 이메일은 구글 계정에서 옵니다. 기수를 바꾸면 열리는 회차도 그 기수 기준으로 바뀝니다.</p>`}
+      <p class="fhint">이름과 이메일은 구글 계정에서 옵니다. 어느 강의를 몇 기로 듣는지는 각 강의 홈의 [참여하기]로 관리됩니다.</p>`}
     </div>`);
   info.querySelector('#my-save')?.addEventListener('click', async (e) => {
     const team = info.querySelector('#my-team').value.trim();
-    const cohortInput = info.querySelector('#my-cohort');
-    const bits = {};
-    if (team) bits.team = team;
-    if (cohortInput) {
-      const c = Number(cohortInput.value);
-      if (Number.isInteger(c) && c >= 1) bits.cohort = c;
-    }
-    if (!Object.keys(bits).length) { toast('바꿀 내용이 없습니다.', 'error'); return; }
+    if (!team) { toast('팀 이름을 입력해주세요.', 'error'); return; }
     e.currentTarget.disabled = true;
-    const saved = await saveProfileBits(bits);
+    const saved = await saveProfileBits({ team });
     e.currentTarget.disabled = false;
     if (saved) { toast('내 정보를 저장했습니다.'); setTimeout(() => location.reload(), 600); }
   });
@@ -185,7 +170,7 @@ function displayValue(key, value) {
       pv.innerHTML = `
         <p style="margin:0 0 0.7rem">지금 <b>${me.cohort}기 수강생의 눈</b>으로 보고 있습니다 —
         홈 카드 🔒, 네비 자물쇠, 회차 잠금 화면이 수강생에게 보이는 그대로입니다.
-        강사 메뉴(/admin)는 이 상태에서 잠깁니다.</p>
+        스튜디오는 이 상태에서 잠깁니다.</p>
         <button class="primary" id="pv-stop" type="button">강사로 돌아가기</button>`;
       pv.querySelector('#pv-stop').addEventListener('click', () => {
         stopMemberPreview();
@@ -214,70 +199,115 @@ function displayValue(key, value) {
     app.appendChild(pv);
   }
 
-  // ── 진행 요약 ──────────────────────────────────────────────
-  app.appendChild(el('<h2>진행 요약</h2>'));
-  app.appendChild(progressBar(progressOf(requiredKeys('all'), entries)));
+  // ── 내 Claude 연결 (MCP) ──────────────────────────────────
+  app.appendChild(el('<h2>내 Claude에 연결하기 (MCP)</h2>'));
+  app.appendChild(await renderMcpSection(me));
 
-  // ── 활용하기 ──────────────────────────────────────────────
-  app.appendChild(el('<h2>활용하기</h2>'));
+  // ── 내 기록 (강의별) ───────────────────────────────────────
+  // 플랫폼 모드(006 이후)면 전 강의 기록을 강의별로 묶고,
+  // 레거시 모드면 기존 단일 강의 기록을 그대로 보여줍니다.
+  app.appendChild(el('<h2>내 기록</h2>'));
+
+  // 버킷: [{ title, slug, shape, labels, entries }]
+  const buckets = [];
+  const rows = await loadAllMyEntries(); // 006 이전이면 오류로 [] (아래 레거시 폴백)
+
+  if (rows.length) {
+    const byCourse = new Map();
+    for (const r of rows) {
+      const cid = r.course_id || 'legacy';
+      if (!byCourse.has(cid)) byCourse.set(cid, {});
+      byCourse.get(cid)[r.item_key] = r.value;
+    }
+    for (const [cid, entries] of byCourse) {
+      if (cid === 'legacy') {
+        buckets.push({ title: '이전 기록', slug: DEFAULT_SLUG, shape: null, labels: {}, entries });
+        continue;
+      }
+      const shape = await loadCourseShape(cid);
+      if (!shape) continue; // 접근 불가(보관된 강의 등)
+      buckets.push({ title: shape.course.title, slug: shape.course.slug, shape, labels: labelMapOf(shape), entries });
+    }
+  } else {
+    // 레거시(006 이전) 또는 기록 없음 — 기존 방식으로 한 번 더 확인
+    await initCourse(me);
+    const entries = await loadEntries();
+    if (Object.keys(entries).length) {
+      buckets.push({ title: C.course?.title || '업무를 연결하는 AI', slug: C.course?.slug || DEFAULT_SLUG, shape: C, labels: labelMapOf(C), entries });
+    }
+  }
+
+  const hasAny = buckets.some(b => Object.keys(b.entries).some(k => String(b.entries[k] || '').trim() && b.entries[k] !== 'false'));
+  if (!hasAny) {
+    app.appendChild(el('<div class="empty-state">아직 기록이 없습니다. <a href="/">강의 목록에서 시작해보세요.</a></div>'));
+    return;
+  }
+
+  // 내보내기 — 모든 강의의 기록을 강의별 섹션으로
   const useBox = el(`
-    <div class="my-actions">
+    <div class="my-actions" style="margin-bottom:1.2rem">
       <button class="primary" id="my-export" type="button">내 기록 파일로 내보내기 (.md)</button>
-      <a class="btn-link" style="background:var(--surface-2);color:var(--ink)" href="/prompts">프롬프트 카드 열기</a>
-      ${String(entries['s3.recipe'] || '').trim() ? '<button id="my-recipe" type="button">내 연결 레시피 복사</button>' : ''}
     </div>`);
   useBox.querySelector('#my-export').addEventListener('click', () => {
-    const rows = Object.entries(entries)
-      .filter(([key, value]) => META[key] && String(value || '').trim() && value !== 'false')
-      .map(([key, value]) => `## ${META[key].group} — ${META[key].label}\n\n${displayValue(key, value)}`);
-    if (!rows.length) { toast('내보낼 기록이 아직 없습니다.', 'error'); return; }
-    const markdown = `# ${me.name} — AX 워크북 기록\n\n${rows.join('\n\n')}`;
+    const parts = [];
+    for (const b of buckets) {
+      const rows2 = Object.entries(b.entries)
+        .filter(([key, value]) => (b.labels[key] || !b.shape) && String(value || '').trim() && value !== 'false')
+        .map(([key, value]) => `## ${b.labels[key]?.group || '기록'} — ${b.labels[key]?.label || key}\n\n${displayValue(key, value)}`);
+      if (rows2.length) parts.push(`# ${b.title}\n\n${rows2.join('\n\n')}`);
+    }
+    if (!parts.length) { toast('내보낼 기록이 아직 없습니다.', 'error'); return; }
+    const markdown = `# ${me.name} — AX 워크북 기록\n\n${parts.join('\n\n---\n\n')}`;
     const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
     link.download = 'ax-workbook-my-notes.md';
     link.click();
     URL.revokeObjectURL(url);
-    toast(`${rows.length}개 항목을 내보냈습니다.`);
-  });
-  useBox.querySelector('#my-recipe')?.addEventListener('click', async (e) => {
-    try {
-      await navigator.clipboard.writeText(entries['s3.recipe']);
-      e.currentTarget.textContent = '복사됨 ✓';
-      setTimeout(() => { e.currentTarget && (e.currentTarget.textContent = '내 연결 레시피 복사'); }, 1500);
-    } catch { toast('복사하지 못했습니다. 3회차에서 직접 복사해주세요.', 'error'); }
+    toast('기록을 내보냈습니다.');
   });
   app.appendChild(useBox);
 
-  // ── 내 Claude 연결 (MCP) ──────────────────────────────────
-  app.appendChild(el('<h2>내 Claude에 연결하기 (MCP)</h2>'));
-  app.appendChild(await renderMcpSection(me));
+  for (const b of buckets) {
+    const written = Object.keys(b.entries).filter(k => String(b.entries[k] || '').trim() && b.entries[k] !== 'false');
+    if (!written.length) continue;
 
-  // ── 내 기록 ────────────────────────────────────────────────
-  app.appendChild(el('<h2>내 기록</h2>'));
-  const written = Object.keys(entries).filter(k => META[k] && String(entries[k] || '').trim() && entries[k] !== 'false');
+    const req = b.shape ? requiredOf(b.shape) : [];
+    const prog = req.length ? progressOf(req, b.entries) : null;
 
-  if (!written.length) {
-    app.appendChild(el('<div class="empty-state">아직 기록이 없습니다. <a href="/session?n=1">1회차부터 시작해보세요.</a></div>'));
-    return;
-  }
+    const head = el(`
+      <div class="my-course-head">
+        <div><span class="section-kicker">COURSE</span><h3><a href="/c/${encodeURIComponent(b.slug)}">${esc(b.title)} ↗</a></h3></div>
+        ${prog ? `<span class="mono card-prog${prog.pct === 100 ? ' done' : ''}">${prog.done}/${prog.total}</span>` : ''}
+      </div>`);
+    app.appendChild(head);
+    if (prog) app.appendChild(progressBar(prog));
 
-  for (const group of GROUP_ORDER) {
-    const keys = written.filter(k => META[k].group === group);
-    if (!keys.length) continue;
-    const sec = el(`
-      <details class="my-group" ${group.startsWith('연결') ? '' : 'open'}>
-        <summary><b>${esc(group)}</b><span class="mono">${keys.length}건</span><a href="${META[keys[0]].href}">수정하러 가기 ↗</a></summary>
-        <div class="my-items"></div>
-      </details>`);
-    const box = sec.querySelector('.my-items');
-    for (const k of keys) {
-      box.appendChild(el(`
-        <div class="answer-item">
-          <div class="answer-q">${esc(META[k].label)}</div>
-          <div class="answer-v">${esc(displayValue(k, entries[k]))}</div>
-        </div>`));
+    // 그룹 순서: labels에 정의된 그룹 순 → 그 외(라벨 없는 키)는 '기타'
+    const groups = [];
+    for (const k of written) {
+      const g = b.labels[k]?.group || '기타';
+      if (!groups.includes(g)) groups.push(g);
     }
-    app.appendChild(sec);
+    for (const group of groups) {
+      const keys = written.filter(k => (b.labels[k]?.group || '기타') === group);
+      if (!keys.length) continue;
+      const first = b.labels[keys[0]];
+      const href = first ? `/c/${encodeURIComponent(b.slug)}/${first.page}` : `/c/${encodeURIComponent(b.slug)}`;
+      const sec = el(`
+        <details class="my-group">
+          <summary><b>${esc(group)}</b><span class="mono">${keys.length}건</span><a href="${href}">수정하러 가기 ↗</a></summary>
+          <div class="my-items"></div>
+        </details>`);
+      const box = sec.querySelector('.my-items');
+      for (const k of keys) {
+        box.appendChild(el(`
+          <div class="answer-item">
+            <div class="answer-q">${esc(b.labels[k]?.label || k)}</div>
+            <div class="answer-v">${esc(displayValue(k, b.entries[k]))}</div>
+          </div>`));
+      }
+      app.appendChild(sec);
+    }
   }
 })();
