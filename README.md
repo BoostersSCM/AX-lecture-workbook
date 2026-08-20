@@ -205,11 +205,18 @@ course_settings(key, value)                    -- 기수별 회차 개방: open_
 
 ### 3. 강사 권한
 
-강사 계정으로 **한 번 로그인한 뒤**, SQL Editor에서 실행하세요.
+강사는 **허용목록**으로 관리합니다 ([`supabase/005_instructors.sql`](supabase/005_instructors.sql) 1회 실행).
+목록에 있는 이메일은 이미 가입했으면 즉시, 아직이면 **첫 로그인 순간 자동으로** 강사가 됩니다.
 
 ```sql
-update public.profiles set role = 'instructor' where email = 'ku.do@boosters.kr';
+-- 강사·조교 추가 (이미 가입한 사람이면 아래 UPDATE도 함께)
+insert into public.instructor_emails (email, note) values ('새강사@boosters.kr', '조교')
+on conflict (email) do nothing;
+update public.profiles set role = 'instructor'
+ where email in (select email from public.instructor_emails) and role <> 'instructor';
 ```
+
+현재 목록: ku.do@boosters.kr, ch.yoo@boosters.kr
 
 ### 4. 로컬 실행
 

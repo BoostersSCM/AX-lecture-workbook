@@ -6,6 +6,21 @@
 -- ============================================================
 
 -- ────────────────────────────────────────────
+-- 0. instructor_emails — 강사 허용목록 (첫 로그인 시 자동 강사 승격)
+-- ────────────────────────────────────────────
+create table if not exists public.instructor_emails (
+  email       text primary key,
+  note        text,
+  created_at  timestamptz not null default now()
+);
+alter table public.instructor_emails enable row level security; -- 정책 없음 = 서버·트리거 전용
+
+insert into public.instructor_emails (email, note) values
+  ('ku.do@boosters.kr', '강사'),
+  ('ch.yoo@boosters.kr', '강사')
+on conflict (email) do nothing;
+
+-- ────────────────────────────────────────────
 -- 1. profiles — auth.users 와 1:1
 -- ────────────────────────────────────────────
 create table if not exists public.profiles (
@@ -30,14 +45,16 @@ begin
     raise exception 'INVALID_DOMAIN: 부스터스 이메일(@boosters.kr) 만 가입할 수 있습니다.';
   end if;
 
-  insert into public.profiles (id, email, name, team)
+  insert into public.profiles (id, email, name, team, role)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name',
              new.raw_user_meta_data->>'name',
              split_part(new.email,'@',1)),
-    coalesce(new.raw_user_meta_data->>'team', '미지정')
+    coalesce(new.raw_user_meta_data->>'team', '미지정'),
+    case when exists (select 1 from public.instructor_emails i where i.email = new.email)
+         then 'instructor' else 'member' end
   )
   on conflict (id) do nothing;
   return new;
