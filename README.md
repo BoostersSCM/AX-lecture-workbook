@@ -36,6 +36,7 @@ Vercel API:
 - `/api/integrations/slack/send` — 인증된 Slack 채널·DM 발송 및 봇 메시지 수정
 - `/api/slack/events` — Slack Events API 수신·서명 검증 (채널 범위는 각 사용자의 워크북 설정으로 관리)
 - `/api/ai/transform` — (선택·기본 미사용) 서버 측 AI 실행 프록시. **API 크레딧을 쓰지 않는 방침**이라 UI에서 호출하지 않으며, ANTHROPIC_API_KEY를 등록한 경우에만 살아나는 예비 경로입니다
+- `/api/mcp-status` — 연결 준비의 [연결 상태 확인] — 본인 확인 후 서버가 mcp_tokens/mcp_keys에서 내 연결 여부를 세어 반환
 - `/api/mcp` — **Remote MCP 서버 = 다듬기(AI 실습)의 정식 경로**. 수강생이 마이페이지에서 발급한 개인 키(`?key=axk_…`)로 자기 Claude(구독)에 커스텀 커넥터로 등록합니다.
   도구: `list_exercises` / `get_exercise`(프롬프트+워크북 재료 통째 전달) / `get_my_workbook` / `get_entry` / `save_entry`(결과를 워크북에 저장) / `get_course_status`.
   **AI 비용은 각자의 Claude 구독에 포함 — 별도 API 크레딧이 들지 않습니다.** 실습 프롬프트 정의는 `public/js/content.js`를 서버가 동적 import해 화면과 단일 원본을 공유합니다(vercel.json includeFiles)

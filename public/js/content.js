@@ -105,8 +105,8 @@ export const SETUP = {
         { key: 'setup.slack',  kind: 'check', label: '슬랙 연결' },
         { key: 'setup.asana',  kind: 'check', label: '아사나 연결 — 실습 프로젝트 또는 태스크 접근 권한 포함' },
         { key: 'setup.mcp', kind: 'check',
-          label: '내 Claude에 **워크북 커넥터**를 등록했다',
-          hint: '마이페이지에서 연결 키를 발급해 Claude 설정 → 커넥터 → 커스텀 커넥터에 주소를 붙여넣습니다. AI 실습(다듬기)은 각자의 Claude가 이 커넥터로 수행합니다 — 별도 API 크레딧이 들지 않습니다.' },
+          label: '내 Claude에 **워크북 커넥터(AX 워크북)**를 연결하고 승인까지 마쳤다',
+          hint: 'AI 실습(다듬기)은 각자의 Claude가 이 커넥터로 수행합니다 — 별도 API 크레딧이 들지 않습니다. 아래 안내대로 켜고, [연결 상태 확인] 버튼으로 실제 연결을 확인하면 자동으로 체크됩니다.' },
       ]
     },
     {

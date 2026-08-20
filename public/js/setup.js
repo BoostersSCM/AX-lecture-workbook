@@ -2,7 +2,7 @@
 import { requireAuth } from './auth.js';
 import { mountShell, esc } from './shell.js';
 import { loadEntries, progressOf, mountStatus, saveValue } from './store.js';
-import { toast } from './supabase.js';
+import { toast, supabase } from './supabase.js';
 import { SETUP, PROMPT_HELP, PROMPTS, requiredKeys } from './content.js';
 import { el, progressBar, renderField, renderPrompt } from './render.js';
 
@@ -34,6 +34,65 @@ function renderPlaygroundGuide(guide) {
     }
   });
   return section;
+}
+
+// 내 Claude 연결 가이드 + 실측 확인 — "했다고 믿는 것"과 "실제 연결"을 구분해줍니다
+function renderMcpGuide() {
+  const card = el(`
+    <section class="field mcp-setup-guide">
+      <b style="font-size:0.95rem">내 Claude에 연결하는 순서 (회사 팀 플랜 기준)</b>
+      <ol style="margin:0.6rem 0 0.9rem;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.35rem;font-size:0.92rem;color:var(--ink-soft,#3C4A47)">
+        <li>Claude(claude.ai) → <b>설정 → 커넥터</b>에서 <b>「AX 워크북」</b>을 켭니다</li>
+        <li>워크북 승인 페이지가 열리면 <b>부스터스 구글 로그인</b> 후 <b>[승인하고 연결]</b></li>
+        <li>Claude 새 대화에서 <i>“워크북 커넥터에서 list_exercises 실행해줘”</i>로 확인</li>
+      </ol>
+      <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
+        <button class="primary" type="button" data-mcp-check>연결 상태 확인</button>
+        <span class="mcp-status-line" aria-live="polite"></span>
+      </div>
+      <p class="fhint" style="margin-top:0.7rem">커넥터 목록에 「AX 워크북」이 아직 없다면 관리자 등록 대기 중입니다 —
+      그동안은 <a href="/my">마이페이지</a>의 개인 연결 키로 커스텀 커넥터를 직접 추가해도 됩니다(개인 플랜용 대안).</p>
+    </section>`);
+
+  const button = card.querySelector('[data-mcp-check]');
+  const line = card.querySelector('.mcp-status-line');
+
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    button.textContent = '확인 중…';
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/mcp-status', {
+        headers: { Authorization: 'Bearer ' + (session?.access_token || '') },
+      });
+      const st = await res.json();
+      if (!res.ok || !st.ok) throw new Error(st.error || ('확인 실패 (' + res.status + ')'));
+
+      if (st.connected) {
+        const how = st.oauthTokens > 0 ? `조직 커넥터 승인 ${st.oauthTokens}건` : '개인 키 발급됨';
+        line.textContent = `✅ 연결되어 있습니다 (${how})`;
+        line.style.color = 'var(--ok, #1F7A4D)';
+        // 실측 성공 → 체크박스 자동 체크 + 저장
+        const box = document.getElementById('f_setup_mcp');
+        if (box && !box.checked) {
+          box.checked = true;
+          await saveValue('setup.mcp', 'true', { immediate: true });
+        }
+        toast('Claude 연결이 확인되었습니다.');
+      } else {
+        line.textContent = '⛔ 아직 연결 기록이 없습니다 — 위 순서대로 커넥터를 켜고 승인해주세요.';
+        line.style.color = 'var(--warn, #9A4A22)';
+      }
+    } catch (error) {
+      line.textContent = '⚠️ ' + (error.message || '확인에 실패했습니다.');
+      line.style.color = 'var(--warn, #9A4A22)';
+    } finally {
+      button.disabled = false;
+      button.textContent = '연결 상태 확인';
+    }
+  });
+
+  return card;
 }
 
 (async function main() {
@@ -68,6 +127,11 @@ function renderPlaygroundGuide(guide) {
 
     for (const f of g.fields) {
       app.appendChild(renderField(f));
+
+      // Claude 커넥터 항목 아래에 켜는 순서 + 실측 확인 버튼을 붙여줍니다
+      if (f.key === 'setup.mcp') {
+        app.appendChild(renderMcpGuide());
+      }
 
       // 연결 확인 항목 아래에 확인용 프롬프트를 바로 붙여줍니다
       if (f.key === 'setup.verify') {
